@@ -198,5 +198,37 @@
       "P1-CAT-001"
     ],
     "acceptance": "checkout saga tests 8/8 green incl. ledger invariants"
+  },
+  {
+    "tid": "P1-INV-001",
+    "title": "Inventory service (atomic reservations, TTL, oversell=0)",
+    "phase": "P1",
+    "workstream": "INV",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "inventory tests 4/4 green"
+  },
+  {
+    "tid": "P1-PAY-001",
+    "title": "Payments PSP adapter SPI + SAQ-A floor + refund guards",
+    "phase": "P1",
+    "workstream": "PAY",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "payments tests 4/4 green incl. PAN rejection"
+  },
+  {
+    "tid": "P1-E2E-001",
+    "title": "E2E purchase proof: catalog\u2192inventory\u2192checkout\u2192payments\u2192ledger",
+    "phase": "P1",
+    "workstream": "E2E",
+    "status": "Done",
+    "dependencies": [
+      "P1-CAT-001",
+      "P1-INV-001",
+      "P1-CRT-001",
+      "P1-PAY-001"
+    ],
+    "acceptance": "kernel/proof/e2e-purchase.test.ts 2/2 green; zero domain code"
   }
 ]

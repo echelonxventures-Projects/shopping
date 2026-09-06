@@ -642,8 +642,11 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P0-M1-GATE | M1 Gate: pure-config entity E2E + second storage engine admitted | KRN | Done | kernel/proof/m1-gate.test.ts 5/5 green |
 | P1-CAT-001 | Catalog service as kernel app (pack-driven products, offers, buy-box) | CAT | Done | services/catalog tests 4/4 green |
 | P1-CRT-001 | Cart + checkout saga (multi-vendor split, idempotency, compensations) | CRT | Done | checkout saga tests 8/8 green incl. ledger invariants |
+| P1-E2E-001 | E2E purchase proof: catalog→inventory→checkout→payments→ledger | E2E | Done | kernel/proof/e2e-purchase.test.ts 2/2 green; zero domain code |
+| P1-INV-001 | Inventory service (atomic reservations, TTL, oversell=0) | INV | Done | inventory tests 4/4 green |
+| P1-PAY-001 | Payments PSP adapter SPI + SAQ-A floor + refund guards | PAY | Done | payments tests 4/4 green incl. PAN rejection |
 
-**Status counts:** 18 Done · total 18
+**Status counts:** 21 Done · total 21
 
-*Generated 2026-09-06T11:15:09.092Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
-**Register status snapshot (Epoch 2.3, 2026-09-06):** §16.7 = live status: 18 items (16 Phase-0 kernel + 2 Phase-1) **Done · M1 PASSED · Phase 1 commenced**. New kernel-apps live: `services/catalog` (pack-driven product/offer/buy-box/market display) and `services/checkout` (cart, multi-vendor split saga w/ idempotency + compensations, double-entry ledger with sum-to-zero invariant, pack-configured commissions — premium-seller 5% rule proven). 65/65 tests, lint (pack-sourced rules), typecheck green; CI enforces all gates incl. §16.7 staleness. Next in sequence: P1-PAY-001 (PSP adapter SPI + payouts), P1-ORD-001 persistence (order state machine transitions on storage), P1-SRC-001 (search service), P1-INV-001 (inventory reservations).
+*Generated 2026-09-06T11:25:03.824Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
+**Register status snapshot (Epoch 2.4, 2026-09-06):** §16.7 = live status: **21 items Done** (Phase-0 kernel complete + M1 passed; Phase-1: catalog, checkout saga, inventory, payments, **full E2E purchase proof** — `kernel/proof/e2e-purchase.test.ts`: pack-driven browse→buy-box→reserve→pay→ledger with oversell-blocking and SAQ-A floor verified). 75/75 tests, lint, typecheck green; CI enforces gates + §16.7 staleness. Next per sequence: P1-ORD-001 persistence (order transitions on durable storage), P1-TAX-001 (Tax Engine v2), P1-SRC-001 (search service), P1-MON-001 (metering/entitlements), P1-MKT-001 (marketplace KYC/seller), P1-LOG-001 (logistics). Production-deploy readiness continues per §7 Phases.
