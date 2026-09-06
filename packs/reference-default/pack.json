@@ -1,0 +1,35 @@
+{
+  "$comment": "AetherCommerce Reference Pack v1 — the DEFAULT, swappable technology selection (Doctrine 6: never a mandate). Runtime targets, storage engines, crypto defaults. Admitted via conformance only.",
+  "pack": { "name": "reference-default", "version": "1.0.0", "kind": "reference-pack" },
+  "runtimeTargets": [
+    {
+      "id": "rt-k8s-anywhere",
+      "name": "Kubernetes-anywhere",
+      "computeClass": "container-orchestrated",
+      "scaling": "horizontal-pod",
+      "network": "mesh-mtls",
+      "placement": ["cloud", "on-prem", "edge"],
+      "capabilities": { "tee": true, "multiAz": true, "sovereignCapable": true }
+    },
+    {
+      "id": "rt-vm-classic",
+      "name": "VM/bare-metal",
+      "computeClass": "machine",
+      "scaling": "instance-group",
+      "network": "vlan",
+      "placement": ["cloud", "on-prem"],
+      "capabilities": { "tee": false, "multiAz": true, "sovereignCapable": true }
+    }
+  ],
+  "storageEngines": {
+    "default": "memory-engine",
+    "production": "file-engine"
+  },
+  "cryptoDefaults": [
+    { "id": "sc-ref-tls", "purpose": "in-transit", "algorithm": "TLS1.3-hybrid", "keyBits": 256, "pqHybrid": true, "assign": ["edge/external", "mesh/east-west"] },
+    { "id": "sc-ref-rest", "purpose": "at-rest", "algorithm": "AES-256-GCM", "keyBits": 256, "pqHybrid": false, "assign": ["volumes/all", "backups/all"] },
+    { "id": "sc-ref-field", "purpose": "field", "algorithm": "AES-256-GCM+blind-index", "keyBits": 256, "pqHybrid": false, "assign": ["pii/vault"] },
+    { "id": "sc-ref-sig", "purpose": "signing", "algorithm": "Ed25519", "keyBits": 256, "pqHybrid": false, "assign": ["audit/hash-chain", "webhooks/hmac"] }
+  ],
+  "idSchemeDefault": "reference-uuidv7"
+}

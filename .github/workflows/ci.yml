@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: Lint (rules from packs/platform-program lintRulePack)
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests (incl. conformance matrix + M1 gate proof)
+        run: npm test
+      - name: Secret scan (kernel + packs)
+        run: node scripts/lint.mjs
+      - name: Register projection sync check (§16.7 up-to-date with pack data)
+        run: |
+          npm run register:project
+          git diff --exit-code docs/PLATFORM-PLAN.md || (echo "::error::§16.7 projection is stale — run npm run register:project" && exit 1)

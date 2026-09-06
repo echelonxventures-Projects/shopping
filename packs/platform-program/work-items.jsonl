@@ -1,17 +1,182 @@
 [
-  { "tid": "P0-KRN-001", "title": "Kernel Data Model v0 + clothing-brand worked example", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": [], "acceptance": "Model in kernel/ + fixture passes" },
-  { "tid": "P0-KRN-002", "title": "Entity primitive (grammar, attrs, inheritance, epochs)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-001"], "acceptance": "Entity types creatable at runtime; bitemporal" },
-  { "tid": "P0-KRN-003", "title": "Relationship primitive (typed edges, cardinality)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-002"], "acceptance": "Edge CRUD + graph queries" },
-  { "tid": "P0-KRN-004", "title": "Context primitive + precedence resolution", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-002"], "acceptance": "Most-specific scope wins; cached" },
-  { "tid": "P0-KRN-005", "title": "Behavior, Rule, Workflow, Policy runtime", "phase": "P0", "workstream": "KRN", "status": "In-Progress", "dependencies": ["P0-KRN-002"], "acceptance": "Rule/workflow engines driven by pack data only" },
-  { "tid": "P0-KRN-006", "title": "Metadata Registry service (epochs, pinning)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-005"], "acceptance": "Epoch publish/rollback; old epochs resolve" },
-  { "tid": "P0-KRN-007", "title": "Context Resolver service (<5ms P95)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-004"], "acceptance": "Multi-level cache; budget test" },
-  { "tid": "P0-KRN-008", "title": "Codegen pipeline (DDL/API/UI from epochs)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-006"], "acceptance": "Generated artifacts compile + pass tests" },
-  { "tid": "P0-KRN-010", "title": "U²ID allocation + U²D dictionary", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-002"], "acceptance": "Scheme registry; never-reuse; merges" },
-  { "tid": "P0-KRN-011", "title": "Registry-level DLP (card-data rejection)", "phase": "P0", "workstream": "KRN", "status": "Done", "dependencies": ["P0-KRN-002"], "acceptance": "Card-typed attribute rejected at write" },
-  { "tid": "P0-CTR-003", "title": "Storage SPI (engine classes, capability negotiation)", "phase": "P0", "workstream": "CTR", "status": "Open", "dependencies": ["P0-KRN-006"], "acceptance": "Second storage engine admitted (gate condition)" },
-  { "tid": "P0-CTR-004", "title": "Conformance harness v1 (generated contract-test matrix)", "phase": "P0", "workstream": "CTR", "status": "Open", "dependencies": ["P0-KRN-006", "P0-CTR-003"], "acceptance": "Auto admit/reject adapter packs" },
-  { "tid": "P0-KRN-012", "title": "Compiled-projection engine (no EAV tax)", "phase": "P0", "workstream": "KRN", "status": "Open", "dependencies": ["P0-KRN-006", "P0-KRN-008"], "acceptance": "Hot-path query meets SLO" },
-  { "tid": "P0-KRN-013", "title": "Bitemporal query SDK (point-in-time reads)", "phase": "P0", "workstream": "KRN", "status": "Open", "dependencies": ["P0-KRN-006"], "acceptance": "'What did entity look like at T'" },
-  { "tid": "P0-GOV-001", "title": "Program-as-data: TIDs as U²IDs, workflow states, lint packs, §16 projection", "phase": "P0", "workstream": "GOV", "status": "In-Progress", "dependencies": ["P0-KRN-005", "P0-KRN-010"], "acceptance": "Ad-hoc register scripts deleted; §16.7 generated" }
+  {
+    "tid": "P0-KRN-001",
+    "title": "Kernel Data Model v0 + clothing-brand worked example",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "Model in kernel/ + fixture passes"
+  },
+  {
+    "tid": "P0-KRN-002",
+    "title": "Entity primitive (grammar, attrs, inheritance, epochs)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-001"
+    ],
+    "acceptance": "Entity types creatable at runtime; bitemporal"
+  },
+  {
+    "tid": "P0-KRN-003",
+    "title": "Relationship primitive (typed edges, cardinality)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "Edge CRUD + graph queries"
+  },
+  {
+    "tid": "P0-KRN-004",
+    "title": "Context primitive + precedence resolution",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "Most-specific scope wins; cached"
+  },
+  {
+    "tid": "P0-KRN-005",
+    "title": "Behavior, Rule, Workflow, Policy runtime",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "Rule/workflow engines driven by pack data only"
+  },
+  {
+    "tid": "P0-KRN-006",
+    "title": "Metadata Registry service (epochs, pinning)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-005"
+    ],
+    "acceptance": "Epoch publish/rollback; old epochs resolve"
+  },
+  {
+    "tid": "P0-KRN-007",
+    "title": "Context Resolver service (<5ms P95)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-004"
+    ],
+    "acceptance": "Multi-level cache; budget test"
+  },
+  {
+    "tid": "P0-KRN-008",
+    "title": "Codegen pipeline (DDL/API/UI from epochs)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-006"
+    ],
+    "acceptance": "Generated artifacts compile + pass tests"
+  },
+  {
+    "tid": "P0-KRN-010",
+    "title": "U\u00b2ID allocation + U\u00b2D dictionary",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "Scheme registry; never-reuse; merges"
+  },
+  {
+    "tid": "P0-KRN-011",
+    "title": "Registry-level DLP (card-data rejection)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "Card-typed attribute rejected at write"
+  },
+  {
+    "tid": "P0-CTR-003",
+    "title": "Storage SPI (engine classes, capability negotiation)",
+    "phase": "P0",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-006"
+    ],
+    "acceptance": "Second storage engine admitted (gate condition)"
+  },
+  {
+    "tid": "P0-CTR-004",
+    "title": "Conformance harness v1 (generated contract-test matrix)",
+    "phase": "P0",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-006",
+      "P0-CTR-003"
+    ],
+    "acceptance": "Auto admit/reject adapter packs"
+  },
+  {
+    "tid": "P0-KRN-012",
+    "title": "Compiled-projection engine (no EAV tax)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-006",
+      "P0-KRN-008"
+    ],
+    "acceptance": "Hot-path query meets SLO"
+  },
+  {
+    "tid": "P0-KRN-013",
+    "title": "Bitemporal query SDK (point-in-time reads)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-006"
+    ],
+    "acceptance": "'What did entity look like at T'"
+  },
+  {
+    "tid": "P0-GOV-001",
+    "title": "Program-as-data: TIDs as U\u00b2IDs, workflow states, lint packs, \u00a716 projection",
+    "phase": "P0",
+    "workstream": "GOV",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-005",
+      "P0-KRN-010"
+    ],
+    "acceptance": "Ad-hoc register scripts deleted; \u00a716.7 generated"
+  },
+  {
+    "tid": "P0-M1-GATE",
+    "title": "M1 Gate: pure-config entity E2E + second storage engine admitted",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-CTR-003",
+      "P0-CTR-004",
+      "P0-KRN-006",
+      "P0-KRN-008"
+    ],
+    "acceptance": "kernel/proof/m1-gate.test.ts 5/5 green"
+  }
 ]
