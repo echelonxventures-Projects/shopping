@@ -1,0 +1,28 @@
+{
+  "id": "mod-logistics",
+  "name": "@aether/service-logistics",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Logistics & Returns",
+  "description": "Carrier registry, capability-filtered rate shopping, shipment tracking, RMA lifecycle with grading, returnless refunds, serial-returner detection. Self-contained: bundles its own carrier/rate/grading packs; runs in any host.",
+  "capabilities": ["shipping", "rate-shopping", "tracking", "rma", "returns-grading", "carrier-registry"],
+  "packs": ["packs/logistics-core.json"],
+  "publicApi": ["rateOptions", "cheapest", "createShipment", "pushTracking", "trackingHistory", "openRma", "advanceRma", "gradeRma", "customerReturnProfile", "recordCustomerOrder"],
+  "configSchema": {
+    "windowDays": { "type": "number", "default": 30 },
+    "returnlessThreshold": { "type": "number", "default": 5 }
+  },
+  "billing": {
+    "meterableEvents": [
+      { "event": "label.generated", "unit": "label", "description": "Shipping label created" },
+      { "event": "rma.opened", "unit": "case", "description": "Return case opened" },
+      { "event": "rate.quoted", "unit": "quote", "description": "Rate quote served" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 49, "currency": "USD", "perUnit": "label" }
+  },
+  "dependencies": [
+    { "id": "mod-product-master", "optional": true, "minVersion": "0.1.0" }
+  ],
+  "hostContract": "aether-host-1"
+}

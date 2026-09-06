@@ -102,6 +102,8 @@ Per Doctrine 6 (Total Agnosticism), every technology below is the *default Refer
 
 ### 2.6 ECR Kernel (Entity–Context–Relationship)
 
+**Module-as-a-Product (Doctrine 5 extension, Epoch 2.8 — `kernel/module`):** every module is a self-contained, plug-and-play product: (a) carries its own `module.json` **manifest** (id/version/capabilities/config-schema/billing model/public API); (b) **bundles its own packs inside itself** — runs in this platform or any external host with zero coupling; (c) implements the `AetherModule` contract (`create(host, billing, packs) → api` + lifecycle hooks); (d) is **billable via a swappable `BillingPort`** — the host wires its own billing system (this platform's Monetization Stack or an external one; `NullBillingPort` = runs unbilled); (e) is **sellable** — every registered module auto-lists in a generated **module catalog** with pricing model + suggested rate + API surface (the app-marketplace inventory); (f) is **customisable/configurable** — host/tenant `ConfigOverride`s deep-merge onto bundled packs (change windows, thresholds, grading — without touching module code); (g) validated manifests enforce the contract (semver, packs, host-contract version).
+
 The platform core is a metadata-driven kernel where **no domain concept is hardcoded** — clothing brands, electronics, groceries, marketplaces, and any future vertical are pure data derivations.
 
 **Universal primitives (Tier-0 code — the only code):**
@@ -649,6 +651,7 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P0-KRN-011 | Registry-level DLP (card-data rejection) | KRN | Done | Card-typed attribute rejected at write |
 | P0-KRN-012 | Compiled-projection engine (no EAV tax) | KRN | Done | Hot-path query meets SLO |
 | P0-KRN-013 | Bitemporal query SDK (point-in-time reads) | KRN | Done | 'What did entity look like at T' |
+| P0-KRN-014 | Module-as-a-Product runtime — manifests, bundled packs, HostPort/BillingPort plug-and-play, config deep-merge overrides, sellable module catalog | KRN | Done | module tests 8/8 green; logistics converted to module contract (first plug-and-play module) |
 | P0-M1-GATE | M1 Gate: pure-config entity E2E + second storage engine admitted | KRN | Done | kernel/proof/m1-gate.test.ts 5/5 green |
 | P1-CAT-001 | Catalog service as kernel app (pack-driven products, offers, buy-box) | CAT | Done | services/catalog tests 4/4 green |
 | P1-CAT-002 | Universal Product Master — taxonomy hierarchy, attribute engine (no columns), type registry (15 types), identity layer (16 schemes), relationship engine, packaging, UOM, lifecycle, 3 deployment modes | CAT | Done | product-master tests 12/12 green; grocery/furniture/hardware/auto/electronics/pharma/digital/services/rental attribute packs proven |
@@ -663,7 +666,7 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P1-SRC-001 | Search service — engine-agnostic SPI, facets, fuzzy, tenant isolation, conformance admission | SRC | Done | search tests 7/7 green |
 | P1-TAX-001 | Tax Engine v2 — bitemporal pack rates, inclusive/exclusive, facilitator, reverse-charge, explainability | TAX | Done | tax tests 8/8 green incl. point-in-time rates |
 
-**Status counts:** 29 Done · total 29
+**Status counts:** 30 Done · total 30
 
-*Generated 2026-09-06T15:11:22.595Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
-**Register status snapshot (Epoch 2.7, 2026-09-06):** §16.7 = live status: **29 items Done**. New: **Logistics** (P1-LOG-001): carrier registry (global + IN/EU regional w/ market-scoped rate cards + INR/EUR currencies), capability-filtered rate shopping (dangerous-goods/cold-chain/COD/lockers), shipment tracking event lifecycle from pack, full RMA workflow (window enforcement, returnless refunds at threshold, grading factors sellable→damaged w/ restock fees, serial-returner detection on pack thresholds) — 10/10. 140/140 tests, lint, typecheck green. Remaining Phase-1 per sequence: P1-SUP-001 (support + decision-explainability), P1-REC-001 (recommendations), P1-EXP-001 (experimentation), P1-B2B (quotes/net-terms), P1-ONB-001 (migration), P1-SEO-001, notifications + health vertical pack. Then Phase-2 market packs + Phase-3 scale proofs.
+*Generated 2026-09-06T15:54:13.004Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
+**Register status snapshot (Epoch 2.8, 2026-09-06):** §16.7 = live status: **30 items Done**. New: **Module-as-a-Product runtime** (P0-KRN-014, `kernel/module`): every module self-contained (manifest + bundled packs + public API), plug-and-play into this platform or ANY external host via HostPort, billable through a **swappable BillingPort** (external billing systems or unbilled via NullBillingPort), **sellable** via the auto-generated module catalog (pricing model + suggested rate + API surface), **customisable** via host/tenant ConfigOverrides deep-merged onto bundled packs. Logistics converted as first module (8/8 module tests; backward-compatible service API retained). 148/148 tests, lint, typecheck green. **Backlog:** convert remaining services (catalog, checkout, orders, tax, search, monetization, marketplace, product-master, payments, inventory) to module contracts; then P1-SUP-001, P1-REC-001, P1-EXP-001, P1-B2B, P1-ONB-001, P1-SEO-001.

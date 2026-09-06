@@ -1,0 +1,11 @@
+{
+  "id": "mod-bad",
+  "name": "@aether/bad",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "capabilities": ["nothing"],
+  "packs": ["packs/none.json"],
+  "publicApi": [],
+  "billing": { "meterableEvents": [], "pricingModel": "free" },
+  "hostContract": "aether-host-1"
+}

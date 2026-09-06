@@ -308,5 +308,16 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "logistics tests 10/10 green (DG/cold-chain/COD filters, INR regional rates, grading factors, window enforcement)"
+  },
+  {
+    "tid": "P0-KRN-014",
+    "title": "Module-as-a-Product runtime \u2014 manifests, bundled packs, HostPort/BillingPort plug-and-play, config deep-merge overrides, sellable module catalog",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-001"
+    ],
+    "acceptance": "module tests 8/8 green; logistics converted to module contract (first plug-and-play module)"
   }
 ]

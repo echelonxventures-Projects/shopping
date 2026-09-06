@@ -6,6 +6,9 @@
 
 import { WorkflowEngine } from '@aether/kernel-runtime/src/index.ts';
 import type { WorkflowDef } from '@aether/kernel-primitives';
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export interface CarrierService {
   code: string;
@@ -236,3 +239,30 @@ export class LogisticsService {
     this.customerReturns.set(key, p);
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+
+const logisticsModule: AetherModule = {
+  manifest: JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as LogisticsPack;
+    const svc = new LogisticsService(pack);
+    const meter = (ev: string, qty = 1, meta?: Record<string, unknown>) => billing.meter(ev, qty, meta);
+    return {
+      rateOptions: (req: ShipmentReq) => (meter('rate.quoted'), svc.rateOptions(req)),
+      cheapest: (req: ShipmentReq) => (meter('rate.quoted'), svc.cheapest(req)),
+      createShipment: (tenantId: string, option: RatedOption) => (meter('label.generated'), svc.createShipment(tenantId, option)),
+      pushTracking: (t: string, id: string, code: string, loc?: string) => svc.pushTracking(t, id, code, loc),
+      trackingHistory: (t: string, id: string) => svc.trackingHistory(t, id),
+      openRma: (input: Parameters<LogisticsService['openRma']>[0]) => (meter('rma.opened'), svc.openRma(input)),
+      advanceRma: (t: string, id: string, to: string, trig: string) => svc.advanceRma(t, id, to, trig),
+      gradeRma: (t: string, id: string, grade: string) => svc.gradeRma(t, id, grade),
+      customerReturnProfile: (t: string, c: string) => svc.customerReturnProfile(t, c),
+      recordCustomerOrder: (t: string, c: string, r: boolean) => svc.recordCustomerOrder(t, c, r),
+      __raw: svc, // host may use the unwrapped service
+    };
+  },
+};
+
+export default logisticsModule;
