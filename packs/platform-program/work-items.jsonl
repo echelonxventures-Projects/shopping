@@ -299,5 +299,14 @@
       "P1-CAT-001"
     ],
     "acceptance": "product-master tests 12/12 green; grocery/furniture/hardware/auto/electronics/pharma/digital/services/rental attribute packs proven"
+  },
+  {
+    "tid": "P1-LOG-001",
+    "title": "Logistics \u2014 carrier registry (global/regional), rate shopping w/ capability filters, tracking events, RMA lifecycle w/ grading + returnless refunds + serial-returner detection",
+    "phase": "P1",
+    "workstream": "LOG",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "logistics tests 10/10 green (DG/cold-chain/COD filters, INR regional rates, grading factors, window enforcement)"
   }
 ]

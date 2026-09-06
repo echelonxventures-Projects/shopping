@@ -655,6 +655,7 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P1-CRT-001 | Cart + checkout saga (multi-vendor split, idempotency, compensations) | CRT | Done | checkout saga tests 8/8 green incl. ledger invariants |
 | P1-E2E-001 | E2E purchase proof: catalog→inventory→checkout→payments→ledger | E2E | Done | kernel/proof/e2e-purchase.test.ts 2/2 green; zero domain code |
 | P1-INV-001 | Inventory service (atomic reservations, TTL, oversell=0) | INV | Done | inventory tests 4/4 green |
+| P1-LOG-001 | Logistics — carrier registry (global/regional), rate shopping w/ capability filters, tracking events, RMA lifecycle w/ grading + returnless refunds + serial-returner detection | LOG | Done | logistics tests 10/10 green (DG/cold-chain/COD filters, INR regional rates, grading factors, window enforcement) |
 | P1-MKT-001 | Marketplace — seller onboarding KYC/AML workflow, scorecard tiers, enforcement ladder, reserves | MKT | Done | marketplace tests 7/7 green |
 | P1-MON-001 | Monetization — billable resources, metering, tiered/per-unit/%-GMV rating, entitlements, invoicing | MON | Done | monetization tests 7/7 green |
 | P1-ORD-001 | Orders service — pack workflow state machine on durable storage, bitemporal lifecycle | ORD | Done | orders tests 9/9 green incl. illegal-transition rejection + history |
@@ -662,7 +663,7 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P1-SRC-001 | Search service — engine-agnostic SPI, facets, fuzzy, tenant isolation, conformance admission | SRC | Done | search tests 7/7 green |
 | P1-TAX-001 | Tax Engine v2 — bitemporal pack rates, inclusive/exclusive, facilitator, reverse-charge, explainability | TAX | Done | tax tests 8/8 green incl. point-in-time rates |
 
-**Status counts:** 28 Done · total 28
+**Status counts:** 29 Done · total 29
 
-*Generated 2026-09-06T14:36:08.154Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
-**Register status snapshot (Epoch 2.6, 2026-09-06):** §16.7 = live status: **28 items Done**. New this wave: search (engine-agnostic SPI + conformance, 7/7), monetization (metering/rating/entitlements/invoicing, 7/7), marketplace (KYC/AML workflow + scorecards + enforcement, 7/7), **Universal Product Master** (P1-CAT-002: taxonomy hierarchy, attribute engine-no-columns, 15 product types, 16 identity schemes, relationship engine, packaging/UOM, lifecycle, 3 deployment modes — 12/12). 123/123 tests, lint, typecheck green. Next per sequence: P1-LOG-001 (logistics: carrier registry, rate shopping, tracking, RMA/returns), P1-REC-001, P1-SUP-001 (support portal + decision-explainability), P1-EXP-001 (experimentation).
+*Generated 2026-09-06T15:11:22.595Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
+**Register status snapshot (Epoch 2.7, 2026-09-06):** §16.7 = live status: **29 items Done**. New: **Logistics** (P1-LOG-001): carrier registry (global + IN/EU regional w/ market-scoped rate cards + INR/EUR currencies), capability-filtered rate shopping (dangerous-goods/cold-chain/COD/lockers), shipment tracking event lifecycle from pack, full RMA workflow (window enforcement, returnless refunds at threshold, grading factors sellable→damaged w/ restock fees, serial-returner detection on pack thresholds) — 10/10. 140/140 tests, lint, typecheck green. Remaining Phase-1 per sequence: P1-SUP-001 (support + decision-explainability), P1-REC-001 (recommendations), P1-EXP-001 (experimentation), P1-B2B (quotes/net-terms), P1-ONB-001 (migration), P1-SEO-001, notifications + health vertical pack. Then Phase-2 market packs + Phase-3 scale proofs.

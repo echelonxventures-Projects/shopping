@@ -1,0 +1,89 @@
+{
+  "$comment": "Logistics core pack — carriers (global + regional), rate cards, service classes, shipping zones, RMA workflow, return grading policy, COD reconciliation rules. All DATA: add a carrier or market = pack entry.",
+  "pack": { "name": "logistics-core", "version": "1.0.0", "kind": "capability-pack" },
+  "carriers": [
+    {
+      "id": "car_global_express",
+      "name": "GlobalExpress",
+      "scope": ["global"],
+      "services": [
+        { "code": "STD", "name": "Standard", "etaDays": { "min": 3, "max": 5 }, "rateCard": { "base": 4.99, "perKg": 1.20, "currency": "USD" } },
+        { "code": "EXP", "name": "Express", "etaDays": { "min": 1, "max": 2 }, "rateCard": { "base": 9.99, "perKg": 2.50, "currency": "USD" } }
+      ],
+      "capabilities": { "tracking": true, "cod": true, "coldChain": false, "dangerousGoods": false, "lockers": false }
+    },
+    {
+      "id": "car_regional_in",
+      "name": "RegionalNext (IN)",
+      "scope": ["IN"],
+      "services": [
+        { "code": "STD", "name": "Surface", "etaDays": { "min": 2, "max": 4 }, "rateCard": { "base": 40, "perKg": 15, "currency": "INR" } },
+        { "code": "SDD", "name": "Same-Day", "etaDays": { "min": 0, "max": 0 }, "rateCard": { "base": 99, "perKg": 25, "currency": "INR" } }
+      ],
+      "capabilities": { "tracking": true, "cod": true, "coldChain": false, "dangerousGoods": false, "lockers": false }
+    },
+    {
+      "id": "car_regional_eu",
+      "name": "EuroPost (EU)",
+      "scope": ["EU"],
+      "services": [
+        { "code": "STD", "name": "Standard", "etaDays": { "min": 2, "max": 4 }, "rateCard": { "base": 3.49, "perKg": 0.90, "currency": "EUR" } }
+      ],
+      "capabilities": { "tracking": true, "cod": false, "coldChain": true, "dangerousGoods": false, "lockers": true }
+    },
+    {
+      "id": "car_cold_chain",
+      "name": "ColdChain Logistics",
+      "scope": ["global"],
+      "services": [
+        { "code": "FRZ", "name": "Frozen", "etaDays": { "min": 1, "max": 3 }, "rateCard": { "base": 12.50, "perKg": 3.75, "currency": "USD" } }
+      ],
+      "capabilities": { "tracking": true, "cod": false, "coldChain": true, "dangerousGoods": false, "lockers": false }
+    },
+    {
+      "id": "car_dg_certified",
+      "name": "HazTrans Certified",
+      "scope": ["global"],
+      "services": [
+        { "code": "DG", "name": "Dangerous Goods Ground", "etaDays": { "min": 3, "max": 6 }, "rateCard": { "base": 19.00, "perKg": 4.00, "currency": "USD" } }
+      ],
+      "capabilities": { "tracking": true, "cod": false, "coldChain": false, "dangerousGoods": true, "lockers": false }
+    }
+  ],
+  "rmaWorkflow": {
+    "id": "wf_rma", "kind": "workflow", "name": "rma-lifecycle", "entityTypeId": "et_rma",
+    "states": ["requested", "approved", "in-transit", "received", "graded", "refunded", "rejected", "closed"],
+    "transitions": [
+      { "from": "requested", "to": "approved", "trigger": "return-window-valid" },
+      { "from": "requested", "to": "rejected", "trigger": "window-elapsed" },
+      { "from": "approved", "to": "in-transit", "trigger": "label-generated" },
+      { "from": "in-transit", "to": "received", "trigger": "carrier-scanned-inbound" },
+      { "from": "received", "to": "graded", "trigger": "grading-complete" },
+      { "from": "graded", "to": "refunded", "trigger": "grade-accepted" },
+      { "from": "graded", "to": "rejected", "trigger": "grade-damaged-fraud" },
+      { "from": "refunded", "to": "closed", "trigger": "settlement-posted" },
+      { "from": "rejected", "to": "closed", "trigger": "disposition-complete" }
+    ],
+    "initial": "requested", "epoch": 1,
+    "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+  },
+  "returnPolicy": {
+    "windowDays": 30,
+    "returnlessRefundThreshold": { "value": 5, "currency": "USD" },
+    "grading": {
+      "grades": ["sellable", "refurbished", "outlet", "liquidate", "damaged"],
+      "refundFactors": { "sellable": 1.0, "refurbished": 0.85, "outlet": 0.7, "liquidate": 0.4, "damaged": 0 },
+      "restockFees": { "sellable": 0, "refurbished": 0.05, "outlet": 0.1, "liquidate": 0.25, "damaged": 0 }
+    },
+    "serialReturner": { "returnRateThreshold": 0.6, "returnsCountThreshold": 10, "action": "flag-fraud-review" }
+  },
+  "trackingEvents": [
+    { "code": "label-created", "meaning": "Label generated", "progress": 10 },
+    { "code": "picked-up", "meaning": "Picked up by carrier", "progress": 30 },
+    { "code": "in-transit", "meaning": "In transit", "progress": 50 },
+    { "code": "out-for-delivery", "meaning": "Out for delivery", "progress": 80 },
+    { "code": "delivered", "meaning": "Delivered", "progress": 100 },
+    { "code": "exception", "meaning": "Delivery exception", "progress": 50 },
+    { "code": "returned-to-sender", "meaning": "Returned to sender", "progress": 0 }
+  ]
+}
