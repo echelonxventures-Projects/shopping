@@ -178,5 +178,25 @@
       "P0-KRN-008"
     ],
     "acceptance": "kernel/proof/m1-gate.test.ts 5/5 green"
+  },
+  {
+    "tid": "P1-CAT-001",
+    "title": "Catalog service as kernel app (pack-driven products, offers, buy-box)",
+    "phase": "P1",
+    "workstream": "CAT",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "services/catalog tests 4/4 green"
+  },
+  {
+    "tid": "P1-CRT-001",
+    "title": "Cart + checkout saga (multi-vendor split, idempotency, compensations)",
+    "phase": "P1",
+    "workstream": "CRT",
+    "status": "Done",
+    "dependencies": [
+      "P1-CAT-001"
+    ],
+    "acceptance": "checkout saga tests 8/8 green incl. ledger invariants"
   }
 ]

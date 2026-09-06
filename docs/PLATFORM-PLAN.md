@@ -640,8 +640,10 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P0-KRN-012 | Compiled-projection engine (no EAV tax) | KRN | Done | Hot-path query meets SLO |
 | P0-KRN-013 | Bitemporal query SDK (point-in-time reads) | KRN | Done | 'What did entity look like at T' |
 | P0-M1-GATE | M1 Gate: pure-config entity E2E + second storage engine admitted | KRN | Done | kernel/proof/m1-gate.test.ts 5/5 green |
+| P1-CAT-001 | Catalog service as kernel app (pack-driven products, offers, buy-box) | CAT | Done | services/catalog tests 4/4 green |
+| P1-CRT-001 | Cart + checkout saga (multi-vendor split, idempotency, compensations) | CRT | Done | checkout saga tests 8/8 green incl. ledger invariants |
 
-**Status counts:** 16 Done · total 16
+**Status counts:** 18 Done · total 18
 
-*Generated 2026-09-06T10:28:59.741Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
-**Register status snapshot (Epoch 2.2, 2026-09-06):** §16.7 (machine-synced projection) is the live status source: **16/16 seeded Phase-0 kernel items Done · M1 GATE PASSED** (pure-config entity E2E + conformance-admitted second durable storage engine, `kernel/proof/m1-gate.test.ts`). Remaining Phase-0: procurement kickoffs (P0-PRC-001..004), content cold-start (P0-CNT-001), IaC production baseline (P0-SEC-002 prod-grade), CTR-001/005 contracts formalization. Next: Phase 1 kernel-app build-out (P1-CAT-001 onward) with services/ scaffolding. CI pipeline live (.github/workflows/ci.yml): lint (pack-sourced rules) → typecheck → tests (incl. conformance + M1 proof) → §16.7 staleness gate.
+*Generated 2026-09-06T11:15:09.092Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
+**Register status snapshot (Epoch 2.3, 2026-09-06):** §16.7 = live status: 18 items (16 Phase-0 kernel + 2 Phase-1) **Done · M1 PASSED · Phase 1 commenced**. New kernel-apps live: `services/catalog` (pack-driven product/offer/buy-box/market display) and `services/checkout` (cart, multi-vendor split saga w/ idempotency + compensations, double-entry ledger with sum-to-zero invariant, pack-configured commissions — premium-seller 5% rule proven). 65/65 tests, lint (pack-sourced rules), typecheck green; CI enforces all gates incl. §16.7 staleness. Next in sequence: P1-PAY-001 (PSP adapter SPI + payouts), P1-ORD-001 persistence (order state machine transitions on storage), P1-SRC-001 (search service), P1-INV-001 (inventory reservations).
