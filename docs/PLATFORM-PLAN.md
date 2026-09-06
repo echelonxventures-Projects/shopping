@@ -491,3 +491,131 @@ Registry/context/relationship schemas drafted as the first Phase-0 deliverable: 
 ---
 
 *Epoch 2 complete — open-ended. Next epoch upgrades assimilate here via the Living-Document Protocol: single doc, upgrade-only, roadmap synced, no final state.*
+
+---
+
+## 16. Trackable Execution Register (WBS — "everything now")
+
+**Item schema:** `TID` · Title · Phase · Workstream · Owner-role · Dependencies (TIDs) · Status (Open / In-Progress / Blocked / Done) · RAG · Due-epoch · Gate-link · Acceptance criteria. Statuses re-synced in every doc change (Living-Document Protocol).
+
+**Review cadence:** weekly RAG review; per-gate verification; per-epoch register sync; JIT refinement allowed (register is open-ended, no final state).
+
+**Critical path (bold TIDs).**
+
+### 16.1 Phase 0 — ECR Kernel & Contracts (Gate: pure-config entity E2E + second storage engine; M1)
+
+| TID | Title | Workstream | Deps | Status | Acceptance |
+|---|---|---|---|---|---|
+| **P0-KRN-001** | Kernel Data Model v0 (registry/context/relationship/epoch/U²ID/rule-pack schemas + clothing-brand worked example) | Kernel | — | In-Progress | Model drafted in kernel/ + example fixture passes |
+| **P0-KRN-002** | Entity primitive (type grammar, JSON-Schema attrs, inheritance, epoch versioning) | Kernel | 001 | Open | Create entity type at runtime; bitemporal versions |
+| **P0-KRN-003** | Relationship primitive (typed directed edges, cardinality) | Kernel | 002 | Open | Edge CRUD + graph query API |
+| **P0-KRN-004** | Context primitive (tenant×market×locale×channel×audience×time resolution frame) | Kernel | 002 | Open | Resolver picks correct entity version per frame |
+| **P0-KRN-005** | Behavior, Rule, Workflow, Policy primitives | Kernel | 002 | Open | Config-defined lifecycle + rule eval demo |
+| **P0-KRN-006** | Metadata Registry service (epoch manifests, schema-version pinning) | Kernel | 002-005 | Open | Registry HA reads; epoch publish/rollback |
+| **P0-KRN-007** | Context Resolver service (<5ms P95 cached) | Kernel | 004,006 | Open | Multi-level cache; <5ms P95 budget test |
+| **P0-KRN-008** | **Codegen pipeline** — DB projections, typed APIs, SDKs, admin CRUD from epochs | Kernel | 006 | Open | Generated artifacts compile + pass contract tests |
+| **P0-KRN-009** | Model-driven UI renderer v0 (forms/tables from entity schemas) | Kernel | 008 | Open | Auto-rendered CRUD page for new entity type |
+| **P0-KRN-010** | U²ID allocation (scheme registry, auto-alloc at creation, vanity policy) | Kernel | 002,006 | Open | Allocated on all core entities; scheme swap via config |
+| **P0-KRN-011** | Registry-level DLP (attribute classifications; card-data write rejection) | Kernel | 002 | Open | Card-typed attribute rejected at registry write |
+| **P0-KRN-012** | Compiled-projection engine (no EAV hot-path tax) | Kernel | 006,008 | Open | Hot-path query on projection meets SLO |
+| **P0-KRN-013** | Bitemporal query SDK (point-in-time reads, epoch replay) | Kernel | 006 | Open | "What did entity look like at T" query |
+| P0-CTR-001 | Contract layer: data (Protobuf-class), events (CloudEvents), APIs (OpenAPI/AsyncAPI), telemetry (OTel) | Contracts | — | Open | Contracts published; lint gate in CI |
+| P0-CTR-002 | Runtime SPI (RuntimeTarget entity + adapter) | Contracts | 001 | Open | Second runtime target admitted via harness |
+| P0-CTR-003 | Storage SPI (engine classes per workload, capability negotiation) | Contracts | 001 | Open | **Second storage engine admitted — Gate condition** |
+| P0-CTR-004 | Conformance harness v1 (generated contract-test matrix per adapter) | Contracts | 001-003 | Open | Harness admits/rejects adapter packs automatically |
+| P0-CTR-005 | Versioning-as-data (API/SDK/schema lifecycles, compat linters) | Contracts | 001 | Open | Additive version change; breaking change flagged |
+| P0-GOV-001 | Config Store + tiered change control (T0–T3, preview/approval/audit) | Governance | 006 | Open | T2 self-serve config publish w/ validation |
+| P0-GOV-002 | **Constitution v1 bootstrap** (T-C tier, M-of-N quorum, ratification ceremony) | Governance | 001 | Open | Charter signed; amendment protocol executable |
+| P0-GOV-003 | Constitutional crypto floors (§4.5 minimums, publish-time validation) | Governance | 001,011 | Open | Config below floor rejected at publish |
+| P0-GOV-004 | Simulation harness for config packs | Governance | 005,006 | Open | Bad commission rule caught pre-publish |
+| P0-SEC-001 | Crypto-agility registry (CryptoScheme entities, key hierarchy, floors) | Security | 002 | Open | Scheme swap via epoch; CBOM generated |
+| P0-SEC-002 | IaC baseline + Reference Pack v1 (runtime/storage defaults as config) | Infra | 002,003 | Open | Full env from IaC; pack swap demo |
+| P0-SEC-003 | CI pipeline v0 (test/lint/contract-compat/epoch-stamp/secret-scan) | Infra | 001 | Open | CI green gates on kernel packages |
+| P0-PRC-001 | PSP platform agreements + payout licensing kickoff (all target markets) | Procurement | — | Open | Signed platform agreements; licensing calendar |
+| P0-PRC-002 | Vendor certifications kickoff (tax, carriers, KYC, e-invoicing, TMS) | Procurement | — | Open | Certification tracker live w/ lead times |
+| P0-PRC-003 | Marketplace-facilitator tax registrations plan | Procurement | — | Open | Registration roadmap per market |
+| P0-PRC-004 | DPA/ToS/insurance templates | Procurement | — | Open | Legal templates approved |
+| P0-CNT-001 | Content cold-start workstream setup (rule packs, category schemas, translation memory) | Content | — | Open | Backlog + owners per market |
+
+### 16.2 Phase 1 — Full-Platform Core Commerce (Gate: everything transactable; M7–24)
+
+| TID | Title | Workstream | Deps | Status | Acceptance |
+|---|---|---|---|---|---|
+| P1-CAT-001 | Catalog service as kernel app (types, variants, media, moderation) | Catalog | P0 gate | Open | All type packs creatable/transactable |
+| P1-CAT-002 | Product Type Registry packs wave 1: physical, digital+DRM, subscriptions, gift cards, kits, services/bookings | Catalog | 001 | Open | Each pack passes conformance matrix |
+| P1-CAT-003 | Type packs wave 2: perishables, regulated, CPQ, freight, used/C2C, auctions, rentals, trade-in, group-buy, live/social, AR/3D, voice, charity, fractional | Catalog | 002 | Open | Same |
+| P1-CAT-004 | Health vertical pack (HIPAA-class, Rx, serialization) | Catalog | 002 | Open | Vertical compliance review passed |
+| P1-SRC-001 | Search service (per-language analyzers, facets, federation w/ U²ID resolution) | Search | P0 gate | Open | P95<150ms; CJK/Arabic/Indic analyzers |
+| P1-PRC-001 | Pricing engine (bitemporal price lists, market matrices) | Pricing | P0 gate | Open | Point-in-time price reconstruction |
+| P1-PRC-002 | Promotions engine (stacking rules, bundles, B2B tiers) | Pricing | 001 | Open | Golden promo scenarios pass |
+| P1-TAX-001 | Tax Engine v2 (facilitator mode, e-invoicing adapters, reverse charge) | Tax | 001 | Open | Golden tax cases pass; e-invoice per market |
+| P1-CRT-001 | Cart + checkout (idempotency, fraud hooks, wallets/BNPL/COD) | Checkout | 001 | Open | Multi-vendor split; SCA flows |
+| P1-PAY-001 | Payments + PSP adapter routing + ledger (region-pinned writes) | Payments | CRT-001 | Open | Double-entry invariants; daily recon |
+| P1-INV-001 | Inventory service (reservations, atomic decrements, multi-DC) | Fulfillment | 001 | Open | Oversell = 0 under load test |
+| P1-ORD-001 | Orders saga + state machines (config-defined, compensations) | Orders | PAY-001,INV-001 | Open | Stuck-saga tooling; failure-path golden tests |
+| P1-MON-001 | Monetization stack (resources, metering, rating, entitlements, SaaS billing) | Monetization | PAY-001 | Open | Invoice-vs-ledger harness green |
+| P1-MON-002 | Commission & Fee Engine (unlimited-dimension matrices, bitemporal) | Monetization | MON-001 | Open | Amazon-style fee stack via config only |
+| P1-GID-001 | U²D dictionary + aliases/merges + resolution search | Identity | P0-KRN-010 | Open | Any ID resolves <100ms; policy-scoped |
+| P1-RUL-001 | Rules Engine (decision tables, consumer law, restrictions) | Rules | P0 gate | Open | Explainability per order line |
+| P1-GEO-001 | Geo service (zones, geofences, ship-from-store) | Geo | P0 gate | Open | Zone-driven tax/shipping correct |
+| P1-SEO-001 | SEO platform (sitemaps, hreflang, schema.org) | Growth | SRC-001 | Open | 10M-SKU sitemap shard plan verified |
+| P1-REC-001 | Recommendations (retrieval→LTR→re-rank) | Growth | SRC-001 | Open | Cold-start + consent gating live |
+| P1-EXP-001 | Experimentation platform (flags, A/B, governed rollout) | Growth | P0 gate | Open | Experiment as registry entity |
+| P1-MKT-001 | Marketplace (3P offers, buy-box, KYC, scorecards) | Marketplace | CAT-001,PAY-001 | Open | External seller E2E + correct payout |
+| P1-LOG-001 | Logistics v2 (carrier registry, labels, tracking, lockers) | Fulfillment | INV-001 | Open | Regional carrier admitted via config |
+| P1-LOG-002 | Returns/RMA + grading + abuse detection | Fulfillment | LOG-001 | Open | Full return lifecycle via ops portal |
+| P1-UCA-001 | Unified commerce/POS (offline-first, RFID, BOPIS) | Fulfillment | LOG-001 | Open | In-store pickup/return E2E |
+| P1-SUP-001 | Support portal + decision-explainability | Support | ORD-001,RUL-001 | Open | "Why this charge" per line |
+| P1-FIN-001 | Tenant/seller finance portal (P&L, settlements, BI) | Finance | MON-001 | Open | Settlement reports match ledger |
+| P1-ONB-001 | Onboarding/migration (Shopify/Woo/Magento-class import) | Growth | CAT-001 | Open | Migration with reconciliation report |
+| P1-NOT-001 | Notifications + templates (multi-language, per-tenant senders) | Platform | P0 gate | Open | Never blocks checkout (async) |
+| P1-E2E-001 | E2E sequence specs + failure-path ops (§10) | Eng | All P1 | Open | Golden E2E + invariants green |
+| P1-SEC-001 | §4.5 crypto implementation (keys, TEE policies, PQC hybrid, CBOM) | Security | P0-SEC-001 | Open | Every-level mandate conformance green |
+| P1-SEC-002 | PCI SAQ-A evidence + SOC 2 evidence collection | Security | P1-SEC-001 | Open | Continuous evidence pipeline live |
+
+### 16.3 Phase 2 — Global Markets & Residency (Gate: config-only market onboarding; M25–30)
+
+| TID | Title | Deps | Status | Acceptance |
+|---|---|---|---|---|
+| P2-MKT-001 | Market pack wave 1 (US, EU states, UK, India, SEA, GCC, LATAM…) | P1 gate | Open | Each market onboarded config-only |
+| P2-MKT-002 | Regional residency cells + sovereign RuntimeTargets | P0-SEC-002 | Open | Residency verified by audit |
+| P2-MKT-003 | Regional compliance packs (LGPD/DPDP/PDPA/SCA) + DSR APIs | P2-MKT-001 | Open | DSR export/erasure per region |
+| P2-MKT-004 | Facilitator registrations executed per market | P0-PRC-003 | Open | Registrations active |
+| P2-LOG-001 | Regional carriers/lockers + COD deep ops | P1-LOG-001 | Open | COD recon exceptions < SLA |
+| P2-ECO-001 | App marketplace + developer sandboxes + public APIs | P1 gate | Open | Partner app live via sandbox |
+| P2-OFF-001 | Offline/low-connectivity storefront mode | P1 | Open | Order captured offline syncs |
+
+### 16.4 Phase 3 — Agnosticism Proof & Scale (Gate: dual proof; M31–33)
+
+| TID | Title | Deps | Status | Acceptance |
+|---|---|---|---|---|
+| P3-AGN-001 | **Proof A: new market, zero code deploys** | P2 gate | Open | Deployment diff = empty |
+| P3-AGN-002 | **Proof B: full stack on second RuntimeTarget** | P0-CTR-002 | Open | Golden suite identical on target 2 |
+| P3-SCL-001 | 250k/hr burst load + flash-sale waiting room | P1-E2E-001 | Open | SLOs hold at burst |
+| P3-SCL-002 | Active-active multi-region + region-pinned ledger + settlement | P1-PAY-001 | Open | DR drill passed |
+| P3-SCL-003 | Epoch reprojection at scale (zero-downtime migration) | P0-KRN-012 | Open | Billion-row epoch migration |
+| P3-SCL-004 | Chaos drills + game days | P3-SCL-002 | Open | Break-glass + rollback verified |
+
+### 16.5 Phase 4 — AI Commerce, Ecosystem & Agentic (Gate: agentic E2E + audits; M34–36)
+
+| TID | Title | Deps | Status | Acceptance |
+|---|---|---|---|---|
+| P4-AI-001 | AI shopping assistant + visual search at scale | P1-REC-001 | Open | AI-Act transparency compliance |
+| P4-AI-002 | Agentic commerce (signed delegations, scoped spending) | P4-AI-001 | Open | Agent purchase under constitutional policy |
+| P4-AI-003 | Forecasting/ML pricing + seller financing data products | P1-REC-001 | Open | Guardrail policy enforced |
+| P4-MOB-001 | Native mobile apps (offline, push, deep-links, release ops) | P1 | Open | Store release pipeline live |
+| P4-AUD-001 | SOC 2 Type II + ISO 27001 audits | P1-SEC-002 | Open | Reports issued |
+| P4-ECO-001 | Marketplace ads auction optimization | P1-MON-002 | Open | CPC auction stable at scale |
+
+### 16.6 Cross-Cutting (Continuous)
+
+| TID | Title | Status | Acceptance |
+|---|---|---|---|
+| PX-OPS-001 | Runbooks per service + on-call + game days | Open | Runbook per service in repo |
+| PX-OPS-002 | Finance-ops (recon exceptions queue staffed) | Open | Daily recon SLA met |
+| PX-OPS-003 | Tenant/seller documentation + academies | Open | Docs site live |
+| PX-SEC-001 | Pentests + bug bounty + dependency patch SLAs | Open | Cadence met |
+| PX-CNT-001 | Content cold-start ongoing (rule packs, translations, schemas) | Open | Pack coverage per market |
+| PX-FIN-001 | Capacity reviews + FinOps per-tenant attribution | Open | Unit economics per tenant |
+
+**Register status snapshot (Epoch 2, 2026-09-06):** 78 items · 1 In-Progress · 77 Open · Gates 5 · Critical path: P0-KRN-001→002→006→008→(CTR-003/004)→Gate M1.
