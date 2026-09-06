@@ -71,3 +71,28 @@ export class PaymentsService {
     this.ledgerRefs.push({ pspRef, amount, refunded: 0 });
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+
+const paymentsModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, _packs: Record<string, unknown>) {
+    const svc = new PaymentsService();
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      register: (a: PspAdapter) => svc.register(a),
+      route: (n: string) => svc.route(n),
+      authorize: (total: number, c: string, tok: string) => (meter('payment.authorized'), svc.authorize(total, c, tok)),
+      capture: (ref: string) => svc.capture(ref),
+      refund: (ref: string, amt: number) => svc.refund(ref, amt),
+      recordCapture: (ref: string, amt: number) => svc.recordCapture(ref, amt),
+      __raw: svc,
+    };
+  },
+};
+
+export default paymentsModule;

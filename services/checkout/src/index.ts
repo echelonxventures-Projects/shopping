@@ -231,3 +231,27 @@ export class CheckoutService {
     }
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+import type { WorkflowDef as __WorkflowDef, RuleDef as __RuleDef } from '@aether/kernel-primitives';
+
+const checkoutModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as { workflows: __WorkflowDef[]; rules: __RuleDef[]; idSchemes: Array<Record<string, unknown>> };
+    const svc = new CheckoutService(pack.workflows[0]!, pack.rules ?? [], pack.idSchemes ?? []);
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      checkout: (t: string, cart: Cart, hooks: SagaHooks, idem: string) => (meter('order.placed'), svc.checkout(t, cart, hooks, idem)),
+      commissionFor: (s: string, a: number, c?: string) => svc.commissionFor(s, a, c),
+      postToLedger: (l: Ledger, id: string, r: CheckoutResult) => svc.postToLedger(l, id, r),
+      __raw: svc,
+    };
+  },
+};
+
+export default checkoutModule;

@@ -250,3 +250,25 @@ export class SearchService {
     return this.engine.query(q);
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+
+const searchModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const policy = (Object.values(packs)[0] as { policy?: { fuzzyEnabled?: boolean; defaultLimit?: number } }).policy;
+    const svc = new SearchService(new MemorySearchEngine());
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      indexProduct: (t: string, p: { id: string; title: string; attributes: Record<string, unknown> }, extra?: string) => svc.indexProduct(t, p, extra),
+      search: (q: SearchQuery) => (meter('search.query'), svc.search({ ...q, fuzzy: q.fuzzy ?? policy?.fuzzyEnabled ?? true })),
+      __raw: svc,
+    };
+  },
+};
+
+export default searchModule;

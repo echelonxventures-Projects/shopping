@@ -98,3 +98,29 @@ export class InventoryService {
     this.reapExpired();
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+
+const inventoryModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const policy = (Object.values(packs)[0] as { policy?: Partial<ReservationPolicy> }).policy;
+    const svc = new InventoryService(policy);
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      setStock: (o: string, q: number) => svc.setStock(o, q),
+      available: (o: string) => svc.available(o),
+      reserve: (l: Array<{ offerId: string; qty: number }>) => svc.reserve(l),
+      commit: (ids: string[]) => (meter('reservation.committed'), svc.commit(ids)),
+      release: (ids: string[]) => svc.release(ids),
+      reappear: () => svc.reappear(),
+      __raw: svc,
+    };
+  },
+};
+
+export default inventoryModule;

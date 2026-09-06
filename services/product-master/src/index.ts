@@ -281,3 +281,34 @@ export interface UniversalProductPack {
   uoms?: UomDef[];
   lifecycleWorkflow: WorkflowDef;
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+
+const productMasterModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as UniversalProductPack;
+    const svc = new ProductMasterService(pack);
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      createProduct: (p: Product) => (meter('product.created'), svc.createProduct(p)),
+      createSku: (s: Sku, t: string) => (meter('sku.created'), svc.createSku(s, t)),
+      validateTaxonomyPath: (p: string[]) => svc.validateTaxonomyPath(p),
+      validateAttributes: (p: { id: string; taxonomyPath: string[]; productType: string }, a: Record<string, unknown>) => svc.validateAttributes(p, a),
+      validateIdentity: (s: string, c: Record<string, string>) => svc.validateIdentity(s, c),
+      relate: (r: ProductRelationship) => svc.relate(r),
+      relationsOf: (id: string, k?: ProductRelationKind) => svc.relationsOf(id, k),
+      lifecycleTransition: (p: Product, to: string, trig: string) => svc.lifecycleTransition(p, to, trig),
+      convertUom: (v: number, f: string, to: string) => svc.convertUom(v, f, to),
+      visibleTaxonomy: (m: DeploymentModeConfig) => svc.visibleTaxonomy(m),
+      productVisibleInStorefront: (m: DeploymentModeConfig, p: Product) => svc.productVisibleInStorefront(m, p),
+      __raw: svc,
+    };
+  },
+};
+
+export default productMasterModule;

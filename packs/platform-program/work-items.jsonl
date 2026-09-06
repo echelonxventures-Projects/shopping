@@ -330,5 +330,16 @@
       "P0-KRN-004"
     ],
     "acceptance": "world tests 9/9 green \u2014 new world = one pack entry, zero code (Europa test proves it)"
+  },
+  {
+    "tid": "P0-KRN-015",
+    "title": "Module conversion wave \u2014 all 11 services as AetherModule contracts (manifest + bundled packs + metered APIs); all-modules plug-and-play proof (headless load, swappable billing, catalog of 11 sellable offers, cross-module commerce chain E2E)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-014"
+    ],
+    "acceptance": "kernel/proof/all-modules.test.ts 5/5; 162/162 total"
   }
 ]

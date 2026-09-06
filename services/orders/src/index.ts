@@ -138,3 +138,30 @@ function defaultDbPath(): string {
   const { tmpdir } = require('node:os') as typeof import('node:os');
   return join(tmpdir(), 'aether-orders', 'orders.jsonl');
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+import { MemoryEngine as __MemoryEngine } from '@aether/kernel-storage/src/index.ts';
+import type { WorkflowDef as __WorkflowDef } from '@aether/kernel-primitives';
+
+const ordersModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as { workflows: __WorkflowDef[] };
+    const svc = new OrdersService(pack.workflows[0]!, new __MemoryEngine());
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      place: (o: Parameters<OrdersService['place']>[0]) => (meter('order.stored'), svc.place(o)),
+      get: (t: string, id: string) => svc.get(t, id),
+      transition: (t: string, id: string, to: string, trig: string, facts?: Record<string, unknown>) => (meter('order.transition'), svc.transition(t, id, to, trig, facts)),
+      history: (t: string, id: string) => svc.history(t, id),
+      canTransition: (from: string, to: string, facts?: Record<string, unknown>) => svc.canTransition(from, to, facts),
+      __raw: svc,
+    };
+  },
+};
+
+export default ordersModule;

@@ -165,3 +165,30 @@ export class CatalogService {
     return this.resolver.pick(frame, 'price-display')?.value;
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+import { MemoryEngine as __MemoryEngine } from '@aether/kernel-storage/src/index.ts';
+
+const catalogModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as CatalogPack;
+    const engine = new __MemoryEngine(); // host storage via HostPort.storage() in production wiring
+    const svc = new CatalogService(engine, pack, 'marketplace-sku', 'offer-id');
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      createProduct: (t: string, a: Record<string, unknown>, al?: string[]) => (meter('product.created'), svc.createProduct(t, a, al)),
+      addOffer: (t: string, p: string, o: OfferInput) => (meter('offer.added'), svc.addOffer(t, p, o)),
+      buyBox: (t: string, p: string, f?: { market?: string | null }) => svc.buyBox(t, p, f),
+      listOffers: (t: string, p: string) => svc.listOffers(t, p),
+      displayConfig: (f: { tenant?: string | null; market?: string | null }) => svc.displayConfig(f),
+      __raw: svc,
+    };
+  },
+};
+
+export default catalogModule;

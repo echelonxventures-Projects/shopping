@@ -120,3 +120,27 @@ export class TaxEngine {
     return { rate: hits[0] ? Number(hits[0].outputs['rate'] ?? 0) : 0, ruleName: hits[0]?.ruleName };
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+import type { RuleDef as __RuleDef } from '@aether/kernel-primitives';
+
+const taxModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as { taxRules: __RuleDef[] };
+    const svc = new TaxEngine(pack.taxRules);
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      compute: (fact: TaxFact, lines: TaxedLine[], at?: string) => (meter('tax.computed'), svc.compute(fact, lines, at)),
+      computeLine: (fact: TaxFact, line: TaxedLine, at?: string) => (meter('tax.computed'), svc.computeLine(fact, line, at)),
+      rateAt: (fact: TaxFact, at: string) => svc.rateAt(fact, at),
+      __raw: svc,
+    };
+  },
+};
+
+export default taxModule;

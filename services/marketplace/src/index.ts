@@ -128,3 +128,29 @@ export class MarketplaceService {
     return Number(effects['commissionDiscount'] ?? 0);
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import { readFileSync as __readFileSync } from 'node:fs';
+import { join as __join, dirname as __dirname } from 'node:path';
+import { fileURLToPath as __fileURLToPath } from 'node:url';
+
+const marketplaceModule: AetherModule = {
+  manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+    const pack = Object.values(packs)[0] as SellerPack;
+    const svc = new MarketplaceService(pack);
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      apply: (t: string, s: string) => svc.apply(t, s),
+      advance: (t: string, s: string, to: string, trig: string, guards?: Record<string, boolean>) => svc.advance(t, s, to, trig, guards),
+      score: (t: string, s: string, o?: Partial<Record<string, number>>) => svc.score(t, s, o),
+      enforce: (t: string, s: string) => (meter('enforcement.checked'), svc.enforce(t, s)),
+      rollingReservePct: (t: string, s: string) => svc.rollingReservePct(t, s),
+      commissionAdjust: (t: string, s: string) => svc.commissionAdjust(t, s),
+      __raw: svc,
+    };
+  },
+};
+
+export default marketplaceModule;
