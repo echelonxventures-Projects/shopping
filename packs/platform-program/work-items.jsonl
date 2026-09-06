@@ -230,5 +230,36 @@
       "P1-PAY-001"
     ],
     "acceptance": "kernel/proof/e2e-purchase.test.ts 2/2 green; zero domain code"
+  },
+  {
+    "tid": "P1-ORD-001",
+    "title": "Orders service \u2014 pack workflow state machine on durable storage, bitemporal lifecycle",
+    "phase": "P1",
+    "workstream": "ORD",
+    "status": "Done",
+    "dependencies": [
+      "P1-CRT-001"
+    ],
+    "acceptance": "orders tests 9/9 green incl. illegal-transition rejection + history"
+  },
+  {
+    "tid": "P1-TAX-001",
+    "title": "Tax Engine v2 \u2014 bitemporal pack rates, inclusive/exclusive, facilitator, reverse-charge, explainability",
+    "phase": "P1",
+    "workstream": "TAX",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "tax tests 8/8 green incl. point-in-time rates"
+  },
+  {
+    "tid": "P0-CTR-005",
+    "title": "Git-as-ECR \u2014 repo/branch/commit/tag entities, relationships, remotes+policies as pack config",
+    "phase": "P0",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-010"
+    ],
+    "acceptance": "git tests 5/5 green; remote URL from pack, zero literals"
   }
 ]

@@ -626,6 +626,7 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 |---|---|---|---|---|
 | P0-CTR-003 | Storage SPI (engine classes, capability negotiation) | CTR | Done | Second storage engine admitted (gate condition) |
 | P0-CTR-004 | Conformance harness v1 (generated contract-test matrix) | CTR | Done | Auto admit/reject adapter packs |
+| P0-CTR-005 | Git-as-ECR — repo/branch/commit/tag entities, relationships, remotes+policies as pack config | CTR | Done | git tests 5/5 green; remote URL from pack, zero literals |
 | P0-GOV-001 | Program-as-data: TIDs as U²IDs, workflow states, lint packs, §16 projection | GOV | Done | Ad-hoc register scripts deleted; §16.7 generated |
 | P0-KRN-001 | Kernel Data Model v0 + clothing-brand worked example | KRN | Done | Model in kernel/ + fixture passes |
 | P0-KRN-002 | Entity primitive (grammar, attrs, inheritance, epochs) | KRN | Done | Entity types creatable at runtime; bitemporal |
@@ -644,9 +645,11 @@ Per the ECR-recursion doctrine, the build program itself is kernel data: work it
 | P1-CRT-001 | Cart + checkout saga (multi-vendor split, idempotency, compensations) | CRT | Done | checkout saga tests 8/8 green incl. ledger invariants |
 | P1-E2E-001 | E2E purchase proof: catalog→inventory→checkout→payments→ledger | E2E | Done | kernel/proof/e2e-purchase.test.ts 2/2 green; zero domain code |
 | P1-INV-001 | Inventory service (atomic reservations, TTL, oversell=0) | INV | Done | inventory tests 4/4 green |
+| P1-ORD-001 | Orders service — pack workflow state machine on durable storage, bitemporal lifecycle | ORD | Done | orders tests 9/9 green incl. illegal-transition rejection + history |
 | P1-PAY-001 | Payments PSP adapter SPI + SAQ-A floor + refund guards | PAY | Done | payments tests 4/4 green incl. PAN rejection |
+| P1-TAX-001 | Tax Engine v2 — bitemporal pack rates, inclusive/exclusive, facilitator, reverse-charge, explainability | TAX | Done | tax tests 8/8 green incl. point-in-time rates |
 
-**Status counts:** 21 Done · total 21
+**Status counts:** 24 Done · total 24
 
-*Generated 2026-09-06T11:25:03.824Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
-**Register status snapshot (Epoch 2.4, 2026-09-06):** §16.7 = live status: **21 items Done** (Phase-0 kernel complete + M1 passed; Phase-1: catalog, checkout saga, inventory, payments, **full E2E purchase proof** — `kernel/proof/e2e-purchase.test.ts`: pack-driven browse→buy-box→reserve→pay→ledger with oversell-blocking and SAQ-A floor verified). 75/75 tests, lint, typecheck green; CI enforces gates + §16.7 staleness. Next per sequence: P1-ORD-001 persistence (order transitions on durable storage), P1-TAX-001 (Tax Engine v2), P1-SRC-001 (search service), P1-MON-001 (metering/entitlements), P1-MKT-001 (marketplace KYC/seller), P1-LOG-001 (logistics). Production-deploy readiness continues per §7 Phases.
+*Generated 2026-09-06T13:04:00.938Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
+**Register status snapshot (Epoch 2.5, 2026-09-06):** §16.7 = live status: **24 items Done**. New: orders (persistent pack-driven state machine, 9/9), Tax Engine v2 (bitemporal rates, inclusive/exclusive math, marketplace-facilitator, B2B reverse charge, per-line explainability, point-in-time rate reconstruction, 8/8), **Git-as-ECR** (P0-CTR-005): repository/branch/commit/tag entities + parent-of/branch-of/tags/tracks-remote relationships + remotes/policies as pack config — remote `origin → github.com/echelonxventures-Projects/shopping` registered as DATA (`packs/git-integration/pack.json`), never code (5/5). 84/84 tests, lint, typecheck green. Next per sequence: P1-SRC-001 (search service), P1-MON-001 (monetization metering/entitlements), P1-MKT-001 (marketplace/KYC), P1-LOG-001 (logistics/returns).

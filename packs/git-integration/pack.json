@@ -1,0 +1,21 @@
+{
+  "$comment": "Git configuration pack — repositories, remotes, policies as DATA (Git-as-ECR). URLs/branches/policies live here, never in code.",
+  "pack": { "name": "git-integration", "version": "1.0.0", "kind": "capability-pack" },
+  "git": {
+    "repositories": [
+      {
+        "id": "aethercommerce-platform",
+        "localPath": ".",
+        "defaultBranch": "main",
+        "remotes": [
+          { "name": "origin", "url": "https://github.com/echelonxventures-Projects/shopping.git", "push": true }
+        ]
+      }
+    ],
+    "policies": {
+      "protectedBranches": ["main"],
+      "conventionalCommits": true,
+      "requireUpstream": true
+    }
+  }
+}
