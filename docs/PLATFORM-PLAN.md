@@ -506,17 +506,17 @@ Registry/context/relationship schemas drafted as the first Phase-0 deliverable: 
 
 | TID | Title | Workstream | Deps | Status | Acceptance |
 |---|---|---|---|---|---|
-| **P0-KRN-001** | Kernel Data Model v0 (registry/context/relationship/epoch/U²ID/rule-pack schemas + clothing-brand worked example) | Kernel | — | In-Progress | Model drafted in kernel/ + example fixture passes |
-| **P0-KRN-002** | Entity primitive (type grammar, JSON-Schema attrs, inheritance, epoch versioning) | Kernel | 001 | Open | Create entity type at runtime; bitemporal versions |
-| **P0-KRN-003** | Relationship primitive (typed directed edges, cardinality) | Kernel | 002 | Open | Edge CRUD + graph query API |
-| **P0-KRN-004** | Context primitive (tenant×market×locale×channel×audience×time resolution frame) | Kernel | 002 | Open | Resolver picks correct entity version per frame |
-| **P0-KRN-005** | Behavior, Rule, Workflow, Policy primitives | Kernel | 002 | Open | Config-defined lifecycle + rule eval demo |
-| **P0-KRN-006** | Metadata Registry service (epoch manifests, schema-version pinning) | Kernel | 002-005 | Open | Registry HA reads; epoch publish/rollback |
-| **P0-KRN-007** | Context Resolver service (<5ms P95 cached) | Kernel | 004,006 | Open | Multi-level cache; <5ms P95 budget test |
-| **P0-KRN-008** | **Codegen pipeline** — DB projections, typed APIs, SDKs, admin CRUD from epochs | Kernel | 006 | Open | Generated artifacts compile + pass contract tests |
-| **P0-KRN-009** | Model-driven UI renderer v0 (forms/tables from entity schemas) | Kernel | 008 | Open | Auto-rendered CRUD page for new entity type |
-| **P0-KRN-010** | U²ID allocation (scheme registry, auto-alloc at creation, vanity policy) | Kernel | 002,006 | Open | Allocated on all core entities; scheme swap via config |
-| **P0-KRN-011** | Registry-level DLP (attribute classifications; card-data write rejection) | Kernel | 002 | Open | Card-typed attribute rejected at registry write |
+| **P0-KRN-001** | Kernel Data Model v0 (registry/context/relationship/epoch/U²ID/rule-pack schemas + clothing-brand worked example) | Kernel | — | Done (v0) | Model drafted in kernel/ + example fixture passes |
+| **P0-KRN-002** | Entity primitive (type grammar, JSON-Schema attrs, inheritance, epoch versioning) | Kernel | 001 | Done (v0) | Create entity type at runtime; bitemporal versions |
+| **P0-KRN-003** | Relationship primitive (typed directed edges, cardinality) | Kernel | 002 | Done (v0) | Edge CRUD + graph query API |
+| **P0-KRN-004** | Context primitive (tenant×market×locale×channel×audience×time resolution frame) | Kernel | 002 | Done (v0, +precedence) | Resolver picks correct entity version per frame |
+| **P0-KRN-005** | Behavior, Rule, Workflow, Policy primitives | Kernel | 002 | Open (defs only; runtime pending) | Config-defined lifecycle + rule eval demo |
+| **P0-KRN-006** | Metadata Registry service (epoch manifests, schema-version pinning) | Kernel | 002-005 | Done (v0, in-mem) | Registry HA reads; epoch publish/rollback |
+| **P0-KRN-007** | Context Resolver service (<5ms P95 cached) | Kernel | 004,006 | Done (v0, cache) | Multi-level cache; <5ms P95 budget test |
+| **P0-KRN-008** | **Codegen pipeline** — DB projections, typed APIs, SDKs, admin CRUD from epochs | Kernel | 006 | Done (v0: DDL/API/UI-schema) | Generated artifacts compile + pass contract tests |
+| **P0-KRN-009** | Model-driven UI renderer v0 (forms/tables from entity schemas) | Kernel | 008 | Open (schema generated; renderer pending) | Auto-rendered CRUD page for new entity type |
+| **P0-KRN-010** | U²ID allocation (scheme registry, auto-alloc at creation, vanity policy) | Kernel | 002,006 | Done (v0: schemes+allocator+U²D) | Allocated on all core entities; scheme swap via config |
+| **P0-KRN-011** | Registry-level DLP (attribute classifications; card-data write rejection) | Kernel | 002 | Done (v0, entity-types) | Card-typed attribute rejected at registry write |
 | **P0-KRN-012** | Compiled-projection engine (no EAV hot-path tax) | Kernel | 006,008 | Open | Hot-path query on projection meets SLO |
 | **P0-KRN-013** | Bitemporal query SDK (point-in-time reads, epoch replay) | Kernel | 006 | Open | "What did entity look like at T" query |
 | P0-CTR-001 | Contract layer: data (Protobuf-class), events (CloudEvents), APIs (OpenAPI/AsyncAPI), telemetry (OTel) | Contracts | — | Open | Contracts published; lint gate in CI |
@@ -618,4 +618,4 @@ Registry/context/relationship schemas drafted as the first Phase-0 deliverable: 
 | PX-CNT-001 | Content cold-start ongoing (rule packs, translations, schemas) | Open | Pack coverage per market |
 | PX-FIN-001 | Capacity reviews + FinOps per-tenant attribution | Open | Unit economics per tenant |
 
-**Register status snapshot (Epoch 2, 2026-09-06):** 78 items · 1 In-Progress · 77 Open · Gates 5 · Critical path: P0-KRN-001→002→006→008→(CTR-003/004)→Gate M1.
+**Register status snapshot (Epoch 2.1, 2026-09-06):** 78 items · 8 Done (v0) · 70 Open · Gates 5 · Critical path: P0-KRN-005 (behavior/rule/workflow/policy runtime) → KRN-012/013 → CTR-003/004 → Gate M1. **Build proof (P0-KRN-001 acceptance):** clothing-brand vertical derived end-to-end from `packs/acmewear-clothing/pack.json` through registry epochs, DLP gate, U²ID/U²D, context resolution (per-market size charts), and codegen (DDL/API/UI) — 21/21 tests, lint, typecheck green. Zero hardcoded domain code.

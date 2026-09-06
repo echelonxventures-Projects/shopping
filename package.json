@@ -1,0 +1,24 @@
+{
+  "name": "aethercommerce",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AetherCommerce — global multi-tenant, multi-vendor, zero-hardcode commerce platform (ECR kernel)",
+  "type": "module",
+  "workspaces": [
+    "kernel/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "test": "node --test kernel/primitives/test/*.test.ts kernel/registry/test/*.test.ts kernel/context/test/*.test.ts kernel/uid/test/*.test.ts kernel/codegen/test/*.test.ts kernel/proof/*.test.ts",
+    "lint": "node scripts/lint.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

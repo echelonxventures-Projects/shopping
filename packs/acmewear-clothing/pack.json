@@ -1,0 +1,97 @@
+{
+  "$comment": "AetherCommerce Reference Pack: AcmeWear clothing brand — the worked example proving Doctrine 1 (ECR derivation). A complete vertical as pure config data. Refs P0-KRN-001, P0-CTR-003.",
+  "pack": {
+    "name": "acmewear-clothing",
+    "version": "1.0.0",
+    "kind": "reference-pack"
+  },
+  "entityTypes": [
+    {
+      "id": "et_apparel_v1",
+      "kind": "entity-type",
+      "name": "Apparel",
+      "extends": null,
+      "attributes": {
+        "size": { "type": "string", "classification": "public", "required": true },
+        "color": { "type": "string", "classification": "public", "required": true },
+        "fabric": { "type": "string", "classification": "public" },
+        "season": { "type": "string", "classification": "public" },
+        "hsCode": { "type": "string", "classification": "public", "required": true },
+        "countryOfOrigin": { "type": "string", "classification": "public", "required": true }
+      },
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "id": "rel_variant_of",
+      "kind": "relationship-type",
+      "name": "variant-of",
+      "fromType": "Apparel",
+      "toType": "Apparel",
+      "cardinality": "many-many",
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rel_styled_with",
+      "kind": "relationship-type",
+      "name": "styled-with",
+      "fromType": "Apparel",
+      "toType": "Apparel",
+      "cardinality": "many-many",
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "behaviorPacks": [
+    {
+      "id": "bp_physical_fulfillment",
+      "kind": "behavior-pack",
+      "name": "physical-fulfillment",
+      "capability": "fulfillment",
+      "config": { "grading": ["restock", "outlet", "liquidate"], "returnWindowDays": 30 },
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "contextualConfig": [
+    {
+      "id": "ctx_size_us",
+      "scope": { "tenant": "acmewear", "market": "US" },
+      "value": { "name": "size-chart", "sizes": ["XS", "S", "M", "L", "XL"] },
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "ctx_size_eu",
+      "scope": { "tenant": "acmewear", "market": "EU" },
+      "value": { "name": "size-chart", "sizes": ["EU-34", "EU-36", "EU-38", "EU-40"] },
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "ctx_theme_default",
+      "scope": {},
+      "value": { "name": "storefront-theme", "primary": "#1a1a2e", "accent": "#e94560" },
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "idSchemes": [
+    { "name": "acme-order", "format": "prefixed-ulid", "prefix": "ord" },
+    { "name": "acme-sku", "format": "opaque-random", "length": 10, "alphabet": "ABCDEFGHJKMNPQRSTUVWXYZ23456789" }
+  ]
+}
