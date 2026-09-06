@@ -261,5 +261,43 @@
       "P0-KRN-010"
     ],
     "acceptance": "git tests 5/5 green; remote URL from pack, zero literals"
+  },
+  {
+    "tid": "P1-SRC-001",
+    "title": "Search service \u2014 engine-agnostic SPI, facets, fuzzy, tenant isolation, conformance admission",
+    "phase": "P1",
+    "workstream": "SRC",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "search tests 7/7 green"
+  },
+  {
+    "tid": "P1-MON-001",
+    "title": "Monetization \u2014 billable resources, metering, tiered/per-unit/%-GMV rating, entitlements, invoicing",
+    "phase": "P1",
+    "workstream": "MON",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "monetization tests 7/7 green"
+  },
+  {
+    "tid": "P1-MKT-001",
+    "title": "Marketplace \u2014 seller onboarding KYC/AML workflow, scorecard tiers, enforcement ladder, reserves",
+    "phase": "P1",
+    "workstream": "MKT",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "marketplace tests 7/7 green"
+  },
+  {
+    "tid": "P1-CAT-002",
+    "title": "Universal Product Master \u2014 taxonomy hierarchy, attribute engine (no columns), type registry (15 types), identity layer (16 schemes), relationship engine, packaging, UOM, lifecycle, 3 deployment modes",
+    "phase": "P1",
+    "workstream": "CAT",
+    "status": "Done",
+    "dependencies": [
+      "P1-CAT-001"
+    ],
+    "acceptance": "product-master tests 12/12 green; grocery/furniture/hardware/auto/electronics/pharma/digital/services/rental attribute packs proven"
   }
 ]

@@ -1,0 +1,55 @@
+{
+  "$comment": "Monetization core pack — billable resources, rate plans (bitemporal), entitlement grants. Everything is DATA: add a resource or change a rate = edit this pack.",
+  "pack": { "name": "monetization-core", "version": "1.0.0", "kind": "capability-pack" },
+  "billableResources": [
+    { "id": "res_orders", "name": "orders", "unit": "order", "meterEvent": "order.placed" },
+    { "id": "res_storage", "name": "storage", "unit": "GB-day", "meterEvent": "storage.daily" },
+    { "id": "res_api_calls", "name": "api-calls", "unit": "call", "meterEvent": "api.call" },
+    { "id": "res_emails", "name": "emails", "unit": "email", "meterEvent": "email.sent" },
+    { "id": "res_vanity_id", "name": "vanity-id", "unit": "id", "meterEvent": "vanity.allocated" }
+  ],
+  "ratePlans": [
+    {
+      "id": "plan_starter", "name": "Starter",
+      "periodicFee": { "amount": 29, "currency": "USD", "period": "month" },
+      "rates": [
+        { "resource": "orders", "type": "tiered", "tiers": [ { "upTo": 1000, "unitAmount": 0 }, { "upTo": null, "unitAmount": 0.10 } ] },
+        { "resource": "storage", "type": "per-unit", "unitAmount": 0.02 },
+        { "resource": "api_calls", "type": "tiered", "tiers": [ { "upTo": 100000, "unitAmount": 0 }, { "upTo": null, "unitAmount": 0.0001 } ] },
+        { "resource": "emails", "type": "per-unit", "unitAmount": 0.001 },
+        { "resource": "vanity_id", "type": "per-unit", "unitAmount": 2 }
+      ],
+      "includedQuotas": { "orders": 1000, "api_calls": 100000, "emails": 5000 },
+      "grants": { "feature:multi_market": false, "feature:marketplace": false, "feature:custom_domain": false },
+      "validFrom": "2026-01-01T00:00:00Z", "validTo": null
+    },
+    {
+      "id": "plan_growth", "name": "Growth",
+      "periodicFee": { "amount": 199, "currency": "USD", "period": "month" },
+      "rates": [
+        { "resource": "orders", "type": "tiered", "tiers": [ { "upTo": 10000, "unitAmount": 0.05 }, { "upTo": null, "unitAmount": 0.08 } ] },
+        { "resource": "storage", "type": "per-unit", "unitAmount": 0.01 },
+        { "resource": "api_calls", "type": "tiered", "tiers": [ { "upTo": 1000000, "unitAmount": 0 }, { "upTo": null, "unitAmount": 0.00005 } ] },
+        { "resource": "emails", "type": "per-unit", "unitAmount": 0.0005 },
+        { "resource": "vanity_id", "type": "per-unit", "unitAmount": 1 }
+      ],
+      "includedQuotas": { "orders": 10000, "api_calls": 1000000, "emails": 50000 },
+      "grants": { "feature:multi_market": true, "feature:marketplace": true, "feature:custom_domain": true },
+      "validFrom": "2026-01-01T00:00:00Z", "validTo": null
+    },
+    {
+      "id": "plan_enterprise", "name": "Enterprise",
+      "periodicFee": { "amount": 2000, "currency": "USD", "period": "month" },
+      "rates": [
+        { "resource": "orders", "type": "percent-gmv", "rate": 0.005, "minPerPeriod": 500 },
+        { "resource": "storage", "type": "per-unit", "unitAmount": 0.005 },
+        { "resource": "api_calls", "type": "tiered", "tiers": [ { "upTo": null, "unitAmount": 0 } ] },
+        { "resource": "emails", "type": "per-unit", "unitAmount": 0.0002 },
+        { "resource": "vanity_id", "type": "per-unit", "unitAmount": 0 }
+      ],
+      "includedQuotas": { "orders": null, "api_calls": null, "emails": 500000 },
+      "grants": { "feature:multi_market": true, "feature:marketplace": true, "feature:custom_domain": true, "feature:byok": true, "feature:silo_tier": true },
+      "validFrom": "2026-01-01T00:00:00Z", "validTo": null
+    }
+  ]
+}

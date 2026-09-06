@@ -1,0 +1,230 @@
+{
+  "$comment": "Universal Product Pack — the global commerce meta-model as pure data (P1-CAT-002/003). Taxonomies, attribute sets (NO columns), product-type registry, identity schemes, UOM conversions, lifecycle — all configurable. New industry = new pack data.",
+  "pack": { "name": "universal-product", "version": "1.0.0", "kind": "capability-pack" },
+  "taxonomy": [
+    { "id": "dom_retail", "kind": "domain", "name": "Retail & Consumer", "parentId": null },
+    { "id": "dom_food", "kind": "domain", "name": "Food & Grocery", "parentId": null },
+    { "id": "dom_furniture", "kind": "domain", "name": "Furniture & Home", "parentId": null },
+    { "id": "dom_hardware", "kind": "domain", "name": "Construction & Hardware", "parentId": null },
+    { "id": "dom_auto", "kind": "domain", "name": "Automotive", "parentId": null },
+    { "id": "dom_electronics", "kind": "domain", "name": "Electronics", "parentId": null },
+    { "id": "dom_pharma", "kind": "domain", "name": "Healthcare & Pharmaceuticals", "parentId": null },
+    { "id": "dom_digital", "kind": "domain", "name": "Digital Products", "parentId": null },
+    { "id": "dom_services", "kind": "domain", "name": "Professional Services", "parentId": null },
+    { "id": "dom_rental", "kind": "domain", "name": "Rental Assets", "parentId": null },
+    { "id": "ind_grocery", "kind": "industry", "name": "Grocery", "parentId": "dom_food" },
+    { "id": "cat_furniture_living", "kind": "category", "name": "Living Room", "parentId": "dom_furniture" },
+    { "id": "cat_hardware_fasteners", "kind": "category", "name": "Fasteners", "parentId": "dom_hardware" },
+    { "id": "cat_auto_parts", "kind": "category", "name": "Spare Parts", "parentId": "dom_auto" },
+    { "id": "cat_electronics_mobiles", "kind": "category", "name": "Mobiles", "parentId": "dom_electronics" },
+    { "id": "cat_pharma_rx", "kind": "category", "name": "Prescription Medicines", "parentId": "dom_pharma" },
+    { "id": "cat_digital_software", "kind": "category", "name": "Software", "parentId": "dom_digital" },
+    { "id": "cat_services_consulting", "kind": "category", "name": "Consulting", "parentId": "dom_services" },
+    { "id": "fam_bolts", "kind": "product-family", "name": "Hex Bolts", "parentId": "cat_hardware_fasteners" },
+    { "id": "model_bolt_m10", "kind": "product-model", "name": "M10 x 50mm A2 Stainless", "parentId": "fam_bolts" },
+    { "id": "fam_milk", "kind": "product-family", "name": "Fresh Milk", "parentId": "ind_grocery" },
+    { "id": "model_milk_1l", "kind": "product-model", "name": "Organic Whole Milk 1L", "parentId": "fam_milk" }
+  ],
+  "attributeSets": [
+    {
+      "id": "attrs_grocery_compliance", "name": "grocery_compliance",
+      "bindsTo": { "taxonomyPath": "dom_food" },
+      "attributes": [
+        { "name": "expiryDate", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "manufacturingDate", "group": "compliance", "type": "string" },
+        { "name": "storageCondition", "group": "compliance", "type": "enum", "enumValues": ["ambient", "chilled", "frozen"], "validation": { "required": true } },
+        { "name": "temperatureMaxC", "group": "compliance", "type": "measure", "unit": "celsius" },
+        { "name": "lotNumber", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "ingredients", "group": "nutritional", "type": "array" },
+        { "name": "allergens", "group": "nutritional", "type": "array" },
+        { "name": "countryOfOrigin", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "caloriesPer100g", "group": "nutritional", "type": "measure", "unit": "kcal" },
+        { "name": "organicCertified", "group": "compliance", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "attrs_furniture", "name": "furniture_core",
+      "bindsTo": { "taxonomyPath": "dom_furniture" },
+      "attributes": [
+        { "name": "material", "group": "physical", "type": "string", "validation": { "required": true } },
+        { "name": "lengthCm", "group": "physical", "type": "measure", "unit": "cm" },
+        { "name": "widthCm", "group": "physical", "type": "measure", "unit": "cm" },
+        { "name": "heightCm", "group": "physical", "type": "measure", "unit": "cm" },
+        { "name": "weightKg", "group": "physical", "type": "measure", "unit": "kg" },
+        { "name": "woodType", "group": "physical", "type": "string" },
+        { "name": "fabricType", "group": "physical", "type": "string" },
+        { "name": "assemblyRequired", "group": "logistics", "type": "boolean" },
+        { "name": "installationService", "group": "logistics", "type": "boolean" },
+        { "name": "roomMapping", "group": "merchandising", "type": "enum", "enumValues": ["living", "bedroom", "office", "outdoor"] }
+      ]
+    },
+    {
+      "id": "attrs_hardware", "name": "hardware_core",
+      "bindsTo": { "taxonomyPath": "dom_hardware" },
+      "attributes": [
+        { "name": "threadSize", "group": "specifications", "type": "string", "validation": { "required": true } },
+        { "name": "diameterMm", "group": "specifications", "type": "measure", "unit": "mm", "validation": { "required": true } },
+        { "name": "lengthMm", "group": "specifications", "type": "measure", "unit": "mm" },
+        { "name": "materialGrade", "group": "specifications", "type": "string" },
+        { "name": "tolerance", "group": "specifications", "type": "string" },
+        { "name": "finish", "group": "specifications", "type": "string" },
+        { "name": "loadCapacityKg", "group": "specifications", "type": "measure", "unit": "kg" },
+        { "name": "torqueRatingNm", "group": "specifications", "type": "measure", "unit": "nm" }
+      ]
+    },
+    {
+      "id": "attrs_auto", "name": "automotive_core",
+      "bindsTo": { "taxonomyPath": "dom_auto" },
+      "attributes": [
+        { "name": "compatibleMakes", "group": "compatibility", "type": "array", "validation": { "required": true } },
+        { "name": "compatibleModels", "group": "compatibility", "type": "array" },
+        { "name": "yearFrom", "group": "compatibility", "type": "number" },
+        { "name": "yearTo", "group": "compatibility", "type": "number" },
+        { "name": "engineType", "group": "compatibility", "type": "enum", "enumValues": ["petrol", "diesel", "electric", "hybrid"] },
+        { "name": "oemNumber", "group": "identity", "type": "string" },
+        { "name": "installationLaborHours", "group": "logistics", "type": "measure", "unit": "hour" }
+      ]
+    },
+    {
+      "id": "attrs_electronics", "name": "electronics_core",
+      "bindsTo": { "taxonomyPath": "dom_electronics" },
+      "attributes": [
+        { "name": "imei", "group": "identity", "type": "string" },
+        { "name": "serialNumber", "group": "identity", "type": "string" },
+        { "name": "firmwareVersion", "group": "specifications", "type": "string" },
+        { "name": "warrantyMonths", "group": "compliance", "type": "number" },
+        { "name": "voltage", "group": "specifications", "type": "measure", "unit": "volt" },
+        { "name": "powerRatingW", "group": "specifications", "type": "measure", "unit": "watt" },
+        { "name": "energyRating", "group": "compliance", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_pharma", "name": "pharma_compliance",
+      "bindsTo": { "taxonomyPath": "dom_pharma" },
+      "attributes": [
+        { "name": "udi", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "regulatoryApproval", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "expiryDate", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "batchNumber", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "storageCompliance", "group": "compliance", "type": "string" },
+        { "name": "prescriptionRequired", "group": "compliance", "type": "boolean", "validation": { "required": true } }
+      ]
+    },
+    {
+      "id": "attrs_digital", "name": "digital_core",
+      "bindsTo": { "taxonomyPath": "dom_digital" },
+      "attributes": [
+        { "name": "licenseMode", "group": "entitlement", "type": "enum", "enumValues": ["license-key", "account-bound", "site-license"], "validation": { "required": true } },
+        { "name": "downloadSizeMb", "group": "technical", "type": "measure", "unit": "mb" },
+        { "name": "drmScheme", "group": "entitlement", "type": "string" },
+        { "name": "activationLimit", "group": "entitlement", "type": "number" },
+        { "name": "streamingRights", "group": "entitlement", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "attrs_services", "name": "services_core",
+      "bindsTo": { "taxonomyPath": "dom_services" },
+      "attributes": [
+        { "name": "durationMinutes", "group": "delivery", "type": "measure", "unit": "minute", "validation": { "required": true } },
+        { "name": "slaHours", "group": "delivery", "type": "number" },
+        { "name": "requiresLocation", "group": "delivery", "type": "boolean" },
+        { "name": "workforceSkill", "group": "delivery", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_rental", "name": "rental_core",
+      "bindsTo": { "taxonomyPath": "dom_rental" },
+      "attributes": [
+        { "name": "rentalDurationHours", "group": "rental", "type": "measure", "unit": "hour" },
+        { "name": "securityDeposit", "group": "rental", "type": "number" },
+        { "name": "damagePolicy", "group": "rental", "type": "string" },
+        { "name": "inspectionRequired", "group": "rental", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "attrs_universal", "name": "product_master_universal",
+      "bindsTo": {},
+      "attributes": [
+        { "name": "hsCode", "group": "compliance", "type": "string", "validation": { "required": true, "pattern": "^[0-9]{4}\\.?[0-9]{0,6}$" } },
+        { "name": "countryOfOrigin", "group": "compliance", "type": "string" },
+        { "name": "brand", "group": "identity", "type": "string" },
+        { "name": "unspsc", "group": "classification", "type": "string" },
+        { "name": "gpc", "group": "classification", "type": "string" }
+      ]
+    }
+  ],
+  "productTypes": [
+    { "name": "physical", "fulfillment": "physical", "inventoryTracked": "simple", "requires": ["product_master_universal"] },
+    { "name": "perishable", "fulfillment": "physical", "inventoryTracked": "batch-lot", "requires": ["product_master_universal", "grocery_compliance"] },
+    { "name": "pharma", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal", "pharma_compliance"] },
+    { "name": "digital", "fulfillment": "digital", "inventoryTracked": "none", "entitlement": { "mode": "license-key", "limits": { "devices": 5, "downloads": 10 } }, "requires": ["product_master_universal", "digital_core"] },
+    { "name": "service", "fulfillment": "service", "inventoryTracked": "none", "entitlement": { "mode": "booking-slot" }, "requires": ["product_master_universal", "services_core"] },
+    { "name": "rental", "fulfillment": "rental", "inventoryTracked": "serialized", "entitlement": { "mode": "booking-slot" }, "requires": ["product_master_universal", "rental_core"] },
+    { "name": "subscription", "fulfillment": "none", "inventoryTracked": "none", "entitlement": { "mode": "account-bound" }, "requires": ["product_master_universal"] },
+    { "name": "vehicle", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal"] },
+    { "name": "equipment", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal"] },
+    { "name": "consumable", "fulfillment": "physical", "inventoryTracked": "batch-lot", "requires": ["product_master_universal"] },
+    { "name": "raw-material", "fulfillment": "physical", "inventoryTracked": "batch-lot", "requires": ["product_master_universal"] },
+    { "name": "warranty", "fulfillment": "none", "inventoryTracked": "none", "entitlement": { "mode": "account-bound" }, "requires": ["product_master_universal"] },
+    { "name": "course", "fulfillment": "digital", "inventoryTracked": "none", "entitlement": { "mode": "account-bound", "limits": { "seats": 1 } }, "requires": ["product_master_universal", "digital_core"] },
+    { "name": "event-ticket", "fulfillment": "digital", "inventoryTracked": "serialized", "entitlement": { "mode": "license-key" }, "requires": ["product_master_universal"] },
+    { "name": "insurance", "fulfillment": "none", "inventoryTracked": "none", "entitlement": { "mode": "account-bound" }, "requires": ["product_master_universal"] }
+  ],
+  "identitySchemes": [
+    { "code": "SKU", "pattern": "^[A-Za-z0-9-]{3,40}$", "uniquePer": "sku" },
+    { "code": "GTIN", "pattern": "^[0-9]{8}$|^[0-9]{12,14}$", "uniquePer": "global" },
+    { "code": "UPC", "pattern": "^[0-9]{12}$", "uniquePer": "global" },
+    { "code": "EAN", "pattern": "^[0-9]{13}$", "uniquePer": "global" },
+    { "code": "ISBN", "pattern": "^(97[89]-?)?[0-9-]{9,13}$", "uniquePer": "global" },
+    { "code": "ISSN", "pattern": "^[0-9]{4}-[0-9]{3}[0-9X]$", "uniquePer": "global" },
+    { "code": "MPN", "uniquePer": "sku" },
+    { "code": "OEM", "uniquePer": "sku" },
+    { "code": "VIN", "pattern": "^[A-HJ-NPR-Z0-9]{17}$", "uniquePer": "serialized-item" },
+    { "code": "IMEI", "pattern": "^[0-9]{15}$", "uniquePer": "serialized-item" },
+    { "code": "serial", "uniquePer": "serialized-item" },
+    { "code": "batch", "uniquePer": "sku" },
+    { "code": "lot", "uniquePer": "sku" },
+    { "code": "hsCode", "pattern": "^[0-9]{4}\\.?[0-9]{0,6}$", "uniquePer": "sku" },
+    { "code": "CAS", "pattern": "^[0-9]{2,7}-[0-9]{2}-[0-9]$", "uniquePer": "global" },
+    { "code": "UNSPSC", "pattern": "^[0-9]{8}$", "uniquePer": "global" }
+  ],
+  "uoms": [
+    { "id": "kg", "dimension": "weight", "name": "kilogram", "conversions": { "g": 1000, "lb": 2.20462, "tonne": 0.001 } },
+    { "id": "g", "dimension": "weight", "name": "gram", "conversions": { "kg": 0.001 } },
+    { "id": "lb", "dimension": "weight", "name": "pound", "conversions": { "kg": 0.453592 } },
+    { "id": "l", "dimension": "volume", "name": "litre", "conversions": { "ml": 1000, "m3": 0.001 } },
+    { "id": "ml", "dimension": "volume", "name": "millilitre", "conversions": { "l": 0.001 } },
+    { "id": "m", "dimension": "length", "name": "metre", "conversions": { "cm": 100, "mm": 1000, "ft": 3.28084, "in": 39.3701 } },
+    { "id": "cm", "dimension": "length", "name": "centimetre", "conversions": { "m": 0.01, "mm": 10 } },
+    { "id": "mm", "dimension": "length", "name": "millimetre", "conversions": { "cm": 0.1, "m": 0.001 } },
+    { "id": "m2", "dimension": "area", "name": "square metre", "conversions": { "ft2": 10.7639 } },
+    { "id": "hour", "dimension": "time", "name": "hour", "conversions": { "minute": 60, "second": 3600 } },
+    { "id": "minute", "dimension": "time", "name": "minute", "conversions": { "hour": 0.0166667, "second": 60 } },
+    { "id": "volt", "dimension": "power", "name": "volt" },
+    { "id": "watt", "dimension": "power", "name": "watt", "conversions": { "kw": 0.001 } },
+    { "id": "kw", "dimension": "power", "name": "kilowatt", "conversions": { "watt": 1000 } },
+    { "id": "celsius", "dimension": "temperature", "name": "celsius" },
+    { "id": "kcal", "dimension": "energy", "name": "kilocalorie", "conversions": { "kj": 4.184 } },
+    { "id": "kj", "dimension": "energy", "name": "kilojoule", "conversions": { "kcal": 0.239006 } },
+    { "id": "nm", "dimension": "pressure", "name": "newton-metre" },
+    { "id": "mb", "dimension": "count", "name": "megabyte", "conversions": { "gb": 0.001 } },
+    { "id": "gb", "dimension": "count", "name": "gigabyte", "conversions": { "mb": 1000 } },
+    { "id": "each", "dimension": "count", "name": "each" }
+  ],
+  "lifecycleWorkflow": {
+    "id": "wf_product_lifecycle", "kind": "workflow", "name": "product-lifecycle", "entityTypeId": "et_product",
+    "states": ["draft", "review", "approved", "published", "suspended", "discontinued", "archived"],
+    "transitions": [
+      { "from": "draft", "to": "review", "trigger": "submitted" },
+      { "from": "review", "to": "approved", "trigger": "moderation-passed" },
+      { "from": "review", "to": "draft", "trigger": "changes-requested" },
+      { "from": "approved", "to": "published", "trigger": "publish" },
+      { "from": "published", "to": "suspended", "trigger": "policy-violation" },
+      { "from": "suspended", "to": "published", "trigger": "reinstated" },
+      { "from": "published", "to": "discontinued", "trigger": "eol-decision" },
+      { "from": "discontinued", "to": "archived", "trigger": "retention-elapsed" }
+    ],
+    "initial": "draft", "epoch": 1,
+    "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+  }
+}
