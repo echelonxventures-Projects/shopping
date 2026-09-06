@@ -5,10 +5,19 @@
 
 export interface IdScheme {
   name: string;
-  format: 'uuidv7' | 'opaque-random' | 'prefixed-ulid' | 'namespaced' | (string & {});
+  format: 'uuidv7' | 'opaque-random' | 'prefixed-ulid' | 'namespaced' | 'structured' | (string & {});
   prefix?: string;
   length?: number;
   alphabet?: string;
+  structured?: {
+    parts: Array<{
+      kind: 'phase' | 'workstream' | 'sequence' | 'epoch' | (string & {});
+      width: number;
+      alphabet?: string;
+      case?: 'upper' | 'lower';
+    }>;
+    separator?: string;
+  };
 }
 
 export const REFERENCE_SCHEME: IdScheme = { name: 'reference-uuidv7', format: 'uuidv7' };
@@ -29,14 +38,29 @@ export class UidAllocator {
     this.schemes[scheme.name] = scheme;
   }
 
-  allocate(schemeName: string, entityType?: string): AllocatedId {
+  allocate(schemeName: string, entityType?: string, context?: Record<string, string | number>): AllocatedId {
     const s = this.schemes[schemeName];
     if (!s) throw new Error(`Unknown ID scheme "${schemeName}" — register it first (registry config)`);
-    const value = this.generate(s, entityType);
+    const value = this.generate(s, entityType, context);
     return { value, scheme: s.name, allocatedAt: new Date().toISOString() };
   }
 
-  private generate(s: IdScheme, entityType?: string): string {
+  private generate(s: IdScheme, entityType?: string, context?: Record<string, string | number>): string {
+    if (s.format === 'structured') {
+      const sep = s.structured!.separator ?? '-';
+      return s.structured!.parts
+        .map((p) => {
+          const alphabet = p.alphabet ?? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          if (p.kind === 'sequence') {
+            const n = Number(context?.sequence ?? Math.floor(Math.random() * alphabet.length ** p.width));
+            return n.toString().padStart(p.width, '0').slice(-p.width);
+          }
+          const raw = String(context?.[p.kind] ?? randomString(p.width, alphabet));
+          const cased = p.case === 'lower' ? raw.toLowerCase() : raw.toUpperCase();
+          return cased.slice(0, p.width);
+        })
+        .join(sep);
+    }
     switch (s.format) {
       case 'uuidv7': {
         const ts = BigInt(Date.now()) << 16n;
@@ -63,6 +87,11 @@ export class UidAllocator {
         throw new Error(`Scheme format "${s.format}" not in Reference Pack — register an adapter (conformance harness, §2.7)`);
     }
   }
+}
+
+function randomString(width: number, alphabet: string): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(width));
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
 }
 
 export class UDictionary {

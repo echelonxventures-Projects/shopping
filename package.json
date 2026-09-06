@@ -13,6 +13,7 @@
     "build": "tsc -b",
     "test": "node --test kernel/primitives/test/*.test.ts kernel/registry/test/*.test.ts kernel/context/test/*.test.ts kernel/uid/test/*.test.ts kernel/codegen/test/*.test.ts kernel/proof/*.test.ts",
     "lint": "node scripts/lint.mjs",
+    "register:project": "node scripts/project-register.mjs",
     "typecheck": "tsc --noEmit"
   },
   "engines": {

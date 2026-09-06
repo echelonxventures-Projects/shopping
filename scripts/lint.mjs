@@ -1,16 +1,31 @@
-// Minimal lint v0: enforces kernel laws (AGENTS.md) — no hardcoded domain concepts in kernel/,
-// no card-data attributes outside tests, no secrets.
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+// Lint — ALL rules sourced from packs/platform-program/pack.json lintRulePack (data, not code).
+// Rule semantics: ALL rows of a decision table must match for the rule to fire (AND logic):
+// a "path" row scopes WHERE the rule applies; a "content" row defines WHAT violates.
+// Adding/changing a lint rule = editing the pack. This file is generic Tier-0 mechanics only.
+import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { RuleEngine } from '@aether/kernel-runtime/src/index.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const failures = [];
+const pack = JSON.parse(readFileSync(join(root, 'packs/platform-program/pack.json'), 'utf8'));
 
-// Law 3: kernel/ holds only invariants — domain words are banned there (except proofs/tests)
-const KERNEL_DOMAIN_BAN = /(marketplace|checkout|shopping|acmewear|stripe|paypal|ups|fedex|dhl)/i;
-// Law: never hardcode markets
-const MARKET_BAN = /['"](US|EU|IN|UK|DE|FR|BR)['"]\s*[:=]/;
+const rules = (pack.lintRulePack ?? []).map((r) => ({
+  id: r.id,
+  name: r.name,
+  priority: r.priority,
+  when: r.decisionTable.map((row) => ({
+    field: row.field,
+    matches: row.matches,
+  })),
+  then: {},
+  validFrom: r.validFrom,
+  validTo: r.validTo,
+  recordedAt: r.recordedAt,
+}));
+
+const engine = new RuleEngine(rules);
+const failures = [];
 
 function walk(dir, cb) {
   for (const f of readdirSync(dir)) {
@@ -24,22 +39,25 @@ function walk(dir, cb) {
   }
 }
 
-walk(join(root, 'kernel'), (p) => {
-  const src = readFileSync(p, 'utf8');
-  const isTestOrProof = /test|proof/.test(p);
-  if (!isTestOrProof && KERNEL_DOMAIN_BAN.test(src)) {
-    failures.push(`kernel domain-ban violation: ${p}`);
-  }
-  if (MARKET_BAN.test(src) && !/packs/.test(p)) {
-    failures.push(`possible hardcoded market: ${p}`);
-  }
-  if (/sk-[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}/.test(src)) {
-    failures.push(`secret-like string: ${p}`);
-  }
-});
+const targetDirs = process.argv.includes('--kernel-only')
+  ? ['kernel']
+  : ['kernel', 'services', 'packs'].filter((d) => existsSync(join(root, d)));
+
+for (const dir of targetDirs) {
+  walk(join(root, dir), (p) => {
+    const relPath = p.replace(root + '/', '');
+    const content = readFileSync(p, 'utf8');
+    const fact = { path: relPath, content };
+    for (const _hit of engine.evaluateAll(fact)) {
+      if (!failures.includes(`${relPath}: rule "${_hit.ruleName}"`)) {
+        failures.push(`${relPath}: rule "${_hit.ruleName}"`);
+      }
+    }
+  });
+}
 
 if (failures.length) {
-  console.error('LINT FAILURES:\n' + failures.join('\n'));
+  console.error('LINT FAILURES (rules from packs/platform-program/pack.json):\n' + failures.join('\n'));
   process.exit(1);
 }
-console.log('lint: OK (kernel domain-ban, market-ban, secret-scan)');
+console.log('lint: OK — all rules sourced from platform-program lintRulePack (data, not code)');

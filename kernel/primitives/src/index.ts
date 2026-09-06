@@ -93,6 +93,7 @@ export interface RuleDef extends Bitemporal {
   name: string;
   decisionTable: Array<Record<string, unknown>>;
   priority: number;
+  evaluator?: string;
   epoch: number;
 }
 

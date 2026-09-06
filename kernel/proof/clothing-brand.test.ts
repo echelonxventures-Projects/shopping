@@ -80,7 +80,12 @@ test('pack-registered ID schemes allocate without code changes', () => {
   const uid = new UidAllocator();
   for (const scheme of pack.idSchemes) uid.registerScheme(scheme);
   const sku = uid.allocate('acme-sku', 'Apparel');
-  assert.match(sku.value, /^[A-HJKMNP-TV-Z2-9]{10}$/);
+  const acmeSku = pack.idSchemes.find((s: { name: string }) => s.name === 'acme-sku') as {
+    alphabet: string;
+    length: number;
+  };
+  const re = new RegExp(`^[${acmeSku.alphabet}]{${acmeSku.length}}$`);
+  assert.match(sku.value, re);
 });
 
 test('codegen: Apparel DDL/API/UI generated from registry epoch — zero hand-written artifacts', () => {

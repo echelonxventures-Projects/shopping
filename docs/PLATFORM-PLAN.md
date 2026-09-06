@@ -618,4 +618,29 @@ Registry/context/relationship schemas drafted as the first Phase-0 deliverable: 
 | PX-CNT-001 | Content cold-start ongoing (rule packs, translations, schemas) | Open | Pack coverage per market |
 | PX-FIN-001 | Capacity reviews + FinOps per-tenant attribution | Open | Unit economics per tenant |
 
+### 16.7 Program Data Projection (generated from packs/platform-program — do not hand-edit)
+
+Per the ECR-recursion doctrine, the build program itself is kernel data: work items are `WorkItem` entity instances; TIDs are U²IDs from the `tid-scheme` (structured ID scheme); dependencies are `depends-on` relationships; statuses are `workitem-lifecycle` workflow states guarded by lint/tests green. §16.1–16.6 tables below remain the historical/human projection of the same program — this section is the machine-synced source of truth for status.
+
+| TID | Title | Workstream | Status | Acceptance |
+|---|---|---|---|---|
+| P0-CTR-003 | Storage SPI (engine classes, capability negotiation) | CTR | Open | Second storage engine admitted (gate condition) |
+| P0-CTR-004 | Conformance harness v1 (generated contract-test matrix) | CTR | Open | Auto admit/reject adapter packs |
+| P0-GOV-001 | Program-as-data: TIDs as U²IDs, workflow states, lint packs, §16 projection | GOV | In-Progress | Ad-hoc register scripts deleted; §16.7 generated |
+| P0-KRN-001 | Kernel Data Model v0 + clothing-brand worked example | KRN | Done | Model in kernel/ + fixture passes |
+| P0-KRN-002 | Entity primitive (grammar, attrs, inheritance, epochs) | KRN | Done | Entity types creatable at runtime; bitemporal |
+| P0-KRN-003 | Relationship primitive (typed edges, cardinality) | KRN | Done | Edge CRUD + graph queries |
+| P0-KRN-004 | Context primitive + precedence resolution | KRN | Done | Most-specific scope wins; cached |
+| P0-KRN-005 | Behavior, Rule, Workflow, Policy runtime | KRN | In-Progress | Rule/workflow engines driven by pack data only |
+| P0-KRN-006 | Metadata Registry service (epochs, pinning) | KRN | Done | Epoch publish/rollback; old epochs resolve |
+| P0-KRN-007 | Context Resolver service (<5ms P95) | KRN | Done | Multi-level cache; budget test |
+| P0-KRN-008 | Codegen pipeline (DDL/API/UI from epochs) | KRN | Done | Generated artifacts compile + pass tests |
+| P0-KRN-010 | U²ID allocation + U²D dictionary | KRN | Done | Scheme registry; never-reuse; merges |
+| P0-KRN-011 | Registry-level DLP (card-data rejection) | KRN | Done | Card-typed attribute rejected at write |
+| P0-KRN-012 | Compiled-projection engine (no EAV tax) | KRN | Open | Hot-path query meets SLO |
+| P0-KRN-013 | Bitemporal query SDK (point-in-time reads) | KRN | Open | 'What did entity look like at T' |
+
+**Status counts:** 9 Done · 2 In-Progress · 4 Open · total 15
+
+*Generated 2026-09-06T07:41:51.815Z by `npm run register:project` · source: packs/platform-program/{pack.json, work-items.jsonl}*
 **Register status snapshot (Epoch 2.1, 2026-09-06):** 78 items · 8 Done (v0) · 70 Open · Gates 5 · Critical path: P0-KRN-005 (behavior/rule/workflow/policy runtime) → KRN-012/013 → CTR-003/004 → Gate M1. **Build proof (P0-KRN-001 acceptance):** clothing-brand vertical derived end-to-end from `packs/acmewear-clothing/pack.json` through registry epochs, DLP gate, U²ID/U²D, context resolution (per-market size charts), and codegen (DDL/API/UI) — 21/21 tests, lint, typecheck green. Zero hardcoded domain code.

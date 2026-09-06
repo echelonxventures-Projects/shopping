@@ -1,0 +1,122 @@
+{
+  "$comment": "Platform Program Pack — the build program itself as ECR data (doctrine recursion). Work items are entity instances; statuses are workflow states; dependencies are relationships; TIDs are U²IDs from a structured scheme; lint rules are rule-pack data. Refs P0-KRN-005, P0-GOV-001.",
+  "pack": { "name": "platform-program", "version": "1.0.0", "kind": "reference-pack" },
+  "entityTypes": [
+    {
+      "id": "et_workitem",
+      "kind": "entity-type",
+      "name": "WorkItem",
+      "attributes": {
+        "title": { "type": "string", "classification": "public", "required": true },
+        "workstream": { "type": "string", "classification": "public" },
+        "status": { "type": "string", "classification": "public", "required": true },
+        "rag": { "type": "string", "classification": "public" },
+        "gate": { "type": "string", "classification": "public" },
+        "acceptance": { "type": "string", "classification": "public" }
+      },
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "id": "rel_depends_on",
+      "kind": "relationship-type",
+      "name": "depends-on",
+      "fromType": "WorkItem",
+      "toType": "WorkItem",
+      "cardinality": "many-many",
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rel_blocks_gate",
+      "kind": "relationship-type",
+      "name": "blocks-gate",
+      "fromType": "WorkItem",
+      "toType": "WorkItem",
+      "cardinality": "many-many",
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "wf_workitem_lifecycle",
+      "kind": "workflow",
+      "name": "workitem-lifecycle",
+      "entityTypeId": "et_workitem",
+      "states": ["Open", "In-Progress", "Blocked", "Done"],
+      "transitions": [
+        { "from": "Open", "to": "In-Progress", "trigger": "work-started" },
+        { "from": "Open", "to": "Blocked", "trigger": "dependency-failed" },
+        { "from": "In-Progress", "to": "Blocked", "trigger": "blocker-found" },
+        { "from": "In-Progress", "to": "Done", "trigger": "acceptance-met", "guardRules": ["lint-green", "tests-green"] },
+        { "from": "Blocked", "to": "In-Progress", "trigger": "blocker-cleared" },
+        { "from": "Blocked", "to": "Done", "trigger": "acceptance-met", "guardRules": ["lint-green", "tests-green"] }
+      ],
+      "initial": "Open",
+      "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "idSchemes": [
+    {
+      "name": "tid-scheme",
+      "format": "structured",
+      "structured": {
+        "parts": [
+          { "kind": "phase", "width": 2 },
+          { "kind": "workstream", "width": 3 },
+          { "kind": "sequence", "width": 3 }
+        ],
+        "separator": "-"
+      }
+    }
+  ],
+  "lintRulePack": [
+    {
+      "id": "rule_kernel_domain_ban",
+      "name": "kernel-domain-ban",
+      "priority": 100,
+      "decisionTable": [
+        { "field": "path", "matches": "^kernel/(?!.*test|.*proof)", "then": { "check": "domain-word-ban" } },
+        { "field": "content", "matches": "[Mm]arketplace|[Cc]heckout|acmewear|[Ss]tripe|[Pp]aypal", "then": { "check": "domain-word-ban" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_market_hardcode_ban",
+      "name": "market-hardcode-ban",
+      "priority": 90,
+      "decisionTable": [
+        { "field": "path", "matches": "^(kernel|services)/", "then": { "check": "market-literal-ban" } },
+        { "field": "content", "matches": "['\"](US|EU|UK|IN|DE|FR|BR)['\"]\\s*[:=]", "then": { "check": "market-literal-ban" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_secret_scan",
+      "name": "secret-scan",
+      "priority": 200,
+      "decisionTable": [
+        { "field": "content", "matches": "sk-[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}", "then": { "check": "secret-ban" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ]
+}
