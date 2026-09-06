@@ -1,0 +1,26 @@
+{
+  "$comment": "Request admission pack — two-step engine admission (preflight + finalize). All thresholds are DATA: change policy = edit pack. Policies: prefill_pressure (pending-prefill token budget per rank), queue_saturation, tpu_slice_occupancy. dp_rank is a context fact, never code.",
+  "pack": { "name": "request-admission", "version": "1.0.0", "kind": "capability-pack" },
+  "policies": [
+    {
+      "name": "prefill_pressure",
+      "appliesTo": "cold-request",
+      "limits": { "maxPendingPrefillTokensPerRank": 32000, "maxConcurrentPrefillsPerRank": 8 }
+    },
+    {
+      "name": "queue_saturation",
+      "appliesTo": "cold-request",
+      "limits": { "maxQueueDepthPerRank": 512 }
+    },
+    {
+      "name": "tpu_slice_occupancy",
+      "appliesTo": "warm-request",
+      "limits": { "maxActiveSlices": 4, "maxTokensPerSlice": 8192 }
+    }
+  ],
+  "twoStep": {
+    "preflightTtlMs": 200,
+    "finalizaRecheckRequired": true,
+    "holdSlotOnPreflight": false
+  }
+}

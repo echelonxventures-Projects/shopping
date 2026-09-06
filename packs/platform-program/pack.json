@@ -117,6 +117,39 @@
       "validFrom": "2026-09-06T00:00:00Z",
       "validTo": null,
       "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_everything_is_product_manifest",
+      "name": "everything-is-a-product-manifest",
+      "priority": 300,
+      "decisionTable": [
+        { "field": "path", "matches": "^services/[^/]+/src/index\\.ts$", "then": { "check": "requires-module-json" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_everything_is_product_packs",
+      "name": "everything-is-a-product-packs",
+      "priority": 300,
+      "decisionTable": [
+        { "field": "path", "matches": "^services/[^/]+/module\\.json$", "then": { "check": "requires-bundled-packs" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_everything_is_product_export",
+      "name": "everything-is-a-product-export",
+      "priority": 300,
+      "decisionTable": [
+        { "field": "path", "matches": "^services/[^/]+/src/index\\.ts$", "then": { "check": "requires-module-default-export" } }
+      ],
+      "validFrom": "2026-09-06T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-09-06T00:00:00Z"
     }
   ]
 }

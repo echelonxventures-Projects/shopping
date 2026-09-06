@@ -1,0 +1,20 @@
+{
+  "id": "mod-world",
+  "name": "@aether/service-world",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Worlds & Calendars (Any Celestial Body)",
+  "description": "World-as-ECR: worlds as entities, orbits/trade-lanes as relationships, world context dimension, calendars/units/SLA/physics as configuration over the atomic-seconds spine. Earth, Luna, Mars shipped; any world = one pack entry.",
+  "capabilities": ["worlds", "calendars", "units", "sla-time", "physics-logistics", "interplanetary"],
+  "packs": ["packs/worlds.json"],
+  "publicApi": ["world", "list", "orbits", "tradeLanes", "toLocalDay", "formatLocal", "formatLocalClock", "slaToSpineSeconds", "spineToSlaDisplay", "convertUnit", "logisticsConstraints", "shipmentModeAllowed", "slaPolicy", "weightDisplayBasis"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "world.format", "unit": "format", "description": "Local calendar/time formatting" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

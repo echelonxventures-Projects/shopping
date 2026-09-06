@@ -9,6 +9,7 @@ AetherCommerce — global multi-tenant, multi-vendor, zero-hardcode commerce pla
 2. Never hardcode: markets, fees, taxes, rules, workflows, product types, ID schemes, crypto policies. All runtime data in `packs/` or the registry.
 3. Kernel code (kernel/) holds only invariants; services/ holds kernel applications; packs/ holds config data.
 4. Tech choices are swappable Reference Packs — refer to technologies as `-class` adapters in docs.
+5. **EVERYTHING IS A PRODUCT** (hard law, lint-enforced): every service ships as a Module-as-a-Product — `module.json` manifest (id/version/capabilities/billing/publicApi), packs bundled INSIDE the service, `export default <name>Module` (AetherModule contract), meterable events declared. No service enters `services/` without being a complete, plug-and-play, billable, sellable, configurable product. `npm run lint` rejects violations.
 
 ## Commands
 - Build: `npm run build` (repo root, workspaces)

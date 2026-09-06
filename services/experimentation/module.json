@@ -1,0 +1,21 @@
+{
+  "id": "mod-experimentation",
+  "name": "@aether/service-experimentation",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Experimentation & Feature Flags",
+  "description": "A/B/n experiments with deterministic assignment, governed rollout steps, two-proportion significance promotion, and pack-configured guardrail kill-switch.",
+  "capabilities": ["experiments", "feature-flags", "ab-testing", "rollout-governance", "kill-switch"],
+  "packs": ["packs/experimentation-core.json"],
+  "publicApi": ["create", "start", "assign", "record", "evaluate", "guardrailCheck", "advanceRollout", "get"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "experiment.exposed", "unit": "exposure", "description": "Subject exposed to a variant" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.00005, "currency": "USD", "perUnit": "exposure" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -1,0 +1,26 @@
+{
+  "$comment": "Recommendations pack — retrieval strategy weights, re-rank policies (diversity/inventory-aware/sponsored-blend), cold-start heuristics, explanation templates. All DATA.",
+  "pack": { "name": "recommendations-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": {
+    "candidates": 20,
+    "finalSlots": 8,
+    "strategies": [
+      { "name": "similar-items", "weight": 0.4, "source": "relationship:variant-of|compatible-with|alternative-to" },
+      { "name": "also-bought", "weight": 0.35, "source": "relationship:cross-sell|bundle-contains" },
+      { "name": "trending", "weight": 0.25, "source": "signal:purchases-7d" }
+    ],
+    "reRank": {
+      "diversity": { "enabled": true, "maxPerCategory": 3 },
+      "inventoryAware": { "enabled": true, "dropOutOfStock": true },
+      "sponsored": { "enabled": true, "maxSlots": 2, "label": "Sponsored", "boost": 1.5 }
+    },
+    "coldStart": { "fallback": "bestsellers-global", "minSignals": 3 },
+    "consentRequired": true
+  },
+  "explanationTemplates": {
+    "similar-items": "Similar to {productTitle}",
+    "also-bought": "Customers also bought {productTitle}",
+    "trending": "Trending in {category}",
+    "sponsored": "Sponsored"
+  }
+}

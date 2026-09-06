@@ -1,0 +1,23 @@
+{
+  "id": "mod-support",
+  "name": "@aether/service-support",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Support & Decision-Explainability",
+  "description": "Ticket lifecycle workflow, rule-based AI triage with SLA clocks per severity, and the decision-explainability journal — 'why was I charged this' for any tax/fee/refund/buy-box decision.",
+  "capabilities": ["tickets", "triage", "sla-clocks", "explainability"],
+  "packs": ["packs/support-core.json"],
+  "publicApi": ["open", "triage", "get", "advance", "slaBreached", "recordExplain", "explain", "explainCharge"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "ticket.opened", "unit": "ticket", "description": "Ticket opened" },
+      { "event": "ticket.triaged", "unit": "triage", "description": "AI triage performed" },
+      { "event": "explain.recorded", "unit": "explanation", "description": "Decision explanation journaled" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 19, "currency": "USD", "perUnit": "agent-seat" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -1,0 +1,62 @@
+{
+  "$comment": "Support pack — ticket workflow, SLA tiers by severity, AI-triage rules. All DATA.",
+  "pack": { "name": "support-core", "version": "1.0.0", "kind": "capability-pack" },
+  "workflows": [
+    {
+      "id": "wf_ticket", "kind": "workflow", "name": "ticket-lifecycle", "entityTypeId": "et_ticket",
+      "states": ["new", "triaged", "open", "pending-customer", "resolved", "closed", "escalated"],
+      "transitions": [
+        { "from": "new", "to": "triaged", "trigger": "triage-complete" },
+        { "from": "triaged", "to": "open", "trigger": "agent-assigned" },
+        { "from": "triaged", "to": "escalated", "trigger": "sla-breach-imminent" },
+        { "from": "open", "to": "pending-customer", "trigger": "info-requested" },
+        { "from": "pending-customer", "to": "open", "trigger": "customer-replied" },
+        { "from": "open", "to": "resolved", "trigger": "resolution-applied" },
+        { "from": "resolved", "to": "closed", "trigger": "customer-confirmed" },
+        { "from": "resolved", "to": "open", "trigger": "customer-rejected" },
+        { "from": "escalated", "to": "open", "trigger": "senior-engaged" }
+      ],
+      "initial": "new", "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "slaTiers": [
+    { "severity": "critical", "firstResponseMinutes": 15, "resolutionMinutes": 240 },
+    { "severity": "high", "firstResponseMinutes": 60, "resolutionMinutes": 720 },
+    { "severity": "normal", "firstResponseMinutes": 240, "resolutionMinutes": 2880 },
+    { "severity": "low", "firstResponseMinutes": 720, "resolutionMinutes": 10080 }
+  ],
+  "triageRules": [
+    {
+      "id": "rule_triage_chargeback", "kind": "rule", "name": "triage-chargeback", "priority": 100,
+      "decisionTable": [
+        { "field": "fact", "equals": "triage" },
+        { "field": "text", "matches": "[Cc]hargeback|[Dd]ispute", "then": { "severity": "critical", "queue": "payments-risk", "category": "payments" } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_triage_tracking", "kind": "rule", "name": "triage-where-is-order", "priority": 50,
+      "decisionTable": [
+        { "field": "fact", "equals": "triage" },
+        { "field": "text", "matches": "[Ww]here is my order|[Tt]rack", "then": { "severity": "normal", "queue": "self-service", "category": "fulfillment", "autoResolve": "tracking-lookup" } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_triage_refund", "kind": "rule", "name": "triage-refund-request", "priority": 40,
+      "decisionTable": [
+        { "field": "fact", "equals": "triage" },
+        { "field": "text", "matches": "[Rr]efund", "then": { "severity": "high", "queue": "orders-refunds", "category": "orders" } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_triage_default", "kind": "rule", "name": "triage-default", "priority": 1,
+      "decisionTable": [
+        { "field": "fact", "equals": "triage", "then": { "severity": "normal", "queue": "general", "category": "general" } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ]
+}

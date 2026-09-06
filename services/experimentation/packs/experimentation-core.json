@@ -1,0 +1,11 @@
+{
+  "$comment": "Experimentation pack — guardrails, rollout policy, significance thresholds. Experiments are registry entities (bitemporal). All DATA.",
+  "pack": { "name": "experimentation-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": {
+    "rolloutSteps": [0.01, 0.05, 0.1, 0.25, 0.5, 1.0],
+    "autoPromoteConfidence": 0.95,
+    "minSamplePerArm": 1000,
+    "maxConcurrentExperiments": 50,
+    "killSwitchGuardrail": { "metric": "checkout_success_rate", "minDrop": 0.02 }
+  }
+}

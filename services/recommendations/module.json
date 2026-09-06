@@ -1,0 +1,21 @@
+{
+  "id": "mod-recommendations",
+  "name": "@aether/service-recommendations",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Recommendations",
+  "description": "Retrieval → weighted ranking → business re-rank (diversity, inventory-aware, labeled sponsored blend) with cold-start fallback, explanation strings, and consent gating (EU AI Act).",
+  "capabilities": ["recs", "re-ranking", "sponsored-blend", "cold-start", "consent-gated", "explainable"],
+  "packs": ["packs/recommendations-core.json"],
+  "publicApi": ["recommend"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "recs.served", "unit": "request", "description": "Recommendation set served" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.0005, "currency": "USD", "perUnit": "request" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

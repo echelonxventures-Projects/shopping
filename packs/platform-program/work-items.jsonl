@@ -341,5 +341,52 @@
       "P0-KRN-014"
     ],
     "acceptance": "kernel/proof/all-modules.test.ts 5/5; 162/162 total"
+  },
+  {
+    "tid": "P0-KRN-016",
+    "title": "Everything-is-a-Product system \u2014 product-conformance lint (manifest+packs+export laws), ProductRegistry (auto-listing + monetization sync)",
+    "phase": "P0",
+    "workstream": "KRN",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-014"
+    ],
+    "acceptance": "lint-enforced; product-registry tests 4/4; catalog = source of product truth"
+  },
+  {
+    "tid": "P1-SUP-001",
+    "title": "Support module \u2014 ticket workflow, rule-based AI triage, SLA clocks, decision-explainability journal",
+    "phase": "P1",
+    "workstream": "SUP",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "support tests 7/7 green"
+  },
+  {
+    "tid": "P1-REC-001",
+    "title": "Recommendations module \u2014 weighted retrieval, diversity/inventory/sponsored re-rank, cold-start, consent gate, explanations",
+    "phase": "P1",
+    "workstream": "REC",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "recs tests 6/6 green"
+  },
+  {
+    "tid": "P1-EXP-001",
+    "title": "Experimentation module \u2014 A/B/n, deterministic assignment, significance promotion, guardrail kill-switch",
+    "phase": "P1",
+    "workstream": "EXP",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "experimentation tests 5/5 green"
+  },
+  {
+    "tid": "P1-ADM-001",
+    "title": "Two-step request admission \u2014 Step 1 preflight (non-binding, TTL grant) + Step 2 finalize (live re-check, atomic reserve); BackendAdmissionRejected(dp_rank, policies)",
+    "phase": "P1",
+    "workstream": "ADM",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "admission tests 8/8 green \u2014 exact user-spec contract message proven"
   }
 ]

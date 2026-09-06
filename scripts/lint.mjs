@@ -9,8 +9,10 @@ import { RuleEngine } from '@aether/kernel-runtime/src/index.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pack = JSON.parse(readFileSync(join(root, 'packs/platform-program/pack.json'), 'utf8'));
-
-const rules = (pack.lintRulePack ?? []).map((r) => ({
+const rules = (pack.lintRulePack ?? [])
+  // structural product rules are enforced by the dedicated block below, not the regex engine
+  .filter((r) => !r.name.startsWith('everything-is-a-product'))
+  .map((r) => ({
   id: r.id,
   name: r.name,
   priority: r.priority,
@@ -56,8 +58,54 @@ for (const dir of targetDirs) {
   });
 }
 
+// ---- EVERYTHING IS A PRODUCT: structural product-conformance checks (rules in pack) ----
+const productRules = (pack.lintRulePack ?? []).filter((r) => r.name.startsWith('everything-is-a-product'));
+const servicesDir = join(root, 'services');
+if (existsSync(servicesDir)) {
+  for (const rule of productRules) {
+    const check = rule.decisionTable.find((row) => row.then)?.then?.check;
+    for (const svc of readdirSync(servicesDir)) {
+      const svcPath = join(servicesDir, svc);
+      if (!statSync(svcPath).isDirectory()) continue;
+      if (check === 'requires-module-json') {
+        const src = join(svcPath, 'src/index.ts');
+        if (existsSync(src) && !existsSync(join(svcPath, 'module.json'))) {
+          failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} ships code but no module.json product manifest (rule "${rule.name}")`);
+        }
+      }
+      if (check === 'requires-bundled-packs') {
+        try {
+          const manifest = JSON.parse(readFileSync(join(svcPath, 'module.json'), 'utf8'));
+          for (const p of manifest.packs ?? []) {
+            if (!existsSync(join(svcPath, p))) {
+              failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} manifest references pack "${p}" that is not bundled inside the module`);
+            }
+          }
+          if (!manifest.billing?.meterableEvents) {
+            failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} product must declare billable meterableEvents`);
+          }
+          if (!manifest.publicApi?.length) {
+            failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} product must expose a publicApi surface`);
+          }
+        } catch (err) {
+          failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} has invalid module.json (${err.message})`);
+        }
+      }
+      if (check === 'requires-module-default-export') {
+        const src = join(svcPath, 'src/index.ts');
+        if (existsSync(src)) {
+          const code = readFileSync(src, 'utf8');
+          if (!/export default \w+Module/.test(code)) {
+            failures.push(`EVERYTHING-IS-A-PRODUCT: ${svc} must default-export its AetherModule contract (plug-and-play law)`);
+          }
+        }
+      }
+    }
+  }
+}
+
 if (failures.length) {
   console.error('LINT FAILURES (rules from packs/platform-program/pack.json):\n' + failures.join('\n'));
   process.exit(1);
 }
-console.log('lint: OK — all rules sourced from platform-program lintRulePack (data, not code)');
+console.log('lint: OK — all rules sourced from platform-program lintRulePack (data, not code); every service is a product');

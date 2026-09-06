@@ -173,3 +173,34 @@ export class WorldService {
     return this.resolver;
   }
 }
+
+// ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
+import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+
+const worldModule: AetherModule = {
+  manifest: JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
+  async create(_host: HostPort, billing: BillingPort, _packs: Record<string, unknown>) {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const svc = new WorldService(join(here, '../packs/worlds.json'));
+    const meter = (ev: string) => billing.meter(ev);
+    return {
+      world: (id: string) => svc.world(id),
+      list: () => svc.list(),
+      orbits: (id: string) => svc.orbits(id),
+      tradeLanes: (id: string) => svc.tradeLanes(id),
+      toLocalDay: (w: string, s: number) => svc.toLocalDay(w, s),
+      formatLocal: (w: string, s: number) => (meter('world.format'), svc.formatLocal(w, s)),
+      formatLocalClock: (w: string, s: number, tz?: string) => svc.formatLocalClock(w, s, tz),
+      slaToSpineSeconds: (w: string, q: number, u: string) => svc.slaToSpineSeconds(w, q, u),
+      spineToSlaDisplay: (w: string, s: number) => svc.spineToSlaDisplay(w, s),
+      convertUnit: (w: string, v: number, f: string, t: string) => svc.convertUnit(w, v, f, t),
+      logisticsConstraints: (w: string) => svc.logisticsConstraints(w),
+      shipmentModeAllowed: (w: string, m: string) => svc.shipmentModeAllowed(w, m),
+      slaPolicy: (w: string, t?: string | null) => svc.slaPolicy(w, t),
+      weightDisplayBasis: (w: string) => svc.weightDisplayBasis(w),
+      __raw: svc,
+    };
+  },
+};
+
+export default worldModule;

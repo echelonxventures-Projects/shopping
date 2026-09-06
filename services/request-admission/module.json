@@ -1,0 +1,22 @@
+{
+  "id": "mod-request-admission",
+  "name": "@aether/service-request-admission",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Two-Step Request Admission",
+  "description": "Two-step engine request admission: Step 1 preflight (non-binding early policy check w/ TTL grant), Step 2 finalize (binding live re-check + atomic slot reserve). Rejects raise BackendAdmissionRejected with dp_rank + failed policies. Thresholds are pack data.",
+  "capabilities": ["admission", "preflight", "finalize", "backpressure", "engine-governance"],
+  "packs": ["packs/request-admission.json"],
+  "publicApi": ["preflight", "finalize", "release", "currentSnapshot"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "admission.preflight", "unit": "check", "description": "Admission preflight evaluated" },
+      { "event": "admission.finalize", "unit": "reservation", "description": "Admission finalized (slot reserved)" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.00001, "currency": "USD", "perUnit": "check" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
