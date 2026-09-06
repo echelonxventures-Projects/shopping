@@ -1,0 +1,43 @@
+{
+  "id": "mod-payments",
+  "name": "@aether/service-payments",
+  "displayName": "Payments (PSP-agnostic)",
+  "description": "PSP adapter SPI with config routing; SAQ-A constitutional floor (raw PANs rejected at platform boundary); refund-over-capture guard.",
+  "capabilities": [
+    "payments",
+    "psp-routing",
+    "saq-a-floor",
+    "refunds"
+  ],
+  "packs": [
+    "packs/payments-core.json"
+  ],
+  "publicApi": [
+    "register",
+    "route",
+    "authorize",
+    "capture",
+    "refund",
+    "recordCapture"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "payment.authorized",
+        "unit": "authorization",
+        "description": "Payment authorized"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.3,
+      "currency": "USD",
+      "perUnit": "authorization"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

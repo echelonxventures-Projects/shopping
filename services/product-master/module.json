@@ -1,0 +1,57 @@
+{
+  "id": "mod-product-master",
+  "name": "@aether/service-product-master",
+  "displayName": "Universal Product Master",
+  "description": "The universal commerce meta-model: taxonomy hierarchy, attribute engine (zero columns), 15 product types, 16 identity schemes, relationship engine, packaging/UOM, lifecycle, 3 deployment modes.",
+  "capabilities": [
+    "product-model",
+    "taxonomy",
+    "attributes",
+    "identity",
+    "relationships",
+    "packaging",
+    "uom",
+    "lifecycle"
+  ],
+  "packs": [
+    "packs/universal-product.json"
+  ],
+  "publicApi": [
+    "createProduct",
+    "createSku",
+    "validateTaxonomyPath",
+    "validateAttributes",
+    "validateIdentity",
+    "relate",
+    "relationsOf",
+    "lifecycleTransition",
+    "convertUom",
+    "visibleTaxonomy",
+    "productVisibleInStorefront"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "product.created",
+        "unit": "product",
+        "description": "Product created"
+      },
+      {
+        "event": "sku.created",
+        "unit": "sku",
+        "description": "SKU created"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.02,
+      "currency": "USD",
+      "perUnit": "product"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

@@ -1,0 +1,5 @@
+{
+  "$comment": "Search module pack — engine policy defaults (host may override: fuzzy on/off, limits, analyzer config).",
+  "pack": { "name": "search-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": { "fuzzyEnabled": true, "defaultLimit": 20, "maxLimit": 100, "fuzzyEditDistance": 1 }
+}

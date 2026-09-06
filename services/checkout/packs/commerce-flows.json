@@ -1,0 +1,43 @@
+{
+  "$comment": "Commerce flows pack — order lifecycle workflow + commission rules (config, not code).",
+  "pack": { "name": "commerce-flows", "version": "1.0.0", "kind": "capability-pack" },
+  "entityTypes": [],
+  "workflows": [
+    {
+      "id": "wf_order_v1", "kind": "workflow", "name": "order-lifecycle", "entityTypeId": "et_order",
+      "states": ["created", "confirmed", "shipped", "delivered", "closed", "cancelled", "returned"],
+      "transitions": [
+        { "from": "created", "to": "confirmed", "trigger": "payment-captured" },
+        { "from": "confirmed", "to": "shipped", "trigger": "carrier-pickedup" },
+        { "from": "shipped", "to": "delivered", "trigger": "carrier-delivered" },
+        { "from": "delivered", "to": "closed", "trigger": "return-window-elapsed" },
+        { "from": "confirmed", "to": "cancelled", "trigger": "cancel-requested" },
+        { "from": "delivered", "to": "returned", "trigger": "rma-approved" }
+      ],
+      "initial": "created", "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule_commission_default", "kind": "rule", "name": "commission-default",
+      "priority": 10,
+      "decisionTable": [
+        { "field": "fact", "equals": "commission", "then": { "rate": 0.1 } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rule_commission_premium_seller", "kind": "rule", "name": "commission-premium-seller",
+      "priority": 20,
+      "decisionTable": [
+        { "field": "fact", "equals": "commission" },
+        { "field": "sellerId", "equals": "seller-premium", "then": { "rate": 0.05 } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "idSchemes": [
+    { "name": "order-id", "format": "prefixed-ulid", "prefix": "ord" }
+  ]
+}

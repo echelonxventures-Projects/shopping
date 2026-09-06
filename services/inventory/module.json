@@ -1,0 +1,42 @@
+{
+  "id": "mod-inventory",
+  "name": "@aether/service-inventory",
+  "displayName": "Inventory & Reservations",
+  "description": "Atomic all-or-nothing reservations with TTL reaping, commit/release, oversell=0 invariant, policy from config.",
+  "capabilities": [
+    "inventory",
+    "reservations",
+    "oversell-protection"
+  ],
+  "packs": [
+    "packs/inventory-core.json"
+  ],
+  "publicApi": [
+    "setStock",
+    "available",
+    "reserve",
+    "commit",
+    "release",
+    "reappear"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "reservation.committed",
+        "unit": "reservation",
+        "description": "Reservation committed to sale"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.005,
+      "currency": "USD",
+      "perUnit": "reservation"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

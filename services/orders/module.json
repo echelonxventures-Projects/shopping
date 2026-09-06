@@ -1,0 +1,41 @@
+{
+  "id": "mod-orders",
+  "name": "@aether/service-orders",
+  "displayName": "Order Lifecycle",
+  "description": "Pack-workflow order state machine persisted on admitted engines; bitemporal lifecycle history; illegal transitions rejected.",
+  "capabilities": [
+    "orders",
+    "state-machine",
+    "bitemporal-history"
+  ],
+  "packs": [
+    "packs/commerce-flows.json"
+  ],
+  "publicApi": [
+    "place",
+    "get",
+    "transition",
+    "history",
+    "canTransition"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "order.stored",
+        "unit": "order",
+        "description": "Order persisted"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.01,
+      "currency": "USD",
+      "perUnit": "order"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

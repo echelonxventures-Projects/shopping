@@ -1,0 +1,55 @@
+{
+  "$comment": "Marketplace core pack — Product/Offer entity types, buy-box rules, price-display config. All vertical-agnostic.",
+  "pack": { "name": "marketplace-core", "version": "1.0.0", "kind": "capability-pack" },
+  "entityTypes": [
+    {
+      "id": "et_product_v1", "kind": "entity-type", "name": "Product", "extends": null,
+      "attributes": {
+        "title": { "type": "string", "classification": "public", "required": true },
+        "hsCode": { "type": "string", "classification": "public", "required": true },
+        "countryOfOrigin": { "type": "string", "classification": "public", "required": true }
+      },
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "et_offer_v1", "kind": "entity-type", "name": "Offer", "extends": null,
+      "attributes": {
+        "productId": { "type": "string", "classification": "public", "required": true },
+        "sellerId": { "type": "string", "classification": "public", "required": true },
+        "price": { "type": "number", "classification": "public", "required": true },
+        "currency": { "type": "string", "classification": "public", "required": true },
+        "condition": { "type": "string", "classification": "public" },
+        "fulfillmentMode": { "type": "string", "classification": "public" }
+      },
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "relationshipTypes": [],
+  "rules": [
+    {
+      "id": "rule_buybox_platform_ff", "kind": "rule", "name": "prefer-platform-fulfilled",
+      "priority": 10,
+      "decisionTable": [
+        { "field": "fact", "equals": "buybox" },
+        { "field": "fulfillmentMode", "equals": "platform-fulfilled", "then": { "prefer-seller": true } }
+      ],
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "contextualConfig": [
+    {
+      "id": "ctx_price_display_default", "scope": {},
+      "value": { "name": "price-display", "taxMode": "exclusive", "currency": "USD" },
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "ctx_price_display_eu", "scope": { "market": "EU" },
+      "value": { "name": "price-display", "taxMode": "inclusive", "currency": "EUR" },
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "idSchemes": [
+    { "name": "marketplace-sku", "format": "opaque-random", "length": 10, "alphabet": "ABCDEFGHJKMNPQRSTUVWXYZ23456789" },
+    { "name": "offer-id", "format": "prefixed-ulid", "prefix": "off" }
+  ]
+}

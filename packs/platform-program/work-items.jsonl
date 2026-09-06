@@ -319,5 +319,16 @@
       "P0-GOV-001"
     ],
     "acceptance": "module tests 8/8 green; logistics converted to module contract (first plug-and-play module)"
+  },
+  {
+    "tid": "P1-WLD-001",
+    "title": "World-as-ECR \u2014 worlds as entities, orbits/trade-lanes as relationships, world context dimension, calendars/units/SLA/physics as config, atomic-seconds spine invariant (Earth/Luna/Mars/Europa-proven)",
+    "phase": "P1",
+    "workstream": "WLD",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-004"
+    ],
+    "acceptance": "world tests 9/9 green \u2014 new world = one pack entry, zero code (Europa test proves it)"
   }
 ]

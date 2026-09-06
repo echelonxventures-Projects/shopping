@@ -1,0 +1,64 @@
+{
+  "$comment": "Tax core pack — bitemporal tax rules per market/jurisdiction + facilitator liability mode + display mode. Rates are DATA (amend via config, never code). Bitemporal: rate changes reconstructable at any transaction time.",
+  "pack": { "name": "tax-core", "version": "1.0.0", "kind": "capability-pack" },
+  "taxRules": [
+    {
+      "id": "tax_us_sales_default", "kind": "rule", "name": "us-sales-tax-default",
+      "priority": 10,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "US", "then": { "rate": 0.07, "mode": "exclusive", "facilitatorLiable": false, "jurisdiction": "US" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tax_us_california", "kind": "rule", "name": "us-sales-tax-ca",
+      "priority": 20,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "US" },
+        { "field": "region", "equals": "CA", "then": { "rate": 0.0925, "mode": "exclusive", "facilitatorLiable": false, "jurisdiction": "US-CA" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tax_eu_vat", "kind": "rule", "name": "eu-vat-inclusive",
+      "priority": 20,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "EU", "then": { "rate": 0.20, "mode": "inclusive", "facilitatorLiable": false, "jurisdiction": "EU-OSS" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tax_eu_marketplace_facilitator", "kind": "rule", "name": "eu-marketplace-facilitator-3p",
+      "priority": 30,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "EU" },
+        { "field": "offerKind", "equals": "3p-marketplace", "then": { "rate": 0.20, "mode": "inclusive", "facilitatorLiable": true, "jurisdiction": "EU-OSS" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tax_in_gst", "kind": "rule", "name": "in-gst",
+      "priority": 20,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "IN", "then": { "rate": 0.18, "mode": "inclusive", "facilitatorLiable": false, "jurisdiction": "IN-GST" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    },
+    {
+      "id": "tax_b2b_reverse_charge", "kind": "rule", "name": "eu-b2b-reverse-charge",
+      "priority": 40,
+      "decisionTable": [
+        { "field": "fact", "equals": "tax" },
+        { "field": "market", "equals": "EU" },
+        { "field": "audience", "equals": "b2b" },
+        { "field": "vatIdValid", "equals": true, "then": { "rate": 0, "mode": "exclusive", "facilitatorLiable": false, "reverseCharge": true, "jurisdiction": "EU-RC" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

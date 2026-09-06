@@ -1,0 +1,44 @@
+{
+  "id": "mod-marketplace",
+  "name": "@aether/service-marketplace",
+  "displayName": "Marketplace & Sellers",
+  "description": "Seller onboarding KYC/AML workflow, scorecard tiers, enforcement ladder, rolling reserves, commission tier effects.",
+  "capabilities": [
+    "sellers",
+    "kyc-aml",
+    "scorecards",
+    "enforcement",
+    "reserves"
+  ],
+  "packs": [
+    "packs/marketplace-seller.json"
+  ],
+  "publicApi": [
+    "apply",
+    "advance",
+    "score",
+    "enforce",
+    "rollingReservePct",
+    "commissionAdjust"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "seller.onboarded",
+        "unit": "seller",
+        "description": "Seller approved"
+      }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": {
+      "amount": 99,
+      "currency": "USD",
+      "perUnit": "seller"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

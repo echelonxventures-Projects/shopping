@@ -1,0 +1,5 @@
+{
+  "$comment": "Inventory module pack — reservation policy defaults (host/tenant override via ConfigOverride).",
+  "pack": { "name": "inventory-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": { "ttlMs": 900000, "maxQtyPerLine": 10, "allOrNothing": true }
+}

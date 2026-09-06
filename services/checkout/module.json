@@ -1,0 +1,51 @@
+{
+  "id": "mod-checkout",
+  "name": "@aether/service-checkout",
+  "displayName": "Checkout Saga",
+  "description": "Cart, multi-vendor split checkout saga with idempotency + compensations, double-entry ledger postings, pack-configured commissions.",
+  "capabilities": [
+    "cart",
+    "checkout",
+    "saga",
+    "ledger-posting",
+    "commission-split"
+  ],
+  "packs": [
+    "packs/commerce-flows.json"
+  ],
+  "publicApi": [
+    "checkout",
+    "commissionFor",
+    "postToLedger"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "order.placed",
+        "unit": "order",
+        "description": "Order placed via saga"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.1,
+      "currency": "USD",
+      "perUnit": "order"
+    }
+  },
+  "dependencies": [
+    {
+      "id": "mod-payments"
+    },
+    {
+      "id": "mod-inventory"
+    },
+    {
+      "id": "mod-orders"
+    }
+  ],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

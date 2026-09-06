@@ -1,0 +1,137 @@
+{
+  "$comment": "Worlds-as-ECR — worlds are ENTITIES (World entity type), calendars/units/physics are CONFIGURATION (attributes + scoped config), orbits/trade-lanes are RELATIONSHIPS. The single Tier-0 invariant: the atomic-seconds spine. Any celestial body = one entity instance + config — zero code. Refs Doctrine 1/2/3.",
+  "pack": { "name": "worlds-ecr", "version": "1.0.0", "kind": "capability-pack" },
+  "entityTypes": [
+    {
+      "id": "et_world", "kind": "entity-type", "name": "World", "extends": null,
+      "attributes": {
+        "displayName": { "type": "string", "classification": "public", "required": true },
+        "calendarName": { "type": "string", "classification": "public", "required": true },
+        "daySeconds": { "type": "number", "classification": "public", "required": true },
+        "daysPerYear": { "type": "number", "classification": "public", "required": true },
+        "displayFormat": { "type": "string", "classification": "public", "required": true },
+        "epochName": { "type": "string", "classification": "public" },
+        "epochAnchorSpineSeconds": { "type": "number", "classification": "public", "required": true },
+        "units": { "type": "object", "classification": "public" },
+        "physics": { "type": "object", "classification": "public" },
+        "timeZones": { "type": "array", "classification": "public" },
+        "deliverySlaUnit": { "type": "string", "classification": "public", "required": true }
+      },
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "relationshipTypes": [
+    {
+      "id": "rel_orbits", "kind": "relationship-type", "name": "orbits",
+      "fromType": "World", "toType": "World", "cardinality": "many-one",
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "rel_trade_lane", "kind": "relationship-type", "name": "trade-lane",
+      "fromType": "World", "toType": "World", "cardinality": "many-many",
+      "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "worlds": [
+    {
+      "id": "earth",
+      "displayName": "Earth",
+      "calendarName": "Gregorian",
+      "daySeconds": 86400,
+      "daysPerYear": 365,
+      "displayFormat": "{y} Day {doy} ({u})",
+      "epochName": "CE",
+      "epochAnchorSpineSeconds": 0,
+      "units": {
+        "length": "m", "mass": "kg", "time": "hour", "speed": "kmh", "temperature": "celsius", "currency": "USD",
+        "conversions": { "km": { "m": 1000, "mi": 0.621371 }, "kmh": { "ms": 0.277778 }, "hour": { "spine-seconds": 3600, "minute": 60 } }
+      },
+      "physics": {
+        "gravityMs2": 9.81, "atmosphere": "breathable", "radiationLevel": "low",
+        "logisticsConstraints": [
+          { "code": "drone", "rule": "allowed" },
+          { "code": "air", "rule": "allowed" },
+          { "code": "railgun-launch", "rule": "forbidden" }
+        ]
+      },
+      "timeZones": [{ "id": "UTC", "offsetSeconds": 0 }, { "id": "IST", "offsetSeconds": 19800 }],
+      "deliverySlaUnit": "day"
+    },
+    {
+      "id": "luna",
+      "displayName": "Luna (Moon)",
+      "calendarName": "Synodic-Lunar",
+      "daySeconds": 86400,
+      "daysPerYear": 354,
+      "displayFormat": "{y} Lunation-Day {doy} ({u})",
+      "epochName": "LCE",
+      "epochAnchorSpineSeconds": 1893456000,
+      "units": {
+        "length": "m", "mass": "kg", "time": "hour", "speed": "knot", "temperature": "celsius", "currency": "LUN",
+        "conversions": { "knot": { "ms": 0.514444 }, "hour": { "spine-seconds": 3600, "minute": 60 } }
+      },
+      "physics": {
+        "gravityMs2": 1.62, "atmosphere": "none", "radiationLevel": "high",
+        "logisticsConstraints": [
+          { "code": "drone", "rule": "forbidden" },
+          { "code": "rover", "rule": "allowed" },
+          { "code": "maglev", "rule": "allowed" },
+          { "code": "vacuum-sealed", "rule": "required" }
+        ]
+      },
+      "timeZones": [{ "id": "LMT", "offsetSeconds": 0 }],
+      "deliverySlaUnit": "day"
+    },
+    {
+      "id": "mars",
+      "displayName": "Mars",
+      "calendarName": "Darian",
+      "daySeconds": 88775,
+      "daysPerYear": 668,
+      "displayFormat": "{y} Sol {doy} ({u})",
+      "epochName": "MS",
+      "epochAnchorSpineSeconds": 0,
+      "units": {
+        "length": "m", "mass": "kg", "time": "sol", "speed": "kmh", "temperature": "celsius", "currency": "MRSC",
+        "conversions": { "km": { "m": 1000 }, "kmh": { "ms": 0.277778 }, "sol": { "spine-seconds": 88775, "day": 1.0275 } }
+      },
+      "physics": {
+        "gravityMs2": 3.71, "atmosphere": "thin", "radiationLevel": "high",
+        "logisticsConstraints": [
+          { "code": "drone", "rule": "allowed-thin-atmosphere" },
+          { "code": "rover", "rule": "allowed" },
+          { "code": "dust-storm-hold", "rule": "required-during-storms" },
+          { "code": "air", "rule": "forbidden" }
+        ]
+      },
+      "timeZones": [{ "id": "MTC", "offsetSeconds": 0 }, { "id": "AMT+2", "offsetSeconds": 7400 }],
+      "deliverySlaUnit": "sol"
+    }
+  ],
+  "relationships": [
+    { "typeId": "rel_orbits", "fromId": "luna", "toId": "earth" },
+    { "typeId": "rel_trade_lane", "fromId": "luna", "toId": "earth" },
+    { "typeId": "rel_trade_lane", "fromId": "mars", "toId": "earth" },
+    { "typeId": "rel_trade_lane", "fromId": "mars", "toId": "luna" }
+  ],
+  "worldConfig": [
+    {
+      "id": "wcfg_default_sla",
+      "scope": {},
+      "value": { "name": "sla-policy", "slaDays": 5, "slaUnitHint": "local" },
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "wcfg_mars_sla",
+      "scope": { "world": "mars" },
+      "value": { "name": "sla-policy", "slaDays": 668, "note": "interplanetary lead times vary; local last-mile in sols" },
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "wcfg_luna_gravity_display",
+      "scope": { "world": "luna" },
+      "value": { "name": "weight-display", "basis": "local-gravity", "factor": 0.165 },
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ]
+}

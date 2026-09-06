@@ -1,8 +1,14 @@
 // @aether/kernel-context — Context Resolver (P0-KRN-004/007).
-// tenant × market × locale × channel × audience × time → applicable definition/config.
-// Multi-level cache toward the <5ms P95 budget (§5).
+// tenant × market × locale × channel × audience × world × time → applicable
+// definition/config. The `world` dimension (Earth/Luna/Mars/any) is a first-class
+// context axis — every scoped config can vary per celestial body. Multi-level
+// cache toward the <5ms P95 budget (§5).
 
 import { isCurrent, type Bitemporal, type ContextFrame } from '@aether/kernel-primitives';
+
+export type ScopeDimension = 'tenant' | 'market' | 'locale' | 'channel' | 'world';
+
+const DIMS: ScopeDimension[] = ['tenant', 'market', 'locale', 'channel', 'world'];
 
 export interface ContextualEntry extends Bitemporal {
   id: string;
@@ -11,6 +17,7 @@ export interface ContextualEntry extends Bitemporal {
     market?: string | null;
     locale?: string | null;
     channel?: string | null;
+    world?: string | null;
   };
   value: Record<string, unknown>;
 }
@@ -22,7 +29,7 @@ export function matchesScope(
 ): boolean {
   if (!isCurrent(entry, at ?? frame.atTime)) return false;
   const s = entry.scope;
-  for (const dim of ['tenant', 'market', 'locale', 'channel'] as const) {
+  for (const dim of DIMS) {
     const scoped = s[dim];
     if (scoped === undefined) continue;
     if (scoped !== null && frame[dim] !== scoped) return false;
@@ -34,7 +41,7 @@ export function matchesScope(
 export function scopeSpecificity(entry: ContextualEntry): number {
   const s = entry.scope;
   let score = 0;
-  for (const dim of ['tenant', 'market', 'locale', 'channel'] as const) {
+  for (const dim of DIMS) {
     if (s[dim] !== undefined) score++;
   }
   return score;
@@ -49,7 +56,7 @@ export class ContextResolver {
   }
 
   private cacheKey(frame: ContextFrame): string {
-    return [frame.tenant ?? '*', frame.market ?? '*', frame.locale ?? '*', frame.channel ?? '*', frame.atTime ?? '*'].join('|');
+    return [frame.tenant ?? '*', frame.market ?? '*', frame.locale ?? '*', frame.channel ?? '*', frame.world ?? '*', frame.atTime ?? '*'].join('|');
   }
 
   resolve(frame: ContextFrame): ContextualEntry[] {

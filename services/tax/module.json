@@ -1,0 +1,41 @@
+{
+  "id": "mod-tax",
+  "name": "@aether/service-tax",
+  "displayName": "Tax Engine v2",
+  "description": "Bitemporal pack-driven tax rules (US/EU/IN + CA override), inclusive/exclusive math, marketplace-facilitator, B2B reverse charge, per-line explainability, point-in-time rates.",
+  "capabilities": [
+    "tax",
+    "e-invoicing-ready",
+    "facilitator-mode",
+    "reverse-charge",
+    "explainability"
+  ],
+  "packs": [
+    "packs/tax-core.json"
+  ],
+  "publicApi": [
+    "compute",
+    "computeLine",
+    "rateAt"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "tax.computed",
+        "unit": "line",
+        "description": "Tax line computed"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.005,
+      "currency": "USD",
+      "perUnit": "line"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

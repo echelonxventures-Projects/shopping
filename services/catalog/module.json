@@ -1,0 +1,52 @@
+{
+  "id": "mod-catalog",
+  "name": "@aether/service-catalog",
+  "displayName": "Catalog & Buy-Box",
+  "description": "Pack-driven product/offer entities, rule-driven buy-box, market-scoped display config. Bundles marketplace-core pack.",
+  "capabilities": [
+    "catalog",
+    "offers",
+    "buy-box",
+    "display-config"
+  ],
+  "packs": [
+    "packs/marketplace-core.json"
+  ],
+  "publicApi": [
+    "createProduct",
+    "addOffer",
+    "buyBox",
+    "listOffers",
+    "displayConfig"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "product.created",
+        "unit": "product",
+        "description": "Product created"
+      },
+      {
+        "event": "offer.added",
+        "unit": "offer",
+        "description": "Offer listed"
+      }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": {
+      "amount": 29,
+      "currency": "USD",
+      "perUnit": "product"
+    }
+  },
+  "dependencies": [
+    {
+      "id": "mod-product-master",
+      "optional": true
+    }
+  ],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

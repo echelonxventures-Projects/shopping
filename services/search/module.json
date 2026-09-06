@@ -1,0 +1,39 @@
+{
+  "id": "mod-search",
+  "name": "@aether/service-search",
+  "displayName": "Search & Discovery",
+  "description": "Engine-agnostic search (SPI + conformance admission): facets, fuzzy matching, filters, tenant isolation, CQRS indexing.",
+  "capabilities": [
+    "search",
+    "facets",
+    "fuzzy",
+    "cqrs-index"
+  ],
+  "packs": [
+    "packs/search-core.json"
+  ],
+  "publicApi": [
+    "indexProduct",
+    "search"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "search.query",
+        "unit": "query",
+        "description": "Search query served"
+      }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": {
+      "amount": 0.0001,
+      "currency": "USD",
+      "perUnit": "query"
+    }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}

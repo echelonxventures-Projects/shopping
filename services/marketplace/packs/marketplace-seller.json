@@ -1,0 +1,36 @@
+{
+  "$comment": "Marketplace seller pack — seller onboarding workflow (KYC/AML gates), scorecard thresholds, enforcement ladder. All DATA: thresholds and states are configurable.",
+  "pack": { "name": "marketplace-seller", "version": "1.0.0", "kind": "capability-pack" },
+  "workflows": [
+    {
+      "id": "wf_seller_onboarding", "kind": "workflow", "name": "seller-onboarding", "entityTypeId": "et_seller",
+      "states": ["applied", "kyc_pending", "kyc_verified", "aml_screening", "approved", "rejected", "suspended"],
+      "transitions": [
+        { "from": "applied", "to": "kyc_pending", "trigger": "documents-submitted" },
+        { "from": "kyc_pending", "to": "kyc_verified", "trigger": "kyc-passed", "guardRules": ["identity-verified"] },
+        { "from": "kyc_pending", "to": "rejected", "trigger": "kyc-failed" },
+        { "from": "kyc_verified", "to": "aml_screening", "trigger": "screening-started" },
+        { "from": "aml_screening", "to": "approved", "trigger": "sanctions-clear", "guardRules": ["identity-verified"] },
+        { "from": "aml_screening", "to": "rejected", "trigger": "sanctions-hit" },
+        { "from": "approved", "to": "suspended", "trigger": "enforcement-action" },
+        { "from": "suspended", "to": "approved", "trigger": "appeal-accepted" }
+      ],
+      "initial": "applied", "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "scorecard": {
+    "metrics": ["defect_rate", "cancellation_rate", "sla_adherence", "fraud_flags"],
+    "weights": { "defect_rate": 0.4, "cancellation_rate": 0.25, "sla_adherence": 0.25, "fraud_flags": 0.1 },
+    "tiers": [
+      { "name": "elite", "minScore": 0.9, "effects": { "commissionDiscount": 0.2, "buyBoxBoost": 0.05 } },
+      { "name": "standard", "minScore": 0.6, "effects": { "commissionDiscount": 0, "buyBoxBoost": 0 } },
+      { "name": "watch", "minScore": 0.3, "effects": { "commissionDiscount": 0, "buyBoxBoost": -0.05 } },
+      { "name": "enforcement", "minScore": 0, "effects": { "suspend": true } }
+    ]
+  },
+  "policies": {
+    "rollingReservePct": { "watch": 0.05, "standard": 0.02, "elite": 0 },
+    "maxListings": { "watch": 100, "standard": 10000, "elite": 1000000 }
+  }
+}

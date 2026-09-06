@@ -1,0 +1,5 @@
+{
+  "$comment": "Payments module pack — SAQ-A constitutional floor + routing defaults (adapters admitted via conformance).",
+  "pack": { "name": "payments-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": { "saqAFloor": true, "defaultAdapter": null, "refundOverCaptureGuard": true, "panRejection": true }
+}

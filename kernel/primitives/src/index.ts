@@ -63,6 +63,7 @@ export interface ContextFrame {
   locale?: string | null;
   channel?: string | null;
   audience?: string | null;
+  world?: string | null;
   atTime?: string;
 }
 

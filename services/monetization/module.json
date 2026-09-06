@@ -1,0 +1,39 @@
+{
+  "id": "mod-monetization",
+  "name": "@aether/service-monetization",
+  "displayName": "Monetization & Billing",
+  "description": "Billable resource registry, usage metering, tiered/per-unit/%-GMV rating, entitlements, invoicing. Plans are pack data.",
+  "capabilities": [
+    "metering",
+    "rating",
+    "entitlements",
+    "invoicing",
+    "saas-billing"
+  ],
+  "packs": [
+    "packs/monetization-core.json"
+  ],
+  "publicApi": [
+    "subscribe",
+    "meter",
+    "rate",
+    "invoice",
+    "entitlement",
+    "usage"
+  ],
+  "billing": {
+    "meterableEvents": [
+      {
+        "event": "invoice.generated",
+        "unit": "invoice",
+        "description": "Invoice generated"
+      }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "configSchema": {}
+}
