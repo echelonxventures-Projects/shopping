@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+target/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Kubernetes
+kubeconfig*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Test & coverage
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Logs & caches
+logs/
+*.log
+.cache/
+.eslintcache
+.turbo/
+
+# Opencode
+.opencode/
