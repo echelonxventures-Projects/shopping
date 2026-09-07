@@ -424,5 +424,23 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "notifications tests 7/7 green \u2014 never-throws contract proven"
+  },
+  {
+    "tid": "P1-SEC-001",
+    "title": "Crypto Vault module \u2014 field-level envelope encryption (per-tenant KEK\u2192DEK), searchable blind indexes, tenant crypto-isolation, CBOM + PQ readiness, crypto-agility",
+    "phase": "P1",
+    "workstream": "SEC",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "crypto-vault tests 7/7 \u2014 cross-tenant decrypt fails cryptographically, floor violations rejected"
+  },
+  {
+    "tid": "P1-E2E-002",
+    "title": "Golden financial scenarios (\u00a711) \u2014 G1 multi-vendor exact split, G2 tri-market tax modes, G3 partial refund pro-rating + balanced reversal postings, G4 grading + reserves + serial-returner, G5 oversell=0 under load",
+    "phase": "P1",
+    "workstream": "E2E",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "golden-financials 5/5 \u2014 hand-computed amounts verified, ledger sum-to-zero throughout"
   }
 ]

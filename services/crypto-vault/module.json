@@ -1,0 +1,22 @@
+{
+  "id": "mod-crypto-vault",
+  "name": "@aether/service-crypto-vault",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Cryptography & Field Vault",
+  "description": "Field-level envelope encryption (per-tenant KEK→DEK), searchable blind indexes for PII lookups, tenant crypto-isolation (cross-tenant decrypt fails cryptographically), CBOM + PQ readiness, crypto-agility via scheme registry. Constitutional floors enforced; policies are pack data.",
+  "capabilities": ["encryption", "field-vault", "blind-index", "tenant-crypto-isolation", "cbom", "crypto-agility"],
+  "packs": ["packs/crypto-vault-core.json"],
+  "publicApi": ["protectField", "revealField", "blindIndex", "isCrossTenantSafe", "cbom", "pqReadiness", "reassignScheme", "policyFor"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "field.encrypted", "unit": "field", "description": "Field encrypted under tenant DEK" },
+      { "event": "blind.indexed", "unit": "index", "description": "Blind index generated" },
+      { "event": "cbom.generated", "unit": "report", "description": "CBOM report generated" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

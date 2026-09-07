@@ -1,0 +1,22 @@
+{
+  "$comment": "Crypto vault pack — envelope-encryption schemes (agility = data), PII field policies, searchable blind-index config, CBOM locations. Constitutional floors enforced by kernel/governance CryptoRegistry; this pack selects ABOVE them.",
+  "pack": { "name": "crypto-vault-core", "version": "1.0.0", "kind": "capability-pack" },
+  "fieldPolicies": [
+    { "classification": "public", "encrypt": false },
+    { "classification": "internal", "encrypt": false },
+    { "classification": "pii", "encrypt": true, "scheme": "sc-field-aes-gcm", "blindIndex": true },
+    { "classification": "sensitive-pii", "encrypt": true, "scheme": "sc-field-aes-gcm", "blindIndex": true }
+  ],
+  "schemes": {
+    "sc-field-aes-gcm": { "algorithm": "aes-256-gcm-class", "keyBits": 256, "pqHybrid": false },
+    "sc-field-pq-hybrid": { "algorithm": "hybrid-aes-gcm+mlkem-class", "keyBits": 256, "pqHybrid": true },
+    "sc-search-blind-index": { "algorithm": "hmac-sha256-blind-index-class", "keyBits": 256, "pqHybrid": false }
+  },
+  "tenantKeys": { "perTenantKek": true, "kekDerivation": "hkdf-sha256-class" },
+  "cbomLocations": [
+    { "location": "fields/pii", "scheme": "sc-field-aes-gcm" },
+    { "location": "search/pii-lookup", "scheme": "sc-search-blind-index" },
+    { "location": "audit/hash-chain", "scheme": "sc-field-pq-hybrid" }
+  ],
+  "policies": { "dekCacheTtlMs": 300000, "rotationIntervalDays": 90 }
+}
