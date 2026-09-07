@@ -442,5 +442,25 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "golden-financials 5/5 \u2014 hand-computed amounts verified, ledger sum-to-zero throughout"
+  },
+  {
+    "tid": "P2-MKT-001",
+    "title": "Market Registry (markets-as-data) \u2014 5 markets shipped (US/EU/IN/BR/AE); config-only onboarding PROVEN (Singapore added at runtime, zero code); activation matrix, capability gating, consumer-law windows",
+    "phase": "P2",
+    "workstream": "MKT",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "market-registry tests 7/7 green incl. runtime SG onboarding"
+  },
+  {
+    "tid": "P2-MKT-002",
+    "title": "Residency enforcement \u2014 market\u2192cell routing (GDPR/DPDP/LGPD/PDPA sovereignty), cross-cell writes REFUSED hard-fail, engine-per-cell, DSR erasure, audit trail",
+    "phase": "P2",
+    "workstream": "MKT",
+    "status": "Done",
+    "dependencies": [
+      "P2-MKT-001"
+    ],
+    "acceptance": "residency tests 5/5 green \u2014 ResidencyViolationError proven"
   }
 ]

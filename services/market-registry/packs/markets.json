@@ -1,0 +1,78 @@
+{
+  "$comment": "Market Registry pack — Market-as-Data (§3.2b). Each market is pure configuration: locales, currencies, tax regime, payment rails, compliance refs, capability flags, residency. Onboarding a market = ONE entry. Zero code. Add markets by appending.",
+  "pack": { "name": "markets", "version": "1.0.0", "kind": "capability-pack" },
+  "markets": [
+    {
+      "id": "US",
+      "displayName": "United States",
+      "locales": ["en-US", "es-US"],
+      "currency": "USD",
+      "taxRegime": { "kind": "sales-tax", "display": "exclusive", "facilitatorLiable": false, "adapter": "tax-us-class" },
+      "paymentRails": ["cards", "apple-pay", "google-pay", "bnpl"],
+      "compliancePacks": ["PCI-DSS-SAQ-A", "CCPA/CPRA", "WCAG-2.2-AA"],
+      "capabilities": { "b2b": true, "bnpl": true, "cod": false, "crossBorderDdp": true, "marketplace": true },
+      "residency": { "dataResidency": "us-east", "sovereignty": "none" },
+      "consumerLaw": { "returnWindowDays": 30 },
+      "idDocumentSchemes": ["SSN-class", "ITIN-class"]
+    },
+    {
+      "id": "EU",
+      "displayName": "European Union",
+      "locales": ["en-EU", "fr-FR", "de-DE", "es-ES"],
+      "currency": "EUR",
+      "taxRegime": { "kind": "vat-oss", "display": "inclusive", "facilitatorLiable": true, "adapter": "tax-eu-oss-class", "eInvoicing": "EN16931-class" },
+      "paymentRails": ["cards", "sepa", "ideal", "bancontact", "apple-pay"],
+      "compliancePacks": ["PCI-DSS-SAQ-A", "GDPR", "PSD2-SCA", "EU-AI-ACT", "WCAG-2.2-AA"],
+      "capabilities": { "b2b": true, "bnpl": true, "cod": false, "crossBorderDdp": true, "marketplace": true },
+      "residency": { "dataResidency": "eu-central", "sovereignty": "gdpr" },
+      "consumerLaw": { "returnWindowDays": 14, "withdrawalRight": true },
+      "idDocumentSchemes": ["eIDAS-class"]
+    },
+    {
+      "id": "IN",
+      "displayName": "India",
+      "locales": ["hi-IN", "en-IN", "ta-IN"],
+      "currency": "INR",
+      "taxRegime": { "kind": "gst", "display": "inclusive", "facilitatorLiable": false, "adapter": "tax-in-gst-class", "eInvoicing": "IRN-class" },
+      "paymentRails": ["cards", "upi", "netbanking", "cod"],
+      "compliancePacks": ["PCI-DSS-SAQ-A", "DPDP-2023", "WCAG-2.2-AA"],
+      "capabilities": { "b2b": true, "bnpl": false, "cod": true, "crossBorderDdp": false, "marketplace": true },
+      "residency": { "dataResidency": "ap-south-1", "sovereignty": "dpdp" },
+      "consumerLaw": { "returnWindowDays": 7 },
+      "idDocumentSchemes": ["Aadhaar-class", "PAN-class"]
+    },
+    {
+      "id": "BR",
+      "displayName": "Brazil",
+      "locales": ["pt-BR"],
+      "currency": "BRL",
+      "taxRegime": { "kind": "icms", "display": "inclusive", "facilitatorLiable": false, "adapter": "tax-br-class", "eInvoicing": "NFe-class" },
+      "paymentRails": ["cards", "pix", "boleto"],
+      "compliancePacks": ["PCI-DSS-SAQ-A", "LGPD", "WCAG-2.2-AA"],
+      "capabilities": { "b2b": false, "bnpl": true, "cod": false, "crossBorderDdp": false, "marketplace": true },
+      "residency": { "dataResidency": "sa-east-1", "sovereignty": "lgpd" },
+      "consumerLaw": { "returnWindowDays": 7 },
+      "idDocumentSchemes": ["CPF-class"]
+    },
+    {
+      "id": "AE",
+      "displayName": "United Arab Emirates",
+      "locales": ["ar-AE", "en-AE"],
+      "currency": "AED",
+      "taxRegime": { "kind": "vat", "display": "inclusive", "facilitatorLiable": false, "adapter": "tax-ae-class" },
+      "paymentRails": ["cards", "cod"],
+      "compliancePacks": ["PCI-DSS-SAQ-A", "WCAG-2.2-AA"],
+      "capabilities": { "b2b": true, "bnpl": false, "cod": true, "crossBorderDdp": false, "marketplace": true },
+      "residency": { "dataResidency": "me-central-1", "sovereignty": "none" },
+      "consumerLaw": { "returnWindowDays": 7 },
+      "idDocumentSchemes": ["EmiratesID-class"]
+    }
+  ],
+  "tenantActivations": [
+    { "tenantId": "acmewear", "marketId": "US", "status": "active" },
+    { "tenantId": "acmewear", "marketId": "EU", "status": "active" },
+    { "tenantId": "acmewear", "marketId": "IN", "status": "active" },
+    { "tenantId": "tenant-b2b-only", "marketId": "US", "status": "active" },
+    { "tenantId": "tenant-b2b-only", "marketId": "EU", "status": "active" }
+  ]
+}

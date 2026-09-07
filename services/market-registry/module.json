@@ -1,0 +1,23 @@
+{
+  "id": "mod-market-registry",
+  "name": "@aether/service-market-registry",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Market Registry (Markets-as-Data)",
+  "description": "Every market is one pack entry: locales, currency, tax regime descriptor, payment rails, compliance packs, capability flags (COD/BNPL/DDP), residency cells, consumer-law windows, tenant×market activation matrix. New market = config, zero code.",
+  "capabilities": ["markets", "market-gating", "residency-routing", "activation-matrix", "capability-flags"],
+  "packs": ["packs/markets.json"],
+  "publicApi": ["registerMarket", "get", "list", "activateMarket", "deactivateMarket", "activeMarkets", "isMarketActiveFor", "resolve", "capability", "residencyFor"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "market.registered", "unit": "market", "description": "New market onboarded (config-only)" },
+      { "event": "market.activated", "unit": "activation", "description": "Market activated for a tenant" },
+      { "event": "market.resolved", "unit": "resolution", "description": "Market context resolved" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 25, "currency": "USD", "perUnit": "market" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

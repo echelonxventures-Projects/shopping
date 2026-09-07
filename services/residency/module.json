@@ -1,0 +1,21 @@
+{
+  "id": "mod-residency",
+  "name": "@aether/service-residency",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Data Residency Enforcement",
+  "description": "Market→cell routing with hard-fail enforcement: tenant-market data writes are refused outside their sovereignty cell (GDPR/DPDP/LGPD/PDPA). Engine-per-cell (any admitted StorageEngine), DSR erasure hooks, full audit trail. Cells and policies are pack data.",
+  "capabilities": ["residency", "sovereignty", "cells", "dsr-erasure", "audit"],
+  "packs": ["packs/residency-core.json"],
+  "publicApi": ["bindEngines", "cellFor", "write", "attemptWriteTo", "read", "eraseTenant", "auditTrail"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "residency.write", "unit": "write", "description": "Cell-enforced write" },
+      { "event": "residency.erasure", "unit": "erasure", "description": "DSR tenant erasure executed" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
