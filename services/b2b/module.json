@@ -1,0 +1,22 @@
+{
+  "id": "mod-b2b",
+  "name": "@aether/service-b2b",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "B2B Commerce",
+  "description": "RFQ/quote lifecycle, PO approval chains with finance routing by amount, net-terms credit grades, volume-tier contract pricing. All pack data.",
+  "capabilities": ["b2b", "quotes", "po-approvals", "net-terms", "contract-pricing"],
+  "packs": ["packs/b2b-core.json"],
+  "publicApi": ["requestQuote", "contractDiscount", "quoteTransition", "getQuote", "netTermGrade", "submitPo", "poAdvance", "getPo"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "quote.requested", "unit": "quote", "description": "RFQ submitted" },
+      { "event": "po.submitted", "unit": "po", "description": "Purchase order submitted" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 149, "currency": "USD", "perUnit": "org-seat" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

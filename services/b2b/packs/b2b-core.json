@@ -1,0 +1,50 @@
+{
+  "$comment": "B2B pack — RFQ/quote workflow, purchase-order approval thresholds, net-terms credit policy, contract pricing tiers. All DATA.",
+  "pack": { "name": "b2b-core", "version": "1.0.0", "kind": "capability-pack" },
+  "workflows": [
+    {
+      "id": "wf_quote", "kind": "workflow", "name": "quote-lifecycle", "entityTypeId": "et_quote",
+      "states": ["requested", "quoted", "accepted", "expired", "ordered", "declined"],
+      "transitions": [
+        { "from": "requested", "to": "quoted", "trigger": "seller-responded" },
+        { "from": "quoted", "to": "accepted", "trigger": "buyer-accepted" },
+        { "from": "quoted", "to": "expired", "trigger": "validity-elapsed" },
+        { "from": "accepted", "to": "ordered", "trigger": "po-issued" },
+        { "from": "accepted", "to": "declined", "trigger": "buyer-withdrew" }
+      ],
+      "initial": "requested", "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    },
+    {
+      "id": "wf_po_approval", "kind": "workflow", "name": "po-approval", "entityTypeId": "et_po",
+      "states": ["submitted", "manager-review", "finance-review", "approved", "rejected"],
+      "transitions": [
+        { "from": "submitted", "to": "manager-review", "trigger": "auto-route" },
+        { "from": "manager-review", "to": "finance-review", "trigger": "manager-approved", "guardRules": ["amount-over-manager-limit"] },
+        { "from": "manager-review", "to": "approved", "trigger": "manager-approved", "guardRules": ["amount-within-manager-limit"] },
+        { "from": "finance-review", "to": "approved", "trigger": "finance-approved" },
+        { "from": "manager-review", "to": "rejected", "trigger": "manager-rejected" },
+        { "from": "finance-review", "to": "rejected", "trigger": "finance-rejected" }
+      ],
+      "initial": "submitted", "epoch": 1,
+      "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+    }
+  ],
+  "approvalThresholds": { "managerLimit": 10000, "financeLimit": 100000 },
+  "netTerms": {
+    "grades": [
+      { "grade": "net-15", "creditScoreMin": 800, "interestFreeDays": 15 },
+      { "grade": "net-30", "creditScoreMin": 700, "interestFreeDays": 30 },
+      { "grade": "net-60", "creditScoreMin": 600, "interestFreeDays": 60 },
+      { "grade": "prepaid", "creditScoreMin": 0, "interestFreeDays": 0 }
+    ],
+    "defaultGrade": "prepaid"
+  },
+  "contractPricing": [
+    { "tier": "volume-bronze", "minAnnualVolume": 0, "discountPct": 0 },
+    { "tier": "volume-silver", "minAnnualVolume": 50000, "discountPct": 5 },
+    { "tier": "volume-gold", "minAnnualVolume": 250000, "discountPct": 12 },
+    { "tier": "volume-platinum", "minAnnualVolume": 1000000, "discountPct": 20 }
+  ],
+  "quoteValidityDays": 14
+}

@@ -1,0 +1,21 @@
+{
+  "id": "mod-seo",
+  "name": "@aether/service-seo",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "SEO Platform",
+  "description": "Sitemap sharding at 10M+ SKU scale, hreflang alternates per market, schema.org Product/Offer JSON-LD, per-tenant robots policies, canonical URLs on U²ID.",
+  "capabilities": ["seo", "sitemaps", "hreflang", "schema-org", "robots", "canonicals"],
+  "packs": ["packs/seo-core.json"],
+  "publicApi": ["shardSitemaps", "hreflangAlternates", "robotsTxt", "productJsonLd", "canonicalUrl"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "sitemap.sharded", "unit": "shard-set", "description": "Sitemap shard set generated" },
+      { "event": "jsonld.generated", "unit": "product", "description": "Product JSON-LD emitted" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

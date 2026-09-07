@@ -1,0 +1,21 @@
+{
+  "id": "mod-notifications",
+  "name": "@aether/service-notifications",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Notifications",
+  "description": "Multi-channel (email/SMS/push/webhook) templated notifications with localization fallback chains, retry + channel fallback, quiet hours; never blocks commerce by contract.",
+  "capabilities": ["notifications", "templates", "localization", "retry", "quiet-hours", "async-safe"],
+  "packs": ["packs/notifications-core.json"],
+  "publicApi": ["render", "send", "quietHoursApply", "outboxDump"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "notification.sent", "unit": "notification", "description": "Notification send attempted" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.001, "currency": "USD", "perUnit": "notification" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -1,0 +1,16 @@
+{
+  "$comment": "SEO pack — sitemap sharding, hreflang markets, schema.org output, robots policies, canonical rules. All DATA.",
+  "pack": { "name": "seo-core", "version": "1.0.0", "kind": "capability-pack" },
+  "sitemap": { "urlsPerShard": 50000, "shardPrefix": "sitemap-products", "includeLastmod": true },
+  "markets": [
+    { "market": "US", "locale": "en-US", "baseUrl": "https://store.example.com", "hreflang": "en-us" },
+    { "market": "EU", "locale": "en-EU", "baseUrl": "https://eu.store.example.com", "hreflang": "en-eu" },
+    { "market": "EU", "locale": "fr-FR", "baseUrl": "https://fr.store.example.com", "hreflang": "fr-fr" },
+    { "market": "IN", "locale": "hi-IN", "baseUrl": "https://in.store.example.com", "hreflang": "hi-in" }
+  ],
+  "robotsPolicies": [
+    { "tenantType": "default", "disallow": ["/admin", "/checkout", "/cart", "/api"] },
+    { "tenantType": "brand-store", "disallow": ["/admin", "/checkout", "/cart", "/api", "/compare"] }
+  ],
+  "schemaOrg": { "product": true, "offer": true, "aggregateRating": true, "faq": true }
+}

@@ -388,5 +388,41 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "admission tests 8/8 green \u2014 exact user-spec contract message proven"
+  },
+  {
+    "tid": "P1-B2B",
+    "title": "B2B module \u2014 RFQ/quotes w/ volume-tier pricing, PO approval chains (manager/finance routing by pack thresholds), net-terms credit grades",
+    "phase": "P1",
+    "workstream": "B2B",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "b2b tests 6/6 green \u2014 finance-limit bypass blocked by pack guard"
+  },
+  {
+    "tid": "P1-ONB-001",
+    "title": "Onboarding & Migration module \u2014 pack field maps (Shopify/Woo-class), dry-run default, external-id dedupe, error-budget abort, checkpoint resume, reconciliation report",
+    "phase": "P1",
+    "workstream": "ONB",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "onboarding tests 7/7 green"
+  },
+  {
+    "tid": "P1-SEO-001",
+    "title": "SEO module \u2014 10M-SKU sitemap sharding (50k/shard), hreflang alternates per market, schema.org Product/Offer JSON-LD, per-tenant robots, U\u00b2ID canonicals",
+    "phase": "P1",
+    "workstream": "SEO",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "seo tests 5/5 green"
+  },
+  {
+    "tid": "P1-NOT-001",
+    "title": "Notifications module \u2014 multi-channel templates, locale fallback chains, retry/backoff + channel fallback, quiet hours, NEVER blocks commerce",
+    "phase": "P1",
+    "workstream": "NOT",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "notifications tests 7/7 green \u2014 never-throws contract proven"
   }
 ]

@@ -1,0 +1,29 @@
+{
+  "$comment": "Onboarding/migration pack — source adapters (Shopify/Woo/Magento-class), field maps, import policies. All DATA: a new source platform = new adapter config entry.",
+  "pack": { "name": "onboarding-core", "version": "1.0.0", "kind": "capability-pack" },
+  "sources": [
+    {
+      "platform": "shopify-class",
+      "entityMaps": {
+        "product": { "externalType": "product", "fieldMap": { "title": "title", "variants": "variants", "hs_code": "hsCode", "tags": "keywords" } },
+        "customer": { "externalType": "customer", "fieldMap": { "email": "email", "first_name": "firstName", "last_name": "lastName" } },
+        "order": { "externalType": "order", "fieldMap": { "id": "externalOrderId", "created_at": "placedAt", "total_price": "total" } }
+      },
+      "limits": { "maxBatchSize": 250, "rateLimitPerSec": 4 }
+    },
+    {
+      "platform": "woocommerce-class",
+      "entityMaps": {
+        "product": { "externalType": "product", "fieldMap": { "name": "title", "sku": "sku", "weight": "weightKg" } },
+        "customer": { "externalType": "customer", "fieldMap": { "email": "email", "billing": "billingAddress" } }
+      },
+      "limits": { "maxBatchSize": 100, "rateLimitPerSec": 2 }
+    }
+  ],
+  "policies": {
+    "dryRunDefault": true,
+    "reconciliationReport": true,
+    "duplicateStrategy": "skip-by-external-id",
+    "abortOnErrorCount": 50
+  }
+}

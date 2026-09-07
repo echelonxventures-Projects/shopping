@@ -1,0 +1,22 @@
+{
+  "id": "mod-onboarding",
+  "name": "@aether/service-onboarding",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Onboarding & Migration",
+  "description": "Tenant onboarding + catalog/customer/order migration from external platforms (Shopify/Woo/Magento-class) via pack-defined field maps; dry-run + reconciliation by default; resumable checkpoints.",
+  "capabilities": ["onboarding", "migration", "import", "reconciliation"],
+  "packs": ["packs/onboarding-core.json"],
+  "publicApi": ["mapRecord", "importBatch", "onboardingProgress"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "migration.batch", "unit": "batch", "description": "Migration batch processed" },
+      { "event": "migration.record_mapped", "unit": "record", "description": "Record mapped through field map" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.005, "currency": "USD", "perUnit": "record" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

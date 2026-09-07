@@ -1,0 +1,28 @@
+{
+  "$comment": "Notifications pack — channels, templates (multi-language), delivery policies, retry/fallback. All DATA: add channel or language = pack entry.",
+  "pack": { "name": "notifications-core", "version": "1.0.0", "kind": "capability-pack" },
+  "channels": [
+    { "id": "email", "kind": "email", "rateLimitPerMin": 60 },
+    { "id": "sms", "kind": "sms", "rateLimitPerMin": 10 },
+    { "id": "push", "kind": "push", "rateLimitPerMin": 240 },
+    { "id": "webhook", "kind": "webhook", "rateLimitPerMin": 120 }
+  ],
+  "templates": {
+    "order.confirmation": [
+      { "locale": "en-US", "channel": "email", "subject": "Order {{orderId}} confirmed", "body": "Thanks! Your order {{orderId}} totalling {{total}} {{currency}} is confirmed." },
+      { "locale": "fr-FR", "channel": "email", "subject": "Commande {{orderId}} confirmée", "body": "Merci ! Votre commande {{orderId}} d'un montant de {{total}} {{currency}} est confirmée." },
+      { "locale": "hi-IN", "channel": "email", "subject": "आदेश {{orderId}} की पुष्टि", "body": "धन्यवाद! आपका आदेश {{orderId}} ({{total}} {{currency}}) जोड़ गया है।" },
+      { "locale": "en-US", "channel": "sms", "subject": null, "body": "Order {{orderId}} confirmed ({{total}} {{currency}})." }
+    ],
+    "order.shipped": [
+      { "locale": "en-US", "channel": "email", "subject": "Order {{orderId}} shipped", "body": "Your order {{orderId}} is on its way. Track: {{trackingUrl}}" },
+      { "locale": "en-US", "channel": "push", "subject": null, "body": "Order {{orderId}} shipped 🚚" }
+    ]
+  },
+  "policies": {
+    "neverBlockCheckout": true,
+    "retry": { "maxAttempts": 3, "backoffMs": [1000, 5000, 30000] },
+    "fallbackChannel": "email",
+    "quietHours": { "enabled": true, "from": "22:00", "to": "08:00", "channels": ["sms", "push"] }
+  }
+}
