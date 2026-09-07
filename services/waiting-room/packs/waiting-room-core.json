@@ -1,0 +1,12 @@
+{
+  "$comment": "Virtual waiting room pack — admission rate, queue capacity, session quotas, slot hold times. All DATA: flash-sale capacity is configuration.",
+  "pack": { "name": "waiting-room-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policies": {
+    "admitPerSecond": 500,
+    "maxQueueSize": 250000,
+    "slotHoldSeconds": 600,
+    "sessionsPerUser": 1,
+    "queueFullBehavior": "reject-with-retry-after",
+    "admissionCurve": "constant"
+  }
+}

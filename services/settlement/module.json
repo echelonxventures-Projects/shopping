@@ -1,0 +1,24 @@
+{
+  "id": "mod-settlement",
+  "name": "@aether/service-settlement",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Region-Pinned Settlement & DR",
+  "description": "Tenant home-region-pinned ledger writes (writes refused outside home region), per-region sum-to-zero invariants, cross-region settlement positions with FX spread at the pack window, DR promotion lifecycle with promote thresholds. §3.6 locked decision implemented.",
+  "capabilities": ["settlement", "region-pinning", "cross-region-fx", "dr-promotion", "active-active-ledger"],
+  "packs": ["packs/settlement-core.json"],
+  "publicApi": ["homeRegionFor", "postInRegion", "queueCrossRegion", "runSettlementWindow", "reportPrimaryDown", "tryPromote", "regionDrState", "regionLedgerInvariant", "positions"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "ledger.posted", "unit": "transaction", "description": "Region-pinned ledger posting" },
+      { "event": "settlement.window", "unit": "window", "description": "Settlement window executed" },
+      { "event": "dr.promoted", "unit": "promotion", "description": "DR promotion evaluated" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [
+    { "id": "mod-checkout", "minVersion": "0.1.0" }
+  ],
+  "hostContract": "aether-host-1"
+}

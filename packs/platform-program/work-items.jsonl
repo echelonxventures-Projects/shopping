@@ -493,5 +493,57 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "offline-mode tests 6/6 \u2014 never charges wrong prices after reconnect"
+  },
+  {
+    "tid": "P3-SCL-001",
+    "title": "Virtual waiting room \u2014 flash-sale burst admission (500/sec token bucket, 250k FIFO queue w/ ETA, slot holds + reclaim + early release, per-user caps, retry-after on full)",
+    "phase": "P3",
+    "workstream": "SCL",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "waiting-room tests 6/6 \u2014 1k-user burst caps at exactly 500 admitted"
+  },
+  {
+    "tid": "P3-SCL-002",
+    "title": "Region-pinned settlement + DR \u2014 tenant home-region globs, cross-region writes REFUSED (RegionPinnedError), per-region sum-to-zero, settlement window w/ FX spread, DR promotion thresholds",
+    "phase": "P3",
+    "workstream": "SCL",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "settlement tests 6/6 \u2014 \u00a73.6 locked decision implemented and proven"
+  },
+  {
+    "tid": "P3-SCL-003",
+    "title": "Epoch reprojection engine \u2014 batched migration w/ checkpoints + resume, transforms as epoch-diff data (rename/default/derive w/ float-safe roundTo), 1M-record zero-downtime migration proven, error tolerance",
+    "phase": "P3",
+    "workstream": "SCL",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-012"
+    ],
+    "acceptance": "reprojection tests 5/5 \u2014 1M records migrated, pause/resume exact-count, no dupes/gaps"
+  },
+  {
+    "tid": "P3-AGN-001",
+    "title": "PROOF A: new market onboarded config-only (Japan via one data object, zero code deploys)",
+    "phase": "P3",
+    "workstream": "AGN",
+    "status": "Done",
+    "dependencies": [
+      "P2-MKT-001"
+    ],
+    "acceptance": "dual-agnosticism.test.ts Proof A green; market-hardcode-ban lint guards every commit"
+  },
+  {
+    "tid": "P3-AGN-002",
+    "title": "PROOF B: identical golden commerce results across BOTH conformance-admitted storage engines + module runtime targets swappable; unadmitted engines refused",
+    "phase": "P3",
+    "workstream": "AGN",
+    "status": "Done",
+    "dependencies": [
+      "P0-CTR-003",
+      "P0-CTR-004"
+    ],
+    "acceptance": "dual-agnosticism.test.ts Proofs B + conformance-refusal green \u2014 payable 90.00/tax 7.00 identical on memory+file engines"
   }
 ]

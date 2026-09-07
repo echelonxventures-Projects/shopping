@@ -1,0 +1,20 @@
+{
+  "id": "mod-waiting-room",
+  "name": "@aether/service-waiting-room",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Virtual Waiting Room (Flash-Sale Bursts)",
+  "description": "Token-bucket admission (pack rate) with FIFO overflow queue, deterministic positions + ETA, per-user session caps, slot holds with reclaim + early release on checkout, retry-after on full queue. Protects checkout at 250k/hr burst; all capacity numbers are pack data.",
+  "capabilities": ["flash-sale", "waiting-room", "burst-admission", "queueing", "slo-protection"],
+  "packs": ["packs/waiting-room-core.json"],
+  "publicApi": ["join", "drain", "release", "stats", "queueDepth"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "waitroom.join", "unit": "join", "description": "User joined the waiting room" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -1,0 +1,13 @@
+{
+  "$comment": "Settlement pack — region-pinned ledger writes, cross-region settlement windows, DR promotion rules. All DATA.",
+  "pack": { "name": "settlement-core", "version": "1.0.0", "kind": "capability-pack" },
+  "regions": [
+    { "id": "us-east", "role": "primary-for", "tenants": ["*"], "currency": "USD" },
+    { "id": "eu-central", "role": "primary-for", "tenants": ["eu-*"], "currency": "EUR" }
+  ],
+  "settlement": {
+    "window": { "periodicity": "daily", "hourUtc": 2 },
+    "crossRegion": { "mode": "global-settlement-service", "fxSpreadPct": 0.5 },
+    "dr": { "rpoSeconds": 300, "rtoSeconds": 3600, "promoteAfterPrimaryDownSec": 60 }
+  }
+}
