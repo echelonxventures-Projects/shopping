@@ -1,0 +1,23 @@
+{
+  "id": "mod-app-marketplace",
+  "name": "@aether/service-app-marketplace",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "App Marketplace & Developer Ecosystem",
+  "description": "Partner app store with signed submissions, auto-scan + human review pipeline, tiered revenue share, tenant installs with dev/platform split, developer sandboxes with quotas + synthetic-data policy. The apps sold are themselves AetherModules — full doctrine recursion.",
+  "capabilities": ["app-store", "review-pipeline", "revenue-share", "sandboxes", "signed-distribution"],
+  "packs": ["packs/app-marketplace-core.json"],
+  "publicApi": ["submit", "advance", "get", "published", "install", "provisionSandbox", "sandboxCall", "runAutoScan"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "app.submitted", "unit": "submission", "description": "App submitted for review" },
+      { "event": "app.installed", "unit": "install", "description": "App installed by a tenant" },
+      { "event": "sandbox.provisioned", "unit": "sandbox", "description": "Developer sandbox provisioned" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0, "currency": "USD", "perUnit": "install" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

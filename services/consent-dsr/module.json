@@ -1,0 +1,22 @@
+{
+  "id": "mod-consent-dsr",
+  "name": "@aether/service-consent-dsr",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Consent & DSR Engine",
+  "description": "Purpose-based consent gating (essential vs opt-in), Data-Subject-Rights lifecycle (access/portability/erasure/rectification/object) with per-regulation SLAs (GDPR/DPDP/LGPD/CCPA/PDPA), legal-hold erasure exemptions, retention windows, consent revocation on erasure. Regulations are pack data.",
+  "capabilities": ["consent", "dsr", "gdpr", "privacy", "retention", "legal-hold"],
+  "packs": ["packs/consent-dsr-core.json"],
+  "publicApi": ["setConsent", "hasConsent", "storeData", "openDsr", "fulfil", "slaBreaches", "dsr", "regulationFor"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "dsr.opened", "unit": "request", "description": "DSR request opened" },
+      { "event": "dsr.fulfilled", "unit": "request", "description": "DSR request fulfilled" },
+      { "event": "consent.set", "unit": "record", "description": "Consent record written" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -462,5 +462,36 @@
       "P2-MKT-001"
     ],
     "acceptance": "residency tests 5/5 green \u2014 ResidencyViolationError proven"
+  },
+  {
+    "tid": "P2-MKT-003",
+    "title": "Consent & DSR engine \u2014 purpose-based consent gating, DSR lifecycle w/ per-regulation SLAs (GDPR/DPDP/LGPD/CCPA/PDPA), legal-hold erasure exemptions, retention windows, consent revocation",
+    "phase": "P2",
+    "workstream": "MKT",
+    "status": "Done",
+    "dependencies": [
+      "P2-MKT-001"
+    ],
+    "acceptance": "consent-dsr tests 6/6 \u2014 LGPD 15d < GDPR 30d < CCPA 45d SLAs proven"
+  },
+  {
+    "tid": "P2-ECO-001",
+    "title": "App Marketplace \u2014 signed partner app submissions, auto-scan + human review pipeline, tiered revenue share (20/15/10%), tenant installs w/ dev/platform split, developer sandboxes (quotas + TTL + synthetic-only)",
+    "phase": "P2",
+    "workstream": "ECO",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-016"
+    ],
+    "acceptance": "app-marketplace tests 7/7 \u2014 apps sold are themselves AetherModules (doctrine recursion)"
+  },
+  {
+    "tid": "P2-OFF-001",
+    "title": "Offline mode \u2014 capture queue w/ overflow policy, priority-ordered sync, staleness windows (48h orders / 1h carts), price-drift protection (>5% holds for re-confirmation), PWA seed manifest",
+    "phase": "P2",
+    "workstream": "OFF",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "offline-mode tests 6/6 \u2014 never charges wrong prices after reconnect"
   }
 ]

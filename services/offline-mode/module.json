@@ -1,0 +1,21 @@
+{
+  "id": "mod-offline-mode",
+  "name": "@aether/service-offline-mode",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Offline / Low-Connectivity Mode",
+  "description": "Storefront operation without connectivity: action capture queue with overflow policy, priority-ordered sync, staleness windows, price-drift protection (orders held for re-confirmation when prices moved), PWA seed content. All policies are pack data.",
+  "capabilities": ["offline", "capture-queue", "sync", "price-drift-protection", "pwa-seed"],
+  "packs": ["packs/offline-core.json"],
+  "publicApi": ["capture", "queueDepth", "sync", "seedManifest"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "action.captured", "unit": "action", "description": "Action captured offline" },
+      { "event": "queue.synced", "unit": "sync", "description": "Offline queue synchronized" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

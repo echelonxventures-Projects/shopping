@@ -1,0 +1,31 @@
+{
+  "$comment": "App marketplace pack — app categories, revenue-share tiers, sandbox policies, review workflow, signing requirements. All DATA.",
+  "pack": { "name": "app-marketplace-core", "version": "1.0.0", "kind": "capability-pack" },
+  "revenueShare": [
+    { "tier": "standard", "platformPct": 20, "minPrice": 0 },
+    { "tier": "enterprise-partner", "platformPct": 15, "minPrice": 0 },
+    { "tier": "strategic", "platformPct": 10, "minPrice": 0 }
+  ],
+  "sandbox": {
+    "quota": { "apiCallsPerDay": 10000, "storageMb": 500, "sandboxTtlDays": 30 },
+    "dataPolicy": "synthetic-only",
+    "features": { "allPlatformApis": true, "billingDisabled": true }
+  },
+  "reviewWorkflow": {
+    "states": ["submitted", "auto-scan", "human-review", "approved", "rejected", "published", "suspended"],
+    "transitions": [
+      { "from": "submitted", "to": "auto-scan", "trigger": "pipeline-start" },
+      { "from": "auto-scan", "to": "human-review", "trigger": "scan-flagged" },
+      { "from": "auto-scan", "to": "approved", "trigger": "scan-clean" },
+      { "from": "human-review", "to": "approved", "trigger": "reviewer-approved" },
+      { "from": "human-review", "to": "rejected", "trigger": "reviewer-rejected" },
+      { "from": "approved", "to": "published", "trigger": "dev-published" },
+      { "from": "published", "to": "suspended", "trigger": "policy-violation" }
+    ],
+    "initial": "submitted",
+    "autoScanChecks": ["secret-scan", "permission-audit", "api-misuse", "module-conformance"],
+    "id": "wf_app_review", "kind": "workflow", "name": "app-review", "entityTypeId": "et_app",
+    "epoch": 1, "validFrom": "2026-09-06T00:00:00Z", "validTo": null, "recordedAt": "2026-09-06T00:00:00Z"
+  },
+  "signingPolicy": { "required": true, "algorithm": "ed25519-class", "minKeyBits": 256 }
+}

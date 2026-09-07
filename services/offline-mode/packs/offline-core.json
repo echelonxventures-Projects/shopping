@@ -1,0 +1,16 @@
+{
+  "$comment": "Offline mode pack — capture policies, sync conflict strategies, queue limits, prioritization. All DATA.",
+  "pack": { "name": "offline-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policies": {
+    "captureWindow": { "maxAgeMs": 172800000, "maxCartAgeMs": 3600000 },
+    "queue": { "maxPendingActions": 500, "maxPayloadKb": 256, "overflowPolicy": "reject-oldest" },
+    "sync": {
+      "conflictStrategy": "last-write-wins-with-price-check",
+      "priceDriftTolerancePct": 5,
+      "batchSize": 100,
+      "retryBackoffMs": [500, 2000, 10000]
+    },
+    "priority": { "order": ["order.place", "cart.update", "wishlist.add", "view.track"] },
+    "seedContent": ["catalog-top-sellers", "storefront-shell", "pdp-cache-50"]
+  }
+}

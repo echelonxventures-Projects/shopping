@@ -1,0 +1,59 @@
+{
+  "$comment": "Consent & DSR pack — purposes, retention windows per regulation, DSR SLAs, erasure rules. All DATA: adding a regulation = pack entry.",
+  "pack": { "name": "consent-dsr-core", "version": "1.0.0", "kind": "capability-pack" },
+  "purposes": [
+    { "id": "essential", "requireConsent": false, "description": "Order fulfillment, payments, legal" },
+    { "id": "personalization", "requireConsent": true, "description": "Recommendations, personalized search" },
+    { "id": "marketing", "requireConsent": true, "description": "Email/SMS/push campaigns" },
+    { "id": "analytics", "requireConsent": true, "description": "Behavioral analytics, experimentation" },
+    { "id": "profiling", "requireConsent": true, "description": "Automated decision-making profiles" }
+  ],
+  "regulations": [
+    {
+      "id": "GDPR",
+      "appliesTo": ["EU"],
+      "dsrSlaDays": { "access": 30, "erasure": 30, "portability": 30, "rectification": 30 },
+      "lawfulBases": ["consent", "contract", "legal-obligation", "legitimate-interest"],
+      "erasureExemptions": ["legal-obligation", "contract-active"],
+      "rightTo": ["access", "erasure", "portability", "rectification", "object-profiling"]
+    },
+    {
+      "id": "DPDP",
+      "appliesTo": ["IN"],
+      "dsrSlaDays": { "access": 30, "erasure": 30, "portability": 30, "rectification": 30 },
+      "lawfulBases": ["consent", "legal-obligation"],
+      "erasureExemptions": ["legal-obligation"],
+      "rightTo": ["access", "erasure", "portability", "rectification"]
+    },
+    {
+      "id": "LGPD",
+      "appliesTo": ["BR"],
+      "dsrSlaDays": { "access": 15, "erasure": 15, "portability": 15, "rectification": 15 },
+      "lawfulBases": ["consent", "contract", "legal-obligation"],
+      "erasureExemptions": ["legal-obligation"],
+      "rightTo": ["access", "erasure", "portability", "rectification", "object-profiling"]
+    },
+    {
+      "id": "CCPA",
+      "appliesTo": ["US"],
+      "dsrSlaDays": { "access": 45, "erasure": 45, "portability": 45, "rectification": 45 },
+      "lawfulBases": ["notice-at-collection"],
+      "erasureExemptions": ["legal-obligation", "contract-active"],
+      "rightTo": ["access", "erasure", "portability", "object-profiling", "opt-out-sale"]
+    },
+    {
+      "id": "PDPA-SG",
+      "appliesTo": ["SG"],
+      "dsrSlaDays": { "access": 30, "erasure": 30, "portability": 30, "rectification": 30 },
+      "lawfulBases": ["consent", "contract", "legal-obligation"],
+      "erasureExemptions": ["legal-obligation"],
+      "rightTo": ["access", "erasure", "portability", "rectification"]
+    }
+  ],
+  "retention": [
+    { "dataClass": "order-records", "retainDays": 2555, "basis": "legal-obligation", "survivesErasure": true },
+    { "dataClass": "payment-tokens", "retainDays": 540, "basis": "legal-obligation", "survivesErasure": true },
+    { "dataClass": "marketing-profiles", "retainDays": 730, "basis": "consent", "survivesErasure": false },
+    { "dataClass": "behavioral-analytics", "retainDays": 400, "basis": "consent", "survivesErasure": false }
+  ]
+}
