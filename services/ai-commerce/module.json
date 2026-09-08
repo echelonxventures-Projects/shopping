@@ -1,0 +1,23 @@
+{
+  "id": "mod-ai-commerce",
+  "name": "@aether/service-ai-commerce",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "AI Commerce (Visual Search + Shopping Assistant)",
+  "description": "Visual search over a swappable EmbeddingAdapter SPI (thresholds/topK from pack) and a guarded conversational shopping assistant: pack-defined boundary rules, tool grants, escalation triggers, turn limits, EU AI Act transparency (limited-risk classification, AI disclosure). Models are conformance-admitted adapters — never vendor-bound.",
+  "capabilities": ["visual-search", "assistant", "tool-use", "eu-ai-act", "model-agnostic"],
+  "packs": ["packs/ai-commerce-core.json"],
+  "publicApi": ["indexVisual", "visualQuery", "assistantRespond", "sessionTurns"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "visual.queried", "unit": "query", "description": "Visual search query served" },
+      { "event": "assistant.turn", "unit": "turn", "description": "Assistant turn processed" },
+      { "event": "visual.indexed", "unit": "product", "description": "Product visual embedding indexed" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.002, "currency": "USD", "perUnit": "query" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -1,0 +1,22 @@
+{
+  "id": "mod-mobile-ops",
+  "name": "@aether/service-mobile-ops",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Mobile Release Ops",
+  "description": "App release lifecycle: phased rollout with pack-defined stages + hold gates, forced-upgrade floors with grace windows, OS minimums, deep-link domain/route resolution to modules, push throttling (daily caps, quiet hours, collapse keys). All policies are pack data.",
+  "capabilities": ["mobile", "release-ops", "phased-rollout", "forced-upgrade", "deep-links", "push-policy"],
+  "packs": ["packs/mobile-ops-core.json"],
+  "publicApi": ["publishRelease", "advanceRollout", "rolloutPercent", "forceUpgrade", "clientGate", "osSupported", "resolveDeepLink", "canPush"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "release.published", "unit": "release", "description": "Release published to a channel" },
+      { "event": "release.promoted", "unit": "promotion", "description": "Rollout stage advanced" },
+      { "event": "deeplink.resolved", "unit": "deeplink", "description": "Deep link resolved to a module" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

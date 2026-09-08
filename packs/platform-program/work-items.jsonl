@@ -574,5 +574,32 @@
       "P0-GOV-001"
     ],
     "acceptance": "check-register-consistency green (53 TIDs agree); 32 stale rows reconciled"
+  },
+  {
+    "tid": "P4-AI-001",
+    "title": "AI commerce \u2014 visual search over swappable EmbeddingAdapter SPI (pack thresholds/topK) + guarded shopping assistant (pack boundaries, tool grants, escalation triggers, turn limits, EU AI Act limited-risk disclosure)",
+    "phase": "P4",
+    "workstream": "AI",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "ai-commerce tests 8/8 \u2014 boundaries block payments/regulated advice; adapter swap proven zero-core-change"
+  },
+  {
+    "tid": "P4-AUD-001",
+    "title": "Compliance evidence engine \u2014 SOC 2 TSC (5 controls) + ISO 27001 (3 controls) mapped to module proof artifacts via swappable EvidencePort; freshness windows (90d), gap alerts (threshold 3), readiness gate, workpaper exports",
+    "phase": "P4",
+    "workstream": "AUD",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "compliance-evidence tests 6/6 \u2014 gap naming, staleness breaches, readiness gating proven"
+  },
+  {
+    "tid": "P4-MOB-001",
+    "title": "Mobile release ops \u2014 phased rollout (1\u21925\u219220\u219250\u2192100% w/ 24h hold gates), forced-upgrade floors w/ 14-day grace, OS minimums, deep-link domain/route\u2192module resolution, push throttling (caps + quiet hours + collapse keys)",
+    "phase": "P4",
+    "workstream": "MOB",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "mobile-ops tests 5/5 \u2014 hold-gate, grace window, and deep-link param extraction proven"
   }
 ]

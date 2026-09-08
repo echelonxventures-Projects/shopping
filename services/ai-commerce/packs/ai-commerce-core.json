@@ -1,0 +1,29 @@
+{
+  "$comment": "AI commerce pack — visual-search embedding policy, assistant guardrails, transparency (EU AI Act), model adapters. All DATA: models are swappable adapters; thresholds are configuration.",
+  "pack": { "name": "ai-commerce-core", "version": "1.0.0", "kind": "capability-pack" },
+  "visualSearch": {
+    "adapter": "embedding-clip-class",
+    "dimensions": 8,
+    "similarityThreshold": 0.75,
+    "candidatePool": 50,
+    "topK": 5
+  },
+  "assistant": {
+    "adapter": "llm-hosted-class",
+    "systemPromptBoundaries": [
+      "never-disclose-pricing-other-tenants",
+      "never-process-payments-directly",
+      "route-to-support-on-complaints",
+      "decline-medical-legal-financial-advice"
+    ],
+    "maxTurnsPerSession": 20,
+    "tools": ["catalog.search", "product.compare", "cart.add", "order.track"],
+    "escalation": { "toHuman": true, "triggers": ["complaint", "refund-dispute", "policy-question"] }
+  },
+  "transparency": {
+    "aiActClassification": "limited-risk",
+    "discloseAiInteraction": true,
+    "logPrompts": true,
+    "retentionDays": 90
+  }
+}

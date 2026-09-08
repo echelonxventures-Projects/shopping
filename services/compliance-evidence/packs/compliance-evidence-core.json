@@ -1,0 +1,32 @@
+{
+  "$comment": "Compliance evidence pack — SOC 2 TSC + ISO 27001 controls mapped to platform modules; evidence collection policies. All DATA: adding a framework = pack entry.",
+  "pack": { "name": "compliance-evidence-core", "version": "1.0.0", "kind": "capability-pack" },
+  "frameworks": [
+    {
+      "id": "SOC2",
+      "name": "SOC 2 Type II (Trust Services Criteria)",
+      "controls": [
+        { "id": "CC6.1", "criterion": "logical access — encryption at rest/transport", "evidenceFrom": [{ "module": "mod-crypto-vault", "check": "cbom-generated" }, { "module": "mod-payments", "check": "saq-a-floor" }] },
+        { "id": "CC6.7", "criterion": "data in transit protection", "evidenceFrom": [{ "module": "mod-crypto-vault", "check": "tls-floor" }] },
+        { "id": "CC7.2", "criterion": "anomaly monitoring", "evidenceFrom": [{ "module": "mod-marketplace", "check": "enforcement-ladder" }] },
+        { "id": "CC8.1", "criterion": "change management", "evidenceFrom": [{ "module": "mod-git", "check": "commit-audit-trail" }] },
+        { "id": "PI3.1", "criterion": "processing integrity — data completeness", "evidenceFrom": [{ "module": "mod-checkout", "check": "ledger-sum-zero" }] }
+      ]
+    },
+    {
+      "id": "ISO27001",
+      "name": "ISO/IEC 27001:2022",
+      "controls": [
+        { "id": "A.8.24", "criterion": "use of cryptography", "evidenceFrom": [{ "module": "mod-crypto-vault", "check": "cbom-generated" }] },
+        { "id": "A.5.15", "criterion": "access control", "evidenceFrom": [{ "module": "mod-marketplace", "check": "kyc-guards" }, { "module": "mod-agentic-commerce", "check": "delegation-scopes" }] },
+        { "id": "A.8.15", "criterion": "logging", "evidenceFrom": [{ "module": "mod-git", "check": "commit-audit-trail" }] }
+      ]
+    }
+  ],
+  "evidencePolicies": {
+    "collectionIntervalDays": 30,
+    "acceptableAgeDays": 90,
+    "gapAlertThreshold": 3,
+    "exportFormats": ["json", "soc2-workpaper-class"]
+  }
+}

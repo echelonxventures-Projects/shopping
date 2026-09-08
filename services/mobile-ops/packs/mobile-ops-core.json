@@ -1,0 +1,23 @@
+{
+  "$comment": "Mobile release ops pack — app versioning, rollout gates, forced-upgrade thresholds, deep-link domains, push policies. All DATA.",
+  "pack": { "name": "mobile-ops-core", "version": "1.0.0", "kind": "capability-pack" },
+  "release": {
+    "channels": ["alpha", "beta", "production"],
+    "phasedRollout": { "stages": [0.01, 0.05, 0.2, 0.5, 1.0], "minHoldHours": 24 },
+    "forcedUpgrade": { "belowVersionPolicy": "hard-block", "graceDays": 14 },
+    "minSupported": { "ios": "16.0", "android": "10.0" }
+  },
+  "deepLinks": {
+    "domains": ["app.example.com", "shop.example.com"],
+    "routes": [
+      { "scheme": "/product/{productId}", "module": "mod-catalog", "featureFlag": "product-deeplink" },
+      { "scheme": "/order/{orderId}", "module": "mod-orders", "featureFlag": "order-deeplink" },
+      { "scheme": "/checkout", "module": "mod-checkout", "featureFlag": "checkout-deeplink" }
+    ]
+  },
+  "push": {
+    "maxPerUserPerDay": 8,
+    "quietHours": { "from": "22:00", "to": "08:00" },
+    "collapseKeys": ["order-update", "promo", "price-drop"]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "mod-compliance-evidence",
+  "name": "@aether/service-compliance-evidence",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Compliance Evidence Engine (SOC 2 / ISO 27001)",
+  "description": "Continuous audit evidence: control catalogs (SOC 2 TSC, ISO 27001) mapped to platform-module proof artifacts via a swappable EvidencePort; freshness windows, gap alerts, readiness scoring, workpaper exports. Adding a framework = one pack entry.",
+  "capabilities": ["soc2", "iso27001", "evidence-collection", "readiness", "audit-exports"],
+  "packs": ["packs/compliance-evidence-core.json"],
+  "publicApi": ["bindEvidencePort", "frameworks", "collect", "readiness", "exportReport"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "evidence.collected", "unit": "collection", "description": "Framework evidence collection run" },
+      { "event": "readiness.scored", "unit": "score", "description": "Readiness scored across frameworks" },
+      { "event": "report.exported", "unit": "report", "description": "Audit report exported" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
