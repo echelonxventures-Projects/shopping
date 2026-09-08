@@ -1,0 +1,29 @@
+{
+  "$comment": "Infra composer pack — deployment shapes per product, runtime target, sizing classes, IaC output policies. All DATA: topology generation is configuration.",
+  "pack": { "name": "infra-composer-core", "version": "1.0.0", "kind": "capability-pack" },
+  "runtimeTarget": {
+    "id": "rt-k8s-anywhere",
+    "kind": "kubernetes",
+    "apiVersion": "apps/v1",
+    "runtime": "container-orchestrated"
+  },
+  "sizingClasses": {
+    "kernel": { "replicas": 3, "cpuMilli": 500, "memoryMi": 512, "hpa": { "min": 3, "max": 20, "targetCpuPct": 70 } },
+    "commerce-hot-path": { "replicas": 5, "cpuMilli": 1000, "memoryMi": 1024, "hpa": { "min": 5, "max": 50, "targetCpuPct": 65 } },
+    "batch": { "replicas": 1, "cpuMilli": 250, "memoryMi": 256, "hpa": null }
+  },
+  "deploymentShapes": [
+    { "appliesToProducts": ["mod-catalog", "mod-checkout", "mod-orders", "mod-inventory", "mod-payments", "mod-search"], "sizingClass": "commerce-hot-path", "deployment": "stateless" },
+    { "appliesToProducts": ["mod-tax", "mod-monetization", "mod-marketplace", "mod-b2b", "mod-ads-auction", "mod-agentic-commerce", "mod-ai-commerce"], "sizingClass": "kernel", "deployment": "stateless" },
+    { "appliesToProducts": ["mod-onboarding", "mod-recommendations", "mod-experimentation", "mod-compliance-evidence", "mod-mobile-ops", "mod-offline-mode", "mod-waiting-room", "mod-settlement"], "sizingClass": "batch", "deployment": "stateless" },
+    { "appliesToProducts": ["*"], "sizingClass": "kernel", "deployment": "stateless" }
+  ],
+  "dataPlane": {
+    "stores": [
+      { "id": "primary-sql", "engine": "sql-engine", "class": "relational", "haMode": "region-pinned", "backup": { "pitr": true, "retentionDays": 30 } },
+      { "id": "cache", "engine": "memory-engine", "class": "kv", "haMode": "replicated", "backup": { "pitr": false, "retentionDays": 0 } }
+    ],
+    "searchIndex": { "engine": "memory-search", "class": "search", "haMode": "replicated" }
+  },
+  "outputs": { "formats": ["k8s-manifest", "topology-json"], "namespacePrefix": "aether" }
+}

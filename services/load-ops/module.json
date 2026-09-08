@@ -1,0 +1,24 @@
+{
+  "id": "mod-load-ops",
+  "name": "@aether/service-load-ops",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Load Ops (Burst Rehearsal Harness)",
+  "description": "Deterministic burst scenarios run against REAL in-process services (catalog→inventory→checkout, no mocks): staged virtual-user ramps, measured throughput/p95/error-rate, and the oversell=0 invariant verified against real stock. SLO verdicts from pack data; scenarios are configuration.",
+  "capabilities": ["load-testing", "burst-rehearsal", "slo-verification", "oversell-invariant", "throughput-metrics"],
+  "packs": ["packs/load-ops-core.json"],
+  "publicApi": ["run", "scenario"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "scenario.executed", "unit": "run", "description": "Load scenario executed" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [
+    { "id": "mod-checkout", "minVersion": "0.1.0" },
+    { "id": "mod-inventory", "minVersion": "0.1.0" },
+    { "id": "mod-catalog", "minVersion": "0.1.0" }
+  ],
+  "hostContract": "aether-host-1"
+}

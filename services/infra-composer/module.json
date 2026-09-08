@@ -1,0 +1,21 @@
+{
+  "id": "mod-infra-composer",
+  "name": "@aether/service-infra-composer",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Infra Composer (IaC-as-Data)",
+  "description": "Deployment topology composed from the LIVE product registry + pack-defined shapes/sizing: products map to k8s Deployments with HPA; data-plane stores wired from pack; new products auto-extend the topology — infra derives from products, zero infra code.",
+  "capabilities": ["iac", "topology", "k8s-manifests", "sizing", "product-derived-infra"],
+  "packs": ["packs/infra-composer-core.json"],
+  "publicApi": ["compose", "renderK8s", "renderDataPlane", "productCount"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "topology.composed", "unit": "composition", "description": "Topology composed from registry" },
+      { "event": "topology.rendered", "unit": "render", "description": "Manifests rendered" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

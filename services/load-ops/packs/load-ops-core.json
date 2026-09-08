@@ -1,0 +1,58 @@
+{
+  "$comment": "Load-ops pack \u2014 burst scenario, SLO thresholds, ramp stages. All DATA: load scenarios are configuration; new scenario = new pack entry.",
+  "pack": {
+    "name": "load-ops-core",
+    "version": "1.0.0",
+    "kind": "capability-pack"
+  },
+  "scenarios": [
+    {
+      "id": "flash-sale-burst",
+      "description": "250k orders/hr burst rehearsal against real in-process services",
+      "stages": [
+        {
+          "label": "warm",
+          "virtualUsers": 50,
+          "durationMs": 200
+        },
+        {
+          "label": "ramp",
+          "virtualUsers": 500,
+          "durationMs": 400
+        },
+        {
+          "label": "peak",
+          "virtualUsers": 1000,
+          "durationMs": 600
+        }
+      ],
+      "targetOpsPerSecond": 70,
+      "workload": "browse-pdp-addtocart-reserve-checkout",
+      "slos": {
+        "maxErrorRate": 0.001,
+        "p95LatencyMs": 5,
+        "oversellRate": 0
+      },
+      "stockPerOffer": 100000
+    },
+    {
+      "id": "search-heavy",
+      "description": "facet+fuzzy search soak",
+      "stages": [
+        {
+          "label": "soak",
+          "virtualUsers": 200,
+          "durationMs": 400
+        }
+      ],
+      "targetOpsPerSecond": 200,
+      "workload": "search-query",
+      "slos": {
+        "maxErrorRate": 0.0,
+        "p95LatencyMs": 10,
+        "oversellRate": 0
+      },
+      "stockPerOffer": 100000
+    }
+  ]
+}

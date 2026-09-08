@@ -613,5 +613,25 @@
       "P0-CTR-004"
     ],
     "acceptance": "sql-engine tests 5/5 + dual-agnosticism Proof B extended to 3 engines (payable 90.00 / tax 7.00 identical)"
+  },
+  {
+    "tid": "PX-INF-002",
+    "title": "Infra composer (IaC-as-data) \u2014 deployment topology composed from the LIVE product registry + pack shapes: products \u2192 k8s Deployments w/ HPA, data-plane stores, k8s manifest rendering; new products auto-extend topology",
+    "phase": "PX",
+    "workstream": "INF",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-016"
+    ],
+    "acceptance": "infra-composer tests 6/6 \u2014 hot-path 5-replica/HPA-50 vs batch 1-replica; * fallback; registry is the only door"
+  },
+  {
+    "tid": "PX-INF-003",
+    "title": "Load-ops harness \u2014 deterministic burst scenarios against REAL in-process services (catalog\u2192inventory\u2192checkout, no mocks): staged ramps, measured throughput/p95/error-rate, OVERSELL=0 invariant under burst, SLO verdicts from pack",
+    "phase": "PX",
+    "workstream": "INF",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "load-ops tests 6/6 \u2014 flash-sale + search-heavy scenarios pass pack SLOs; unhandled-rejection bug caught & fixed (async seeding)"
   }
 ]
