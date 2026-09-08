@@ -18,6 +18,7 @@ import { TaxEngine } from '../../services/tax/src/index.ts';
 import { OrdersService } from '../../services/orders/src/index.ts';
 import { InventoryService } from '../../services/inventory/src/index.ts';
 import { MemoryEngine, FileEngine } from '../../kernel/storage/src/index.ts';
+import { SqlEngine } from '../../kernel/storage-sql/src/index.ts';
 import { EngineAdmission } from '../../kernel/conformance/src/index.ts';
 import { MarketRegistryService } from '../../services/market-registry/src/index.ts';
 import type { MarketsPack } from '../../services/market-registry/src/index.ts';
@@ -29,12 +30,14 @@ const flowsPack = read('../../packs/commerce-flows/pack.json');
 const taxPack = read('../../packs/tax-core/pack.json');
 const marketsPack = read('../../services/market-registry/packs/markets.json') as MarketsPack;
 
-async function runGoldenCommerce(engineKind: 'memory' | 'file'): Promise<{ orderId: string; payable: number; tax: number }> {
+async function runGoldenCommerce(engineKind: 'memory' | 'file' | 'sql'): Promise<{ orderId: string; payable: number; tax: number }> {
   // one full commerce chain on the given engine — admitted via conformance first
   const admission = new EngineAdmission();
   const makeEngine = () => engineKind === 'memory'
     ? new MemoryEngine()
-    : new FileEngine(join(tmpdir(), `agn-${Date.now()}-${Math.random()}.jsonl`));
+    : engineKind === 'file'
+      ? new FileEngine(join(tmpdir(), `agn-${Date.now()}-${Math.random()}.jsonl`))
+      : new SqlEngine(join(tmpdir(), `agn-sql-${Date.now()}-${Math.random()}.db`));
   const candidate = makeEngine();
   const conformance = await admission.admit(candidate);
   if (!conformance.admitted) throw new Error(`${engineKind} engine failed conformance: ${conformance.failures.map((f) => f.error).join('; ')}`);
@@ -98,10 +101,12 @@ test('PROOF A: new market onboarding = pure config (zero code deploys)', () => {
 });
 
 test('PROOF B: identical golden commerce results on BOTH conformance-admitted engines', async () => {
-  const [onMemory, onFile] = await Promise.all([runGoldenCommerce('memory'), runGoldenCommerce('file')]);
+  const [onMemory, onFile, onSql] = await Promise.all([runGoldenCommerce('memory'), runGoldenCommerce('file'), runGoldenCommerce('sql')]);
   // equivalence across engines — the agnosticism contract
-  assert.equal(onMemory.payable, onFile.payable); // 90.00 on both
-  assert.equal(onMemory.tax, onFile.tax); // 7.00 on both
+  assert.equal(onMemory.payable, onFile.payable); // identical across engines
+  assert.equal(onMemory.payable, onSql.payable); // relational engine agrees
+  assert.equal(onMemory.tax, onFile.tax);
+  assert.equal(onMemory.tax, onSql.tax);
   assert.equal(onMemory.payable, 90);
   assert.equal(onMemory.tax, 7);
   assert.notEqual(onMemory.orderId, onFile.orderId); // different U²IDs, same economics

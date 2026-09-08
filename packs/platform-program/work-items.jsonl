@@ -601,5 +601,17 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "mobile-ops tests 5/5 \u2014 hold-gate, grace window, and deep-link param extraction proven"
+  },
+  {
+    "tid": "PX-INF-001",
+    "title": "SQL storage engine (relational Reference Pack) \u2014 real ACID tables over node:sqlite, in-SQL bitemporal asOf/history, transactional closeVersion, durable across instances; admitted via the SAME conformance matrix; triple-engine golden-commerce equivalence proven (memory+file+SQL)",
+    "phase": "PX",
+    "workstream": "INF",
+    "status": "Done",
+    "dependencies": [
+      "P0-CTR-003",
+      "P0-CTR-004"
+    ],
+    "acceptance": "sql-engine tests 5/5 + dual-agnosticism Proof B extended to 3 engines (payable 90.00 / tax 7.00 identical)"
   }
 ]
