@@ -545,5 +545,34 @@
       "P0-CTR-004"
     ],
     "acceptance": "dual-agnosticism.test.ts Proofs B + conformance-refusal green \u2014 payable 90.00/tax 7.00 identical on memory+file engines"
+  },
+  {
+    "tid": "P4-AI-002",
+    "title": "Agentic commerce \u2014 signed delegations (scoped authority: browse/cart/purchase/replenish), spend guardrails (per-action/day caps, item caps, forbidden categories), human-confirmation thresholds, revocable TTL, consent-gated",
+    "phase": "P4",
+    "workstream": "AI",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "agentic tests 7/7 \u2014 guardrail chain proven (scope \u2192 category \u2192 caps \u2192 confirmation)"
+  },
+  {
+    "tid": "P4-ECO-001",
+    "title": "Ads auction \u2014 second-price CPC (rank = bid \u00d7 quality from pack weights), slot caps, min bid/quality floors, budget depletion + auto-stop, mandatory Sponsored labeling (EU AI Act)",
+    "phase": "P4",
+    "workstream": "ECO",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "ads-auction tests 5/5 \u2014 exact second-price math proven"
+  },
+  {
+    "tid": "PX-GOV-001",
+    "title": "Register consistency gate \u2014 CI check that \u00a716.1-16 historical tables never contradict live work-items data; fix-wbs-rows repair script",
+    "phase": "PX",
+    "workstream": "GOV",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-001"
+    ],
+    "acceptance": "check-register-consistency green (53 TIDs agree); 32 stale rows reconciled"
   }
 ]

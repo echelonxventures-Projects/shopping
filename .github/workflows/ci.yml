@@ -26,3 +26,5 @@ jobs:
         run: |
           npm run register:project
           git diff --exit-code docs/PLATFORM-PLAN.md || (echo "::error::§16.7 projection is stale — run npm run register:project" && exit 1)
+      - name: Register consistency gate (§16.1-16 tables agree with live data)
+        run: node scripts/check-register-consistency.mjs

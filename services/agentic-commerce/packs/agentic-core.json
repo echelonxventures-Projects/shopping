@@ -1,0 +1,23 @@
+{
+  "$comment": "Agentic commerce pack — agent identity scopes, spending guardrails, consent rules. All DATA: an agent's permissions are configuration, never code.",
+  "pack": { "name": "agentic-core", "version": "1.0.0", "kind": "capability-pack" },
+  "agentScopes": [
+    { "scope": "browse", "canSearch": true, "canReadPdp": true, "canAddToCart": false, "canPurchase": false },
+    { "scope": "cart-manage", "canSearch": true, "canReadPdp": true, "canAddToCart": true, "canPurchase": false },
+    { "scope": "purchase", "canSearch": true, "canReadPdp": true, "canAddToCart": true, "canPurchase": true },
+    { "scope": "replenish", "canSearch": true, "canReadPdp": true, "canAddToCart": true, "canPurchase": true, "restrictToCategories": ["consumable", "perishable"] }
+  ],
+  "guardrails": {
+    "maxSpendPerAction": { "amount": 500, "currency": "USD" },
+    "maxSpendPerDay": { "amount": 2000, "currency": "USD" },
+    "maxItemsPerOrder": 20,
+    "forbiddenCategories": ["pharma", "weapons-class", "regulated-high-value"],
+    "requireHumanConfirmationAbove": { "amount": 300, "currency": "USD" },
+    "consentRequired": true
+  },
+  "delegation": {
+    "maxTtlHours": 168,
+    "revocable": true,
+    "signingScheme": "ed25519-class"
+  }
+}

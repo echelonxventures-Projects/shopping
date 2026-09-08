@@ -1,0 +1,22 @@
+{
+  "id": "mod-ads-auction",
+  "name": "@aether/service-ads-auction",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Sponsored Ads Auction",
+  "description": "Second-price CPC auction for sponsored listings: rank = bid × quality score (pack weights over CTR/relevance/sellerRating), slot count + min bid/quality from pack, second-price charging, daily budget depletion with auto-stop, mandatory Sponsored labeling (EU AI Act). The auction itself is configuration.",
+  "capabilities": ["ads", "cpc-auction", "second-price", "quality-score", "budgets", "transparency-labeling"],
+  "packs": ["packs/ads-auction-core.json"],
+  "publicApi": ["qualityScore", "runAuction", "chargeClick", "budgetState"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "auction.run", "unit": "auction", "description": "Auction executed" },
+      { "event": "click.charged", "unit": "click", "description": "Sponsored click charged" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.10, "currency": "USD", "perUnit": "click" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

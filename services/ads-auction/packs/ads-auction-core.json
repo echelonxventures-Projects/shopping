@@ -1,0 +1,17 @@
+{
+  "$comment": "Ads auction pack — CPC bidding, quality-score formula, slot counts, budget rules. All DATA: the auction IS configuration.",
+  "pack": { "name": "ads-auction-core", "version": "1.0.0", "kind": "capability-pack" },
+  "auction": {
+    "pricingModel": "second-price-cpc",
+    "slots": 3,
+    "minBid": { "amount": 0.05, "currency": "USD" },
+    "minQualityScore": 0.3,
+    "qualityScoreWeights": { "ctr": 0.4, "relevance": 0.3, "sellerRating": 0.3 }
+  },
+  "budgets": {
+    "dailyDefault": { "amount": 100, "currency": "USD" },
+    "stopWhenExhausted": true,
+    "carryOver": false
+  },
+  "labeling": { "required": true, "label": "Sponsored" }
+}

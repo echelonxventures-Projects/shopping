@@ -1,0 +1,23 @@
+{
+  "id": "mod-agentic-commerce",
+  "name": "@aether/service-agentic-commerce",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Agentic Commerce",
+  "description": "Signed delegations for AI agents buying on users' behalf: scoped authority (browse/cart/purchase/replenish), cryptographic delegation signing + verification, spend guardrails (per-action/per-day caps, item caps, forbidden categories), human-confirmation thresholds, revocable TTL, consent-gated by constitutional policy. All guardrails are pack data.",
+  "capabilities": ["agentic", "delegations", "signed-authority", "spend-guardrails", "consent-gated"],
+  "packs": ["packs/agentic-core.json"],
+  "publicApi": ["setConsent", "issueDelegation", "revokeDelegation", "verifyDelegation", "evaluate"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "delegation.issued", "unit": "delegation", "description": "Signed delegation issued" },
+      { "event": "delegation.revoked", "unit": "delegation", "description": "Delegation revoked" },
+      { "event": "action.evaluated", "unit": "action", "description": "Agent action guardrail-evaluated" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.01, "currency": "USD", "perUnit": "action" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
