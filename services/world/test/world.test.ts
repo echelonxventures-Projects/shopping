@@ -108,3 +108,20 @@ test('spine invariant: ISO <-> spine round-trips exactly (Tier-0 time spine)', (
   assert.equal(spineSecondsToIso(isoToSpineSeconds(iso)), '2026-09-06T12:34:56.000Z'); // ms-precision ISO
   assert.equal(isoToSpineSeconds(spineSecondsToIso(1_700_000_000)), 1_700_000_000);
 });
+
+test('formatLocalClock: spine seconds → HH:MM:SS; timezone offsets applied (P0-WLD-001)', () => {
+  const s = svc();
+  // noon UTC on an 86400s day
+  assert.equal(s.formatLocalClock('earth', 12 * 3600), '12:00:00');
+  // midnight wrap
+  assert.equal(s.formatLocalClock('earth', 86400 + 3661), '01:01:01');
+  // IST (+5:30) shifts noon UTC → 17:30 IST
+  assert.equal(s.formatLocalClock('earth', 12 * 3600, 'IST'), '17:30:00');
+});
+
+test('spineToSlaDisplay: spine seconds → calendar units (pluralization from unit data)', () => {
+  const s = svc();
+  assert.equal(s.spineToSlaDisplay('earth', 86400), '1 day');
+  assert.equal(s.spineToSlaDisplay('earth', 3 * 86400), '3 days');
+  assert.equal(s.spineToSlaDisplay('earth', 1.5 * 86400), '1.5 days');
+});

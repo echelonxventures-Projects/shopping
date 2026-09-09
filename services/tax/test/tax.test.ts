@@ -78,3 +78,13 @@ test('multi-line totals aggregate correctly (per-line rounding, then sum)', () =
   assert.equal(r.totalTax, 10.54); // per-line rounding then sum: 7 + 3.54
   assert.equal(r.totalGross, 161.04); // 150.5 + 10.54
 });
+
+test('computeLine: single-line convenience API agrees with compute (P1-TAX-001)', () => {
+  const line = { lineId: 'single-1', netAmount: 200 };
+  const single = engine.computeLine({ market: 'US', region: 'TX' }, line);
+  const batch = engine.compute({ market: 'US', region: 'TX' }, [line]);
+  assert.equal(single.taxAmount, batch.lines[0]!.taxAmount);
+  assert.equal(single.gross, batch.lines[0]!.gross);
+  assert.equal(single.mode, 'exclusive');
+  assert.ok(single.explain.length >= 1);
+});

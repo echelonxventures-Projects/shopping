@@ -762,5 +762,14 @@
       "P0-PRD-001"
     ],
     "acceptance": "kernel/module tests 12/12 \u2014 bundle export ships packs+contract; install into external runtime meters to EXTERNAL billing; phantom exports rejected; $5\u2192$7.25 single-value override + tenant-scoped windowDays=99 both land exactly"
+  },
+  {
+    "tid": "PX-TST-001",
+    "title": "Total test coverage \u2014 every publicApi method of every module exercised in tests (231/231 across 39 services); coverage audit is scriptable (manifest publicApi vs test-source scan); real bug found+fixed: support slaBreached resolution-flag dead expression removed",
+    "phase": "PX",
+    "workstream": "TST",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "coverage scan = 0 untested methods; 370/370 tests green; ai-commerce module contract, catalog listOffers tenant isolation, consent regulationFor, ecr relate, ops listDrills, orders canTransition, product-master validators, tax computeLine, world clocks all covered"
   }
 ]

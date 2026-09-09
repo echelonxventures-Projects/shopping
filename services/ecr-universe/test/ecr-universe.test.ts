@@ -163,3 +163,18 @@ test('module contract: default export AetherModule, metered projections', async 
   assert.ok(hops.length >= 2);
   assert.ok(events.includes('ecr.entity.reconstructed'));
 });
+
+test('relate: declare NEW relationships at runtime (config, not enumeration)', () => {
+  const svc2 = new EcrUniverseService(pack);
+  const relId = svc2.relate({
+    typeId: 'rt_ships_via',
+    fromId: 'zone_us_west_ecr',
+    toId: 'carrier_regional_in',
+    epoch: 1,
+    validFrom: '2026-01-01T00:00:00Z',
+    recordedAt: '2026-01-01T00:00:00Z',
+  });
+  assert.ok(relId.startsWith('rel-'));
+  const hops = svc2.traverse('zone_us_west_ecr', '2026-06-01T00:00:00Z', 'rt_ships_via');
+  assert.ok(hops.some((h) => h.toId === 'carrier_regional_in'));
+});

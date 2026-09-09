@@ -137,7 +137,7 @@ export class SupportService {
     const t = this.get(tenantId, ticketId);
     return {
       firstResponse: !!t.firstResponseDueAt && t.firstResponseDueAt < at && !t.events.some((e) => e.trigger === 'agent-assigned'),
-      resolution: !!t.resolutionDueAt < false || (!!t.resolutionDueAt && t.resolutionDueAt < at && !['resolved', 'closed'].includes(t.status)),
+      resolution: !!t.resolutionDueAt && t.resolutionDueAt < at && !['resolved', 'closed'].includes(t.status),
     };
   }
 

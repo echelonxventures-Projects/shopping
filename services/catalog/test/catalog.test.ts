@@ -45,3 +45,17 @@ test('schema validation enforced from pack (required hsCode)', async () => {
     /hsCode/
   );
 });
+
+test('listOffers: returns every live offer for a product (empty + populated)', async () => {
+  const engine = new MemoryEngine();
+  const svc = new CatalogService(engine, pack, 'marketplace-sku', 'offer-id');
+  const { id } = await svc.createProduct('tenant-l', { title: 'List Offers Tee', hsCode: '6109.10', countryOfOrigin: 'IN' });
+  assert.equal((await svc.listOffers('tenant-l', id)).length, 0);
+  await svc.addOffer('tenant-l', id, { sellerId: 's1', price: 10, currency: 'USD', fulfillmentMode: 'seller-fulfilled' });
+  await svc.addOffer('tenant-l', id, { sellerId: 's2', price: 12, currency: 'USD', fulfillmentMode: 'platform-fulfilled' });
+  const offers = await svc.listOffers('tenant-l', id);
+  assert.equal(offers.length, 2);
+  assert.ok(offers.every((o) => o.sellerId === 's1' || o.sellerId === 's2'));
+  // tenant isolation: another tenant sees nothing
+  assert.equal((await svc.listOffers('tenant-other', id)).length, 0);
+});

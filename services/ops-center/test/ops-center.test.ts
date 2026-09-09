@@ -133,3 +133,13 @@ test('module contract: default export AetherModule with metered drill execution'
   assert.equal(r.passed, true);
   assert.deepEqual(events, ['ops.drill.executed']);
 });
+
+test('listDrills: the drill catalog is pack data (every drill declared is listed)', () => {
+  const drills = svc.listDrills();
+  assert.equal(drills.length, pack.drills.length);
+  assert.ok(drills.every((d) => d.invariants.length >= 1 && d.rollback.length >= 1));
+  const ids = drills.map((d) => d.id);
+  for (const must of ['drill_store_outage', 'drill_burst_overload', 'drill_bad_pack_publish']) {
+    assert.ok(ids.includes(must));
+  }
+});

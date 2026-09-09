@@ -94,3 +94,19 @@ test('decision-explainability: journal records + queries why-was-I-charged', () 
   assert.equal((taxWhy[0]!.contextFrame as { market: string }).market, 'EU');
   assert.equal(s.explain('order:ord_9:line:0').length, 2);
 });
+
+test('slaBreached: SLA clocks start at triage; overdue flags computed exactly', () => {
+  const s = svc();
+  const t = s.open('t1', 'c1', 'Where is my parcel?', 'Order 77 not delivered');
+  // pre-triage: no SLA clocks yet — nothing can be breached
+  assert.deepEqual(s.slaBreached('t1', t.ticketId), { firstResponse: false, resolution: false });
+  s.triage('t1', t.ticketId); // starts firstResponseDueAt/resolutionDueAt from pack SLAs
+  // now, at triage time: not yet overdue
+  const ok = s.slaBreached('t1', t.ticketId);
+  assert.equal(ok.firstResponse, false);
+  // far future "now" — clocks long overdue, no agent assign, still open → both breached
+  const future = new Date(Date.now() + 100 * 365 * 24 * 3600 * 1000).toISOString();
+  const breached = s.slaBreached('t1', t.ticketId, future);
+  assert.equal(breached.firstResponse, true);
+  assert.equal(breached.resolution, true);
+});

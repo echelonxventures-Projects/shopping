@@ -210,3 +210,29 @@ test('packaging: multi-level packaging on SKU (bottle→case→carton→pallet)'
   }, 't');
   assert.equal(sku.packaging!.length, 4);
 });
+
+test('validateAttributes: direct legality probe — required/missing, enum, type; unknown type rejected', () => {
+  const s = svc();
+  const product = { id: 'vld-1', taxonomyPath: ['dom_food', 'ind_grocery', 'fam_milk', 'model_milk_1l'], productType: 'perishable' };
+  // valid attribute set passes
+  s.validateAttributes(product, {
+    hsCode: '0401.10', countryOfOrigin: 'IN', expiryDate: '2026-09-20',
+    storageCondition: 'chilled', lotNumber: 'L1', caloriesPer100g: 61, organicCertified: true,
+  });
+  // missing required
+  assert.throws(() => s.validateAttributes(product, { hsCode: '0401.10' }), /missing required attribute/);
+  // wrong scalar type
+  assert.throws(
+    () => s.validateAttributes(product, { hsCode: '0401.10', countryOfOrigin: 'IN', expiryDate: '2026-09-20', storageCondition: 'chilled', lotNumber: 'L1', caloriesPer100g: 'sixty-one' }),
+    /caloriesPer100g must be numeric measure/
+  );
+  // unknown product type
+  assert.throws(() => s.validateAttributes({ ...product, productType: 'teleportation' }, {}), /unknown product type/);
+});
+
+test('validateIdentity: scheme bindings from pack — pattern pass/fail, unknown scheme rejected', () => {
+  const s = svc();
+  s.validateIdentity('sku-1', { GTIN: '00123456789012' }); // 14-digit GTIN from pack pattern
+  assert.throws(() => s.validateIdentity('sku-1', { GTIN: 'not-a-gtin' }), /fails pattern/);
+  assert.throws(() => s.validateIdentity('sku-1', { 'NO-SUCH-SCHEME': 'x' }), /unknown identity scheme .* register in pack/);
+});

@@ -79,3 +79,14 @@ test('returned flow via delivered→returned (pack RMA path)', async () => {
   const ev = await svc.transition('t-1', 'ord-5', 'returned', 'rma-approved');
   assert.equal(ev.to, 'returned');
 });
+
+test('canTransition: pure workflow-legality query (pack states, no side effects)', () => {
+  const svc = new OrdersService(wf, new MemoryEngine());
+  assert.equal(svc.canTransition('created', 'confirmed'), true);
+  assert.equal(svc.canTransition('confirmed', 'shipped'), true);
+  assert.equal(svc.canTransition('delivered', 'returned'), true);
+  // illegal hops
+  assert.equal(svc.canTransition('created', 'delivered'), false);
+  assert.equal(svc.canTransition('closed', 'confirmed'), false);
+  assert.equal(svc.canTransition('cancelled', 'shipped'), false);
+});

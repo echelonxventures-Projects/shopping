@@ -112,3 +112,31 @@ test('embedding adapter is swappable (Doctrine 6): custom adapter changes result
   assert.ok(cosine([1, 0], [1, 0]) > 0.999);
   void new ReferenceEmbeddingAdapter(4);
 });
+
+// ---------- module-contract coverage: every publicApi method exercised ----------
+test('module api: indexVisual, visualQuery, assistantRespond, sessionTurns (all publicApi)', async () => {
+  const mod = (await import('../src/index.ts')).default;
+  const events: string[] = [];
+  const api = await mod.create(
+    { tenantId: () => 't1', storage: () => null, log: () => {} },
+    { meter: (e: string) => events.push(e) },
+    { 'ai-commerce-core': pack }
+  );
+  // indexVisual
+  const cand = (api['indexVisual'] as (id: string, txt: string, t: string, c: string) => VisualCandidate)(
+    'p9', 'navy blue cotton crew neck t-shirt short sleeve', 'Navy Tee', 'apparel'
+  );
+  assert.equal(cand.productId, 'p9');
+  // visualQuery
+  const hits = (api['visualQuery'] as (txt: string, c: VisualCandidate[]) => Array<{ productId: string }>)(
+    'navy cotton t-shirt', [cand]
+  );
+  assert.ok(hits.length >= 1);
+  assert.equal(hits[0]!.productId, 'p9');
+  // assistantRespond + sessionTurns
+  const out = (api['assistantRespond'] as (s: string, m: string) => { action: string; aiDisclosed?: boolean })('sess-1', 'show me navy t-shirts');
+  assert.ok(['reply', 'escalate-human', 'refuse'].includes(out.action));
+  const turns = (api['sessionTurns'] as (s: string) => Array<{ role: string }>)('sess-1');
+  assert.ok(turns.length >= 1);
+  assert.ok(events.includes('visual.indexed') && events.includes('visual.queried') && events.includes('assistant.turn'));
+});

@@ -93,3 +93,10 @@ test('SLA breach detection: unfulfilled past-due requests flagged', () => {
   s.fulfil(d1.dsrId);
   assert.equal(s.slaBreaches().some((b) => b.dsrId === d1.dsrId), false); // completed clears
 });
+
+test('regulationFor: market → mapped regulation; unmapped market rejected (data gap, not fallback)', () => {
+  const s = svc();
+  const reg = s.regulationFor('BR');
+  assert.ok(['LGPD', 'GDPR', 'CCPA/CPRA'].includes(reg.id));
+  assert.throws(() => s.regulationFor('ZZ'), /add to consent-dsr pack/);
+});
