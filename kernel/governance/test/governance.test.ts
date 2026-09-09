@@ -49,3 +49,39 @@ test('crypto registry: floors reject weak keys; CBOM + PQ readiness generated', 
   assert.equal(cr.pqReadiness().ready, 1);
   assert.equal(cr.schemeFor('pii/vault').algorithm, 'AES-GCM');
 });
+
+test('pack simulator (P0-GOV-004): bad commission rule caught PRE-publish; good pack lands; audit records rejection', async () => {
+  const { PackSimulator } = await import('../src/index.ts');
+  const sim = new PackSimulator();
+  const cs = new ConfigStore();
+
+  // scenario suite is CALLER DATA: golden order → expected commission
+  const scenarios = [
+    {
+      id: 'sc_commission_100_order',
+      description: 'a 100.00 order at default rate yields 10.00 commission',
+      run: (candidate: unknown) => {
+        const rate = (candidate as { rate: number }).rate;
+        return { observed: Math.round(100 * rate * 100) / 100 };
+      },
+      expect: 10,
+    },
+  ];
+
+  // BAD pack: fat-fingered 100% commission — simulation blocks publish
+  const bad = sim.publishGated(cs, { key: 'commission.pack', tier: 'T2', value: { rate: 1.0 }, scope: {}, publishedBy: 'ops-1' }, scenarios);
+  assert.equal(bad.report.passed, false);
+  assert.equal(bad.entry, undefined);
+  assert.equal(cs.resolve('commission.pack'), undefined); // never landed
+  assert.ok(cs.auditTrail().some((a) => a.result === 'rejected' && a.key === 'commission.pack'));
+
+  // GOOD pack: passes simulation and publishes
+  const good = sim.publishGated(cs, { key: 'commission.pack', tier: 'T2', value: { rate: 0.1 }, scope: {}, publishedBy: 'ops-1' }, scenarios);
+  assert.equal(good.report.passed, true);
+  assert.equal((cs.resolve('commission.pack')!.value as { rate: number }).rate, 0.1);
+
+  // scenario evaluator errors are captured as failures, not crashes
+  const crash = sim.simulate(null, scenarios);
+  assert.equal(crash.passed, false);
+  assert.ok(String(crash.results[0]!.observed).startsWith('error:'));
+});

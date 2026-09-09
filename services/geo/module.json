@@ -1,0 +1,22 @@
+{
+  "id": "mod-geo",
+  "name": "@aether/service-geo",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Geo Service (Zones, Geofences, Ship-From-Store)",
+  "description": "Zone resolution from unlimited-dimension pack rules (country/region/postal-prefix), polygon + radius geofences (point-in-polygon, haversine), nearest-fulfillment-node selection for ship-from-store/BOPIS with capability filters and distance caps. Zones drive tax/shipping/eligibility as data — no geographic logic in code.",
+  "capabilities": ["geo", "zones", "geofences", "ship-from-store", "bopis-routing", "distance"],
+  "packs": ["packs/geo-core.json"],
+  "publicApi": ["resolveZones", "inGeofence", "nearestNodes", "distanceKm"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "geo.zone.resolved", "unit": "lookup", "description": "Zone resolution performed" },
+      { "event": "geo.route.selected", "unit": "selection", "description": "Fulfillment node selected" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.0001, "currency": "USD", "perUnit": "lookup" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

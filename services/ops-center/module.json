@@ -1,0 +1,23 @@
+{
+  "id": "mod-ops-center",
+  "name": "@aether/service-ops-center",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Ops Center (Chaos Drills, Runbooks-as-Data, FinOps Attribution)",
+  "description": "Operational readiness as a product: chaos game-day drills are pack scenarios (fault injections + expected invariants + rollback verification), runbooks are GENERATED from the live product registry (every product gets one — zero drift), and FinOps attributes metered usage to per-tenant unit economics with pack-defined resource costs. Doctrine recursion: operations derive from products and packs, never from tribal knowledge.",
+  "capabilities": ["chaos-drills", "game-days", "runbooks", "on-call", "finops", "unit-economics", "tenant-attribution"],
+  "packs": ["packs/ops-center-core.json"],
+  "publicApi": ["runDrill", "listDrills", "runbookFor", "allRunbooks", "attribute", "tenantUnitEconomics"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "ops.drill.executed", "unit": "drill", "description": "Chaos drill executed" },
+      { "event": "ops.runbook.generated", "unit": "runbook", "description": "Runbook generated from registry" },
+      { "event": "ops.finops.attributed", "unit": "statement", "description": "Tenant cost attribution computed" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 99, "currency": "USD", "perUnit": "month" }
+  },
+  "dependencies": [{ "id": "mod-infra-composer", "optional": true }],
+  "hostContract": "aether-host-1"
+}

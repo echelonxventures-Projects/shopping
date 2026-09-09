@@ -633,5 +633,112 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "load-ops tests 6/6 \u2014 flash-sale + search-heavy scenarios pass pack SLOs; unhandled-rejection bug caught & fixed (async seeding)"
+  },
+  {
+    "tid": "P1-PRC-001",
+    "title": "Pricing engine \u2014 bitemporal price lists w/ market-dimension matrices, point-in-time price reconstruction (amendments as new rows, recordedAt-aware)",
+    "phase": "P1",
+    "workstream": "PRC",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "pricing tests: price at historical T reconstructs base vs amendment incl. knowledge time; unknown market \u2192 null (no invented fallback)"
+  },
+  {
+    "tid": "P1-PRC-002",
+    "title": "Promotions engine \u2014 pack stacking policy (stackable/exclusive, max-stacked, total-discount cap), bundles, B2B quantity tiers; ML-price guardrails (floor/ceiling/max-daily-move) as constitutional config",
+    "phase": "P1",
+    "workstream": "PRC",
+    "status": "Done",
+    "dependencies": [
+      "P1-PRC-001"
+    ],
+    "acceptance": "golden promo scenarios pass: exclusive suppresses stack; cap clamps; bundle+promo+tier compose with explainability; algorithmic price always clamped"
+  },
+  {
+    "tid": "P1-GEO-001",
+    "title": "Geo service \u2014 zone resolution (country/region/postal-prefix rules, priority), polygon+radius geofences (ray-cast, haversine), ship-from-store/BOPIS nearest-node routing under pack caps",
+    "phase": "P1",
+    "workstream": "GEO",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "geo tests 8/8 \u2014 zone-driven eligibility correct; capability-filtered distance-capped routing; unknown country \u2192 zero zones"
+  },
+  {
+    "tid": "P0-GOV-004",
+    "title": "Pack simulation harness \u2014 scenario suites (caller data) run against CANDIDATE packs pre-publish; publishGated blocks bad packs from ConfigStore, rejection audited",
+    "phase": "P0",
+    "workstream": "GOV",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-001"
+    ],
+    "acceptance": "bad commission rule (100% fat-finger) caught pre-publish; good pack lands; evaluator crash captured as failure"
+  },
+  {
+    "tid": "P3-SCL-004",
+    "title": "Chaos drills + game days \u2014 drill scenarios as pack data (fault, blast radius, invariants, rollback steps); harness adapter (sim or real cluster); abort-on-breach policy; rollback ALWAYS verified",
+    "phase": "P3",
+    "workstream": "SCL",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "ops-center drills: store-outage/burst-overload/bad-pack-publish pass; invariant breach aborts but rollback still runs; break-glass + rollback verified"
+  },
+  {
+    "tid": "PX-OPS-001",
+    "title": "Runbooks-as-data \u2014 one runbook per product GENERATED from the live product registry (template sections from pack, content from module manifests) \u2014 total coverage by construction, zero drift",
+    "phase": "PX",
+    "workstream": "OPS",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-016"
+    ],
+    "acceptance": "ops-center: runbook per registered product (35+), escalation ladder from pack"
+  },
+  {
+    "tid": "PX-FIN-001",
+    "title": "FinOps per-tenant attribution \u2014 metered usage \u00d7 pack cost table \u2192 tenant cost + unit economics vs margin target; unknown resource rejected (rates are config)",
+    "phase": "PX",
+    "workstream": "FIN",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "ops-center: per-tenant/per-resource cost attribution exact; margin verdict vs pack target"
+  },
+  {
+    "tid": "P1-RUL-001",
+    "title": "Rules Engine \u2014 bitemporal decision-table RuleEngine in kernel/runtime (priority resolution, point-in-time evaluation); per-line explainability proven in tax/checkout applications",
+    "phase": "P1",
+    "workstream": "RUL",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "kernel/runtime RuleEngine + tax per-line explain[] strings; delivered with P0-KRN-006/P1-TAX-001"
+  },
+  {
+    "tid": "P1-GID-001",
+    "title": "U\u00b2D dictionary \u2014 global ID dictionary with external aliases, merges (retire-not-delete), resolution \u2014 kernel/uid",
+    "phase": "P1",
+    "workstream": "GID",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-010"
+    ],
+    "acceptance": "kernel/uid alias/merge/resolve; delivered with P0-KRN-010 U\u00b2ID work"
+  },
+  {
+    "tid": "P1-MON-002",
+    "title": "Commission & Fee Engine \u2014 commission rules as bitemporal rule-pack data (checkout commissionFor), seller-tier commission adjustments (marketplace), rating/invoicing (monetization)",
+    "phase": "P1",
+    "workstream": "MON",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "commission from rule pack, tier effects as data; delivered across P1-MON-001/P1-MKT-001/M1 checkout"
+  },
+  {
+    "tid": "P1-LOG-002",
+    "title": "Returns/RMA \u2014 RMA workflow states, grading factors, returnless-refund threshold, serial-returner abuse detection \u2014 services/logistics pack data",
+    "phase": "P1",
+    "workstream": "LOG",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "full return lifecycle + grading + abuse rules in logistics pack; delivered with P1-LOG-001"
   }
 ]

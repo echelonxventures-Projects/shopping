@@ -1,0 +1,22 @@
+{
+  "id": "mod-pricing",
+  "name": "@aether/service-pricing",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Pricing & Promotions Engine",
+  "description": "Bitemporal price lists with unlimited-dimension market matrices (point-in-time price reconstruction at any T), promotion engine with pack-defined stacking rules (stackable/exclusive, cap-per-order), bundles, B2B quantity tiers, and ML-price guardrails (floor/ceiling/max-daily-move as constitutional config — algorithmic prices are clamped, never trusted). Every price, promo, tier, and guardrail is pack data.",
+  "capabilities": ["pricing", "price-lists", "bitemporal-prices", "promotions", "stacking", "bundles", "b2b-tiers", "ml-price-guardrails"],
+  "packs": ["packs/pricing-core.json"],
+  "publicApi": ["priceAt", "quote", "applyPromotions", "tierPrice", "guardrail"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "pricing.quoted", "unit": "quote", "description": "Price quote computed" },
+      { "event": "pricing.promo.applied", "unit": "application", "description": "Promotion applied to a quote" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.0002, "currency": "USD", "perUnit": "quote" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

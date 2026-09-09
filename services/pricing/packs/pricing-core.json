@@ -1,0 +1,96 @@
+{
+  "$comment": "Pricing core pack — bitemporal price lists (market-dimension matrices), promotions with stacking policy, bundles, B2B tiers, ML-price guardrails. ALL numbers are data; amend via config epoch, never code. Markets are matrix DIMENSION VALUES in arrays (Market-as-Data), never code branches.",
+  "pack": { "name": "pricing-core", "version": "1.0.0", "kind": "capability-pack" },
+  "priceLists": [
+    {
+      "id": "pl_base_2026",
+      "name": "base-2026",
+      "priority": 10,
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2025-12-15T00:00:00Z",
+      "entries": [
+        { "sku": "TSHIRT-CLASSIC", "matrix": [ { "market": "US", "currency": "USD", "amount": 25 }, { "market": "EU", "currency": "EUR", "amount": 24 }, { "market": "IN", "currency": "INR", "amount": 1499 } ] },
+        { "sku": "HOODIE-PREMIUM", "matrix": [ { "market": "US", "currency": "USD", "amount": 79 }, { "market": "EU", "currency": "EUR", "amount": 75 } ] }
+      ]
+    },
+    {
+      "id": "pl_base_2026_amend1",
+      "name": "base-2026-amendment-1",
+      "priority": 20,
+      "validFrom": "2026-06-01T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2026-05-20T00:00:00Z",
+      "entries": [
+        { "sku": "TSHIRT-CLASSIC", "matrix": [ { "market": "US", "currency": "USD", "amount": 28 } ] }
+      ]
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo_summer10",
+      "name": "summer-10pct",
+      "kind": "percent-off",
+      "value": 10,
+      "stacking": "stackable",
+      "priority": 50,
+      "conditions": [ { "field": "market", "in": ["US", "EU"] } ],
+      "validFrom": "2026-06-01T00:00:00Z",
+      "validTo": "2026-09-01T00:00:00Z",
+      "recordedAt": "2026-05-01T00:00:00Z"
+    },
+    {
+      "id": "promo_flash20",
+      "name": "flash-20pct-exclusive",
+      "kind": "percent-off",
+      "value": 20,
+      "stacking": "exclusive",
+      "priority": 90,
+      "conditions": [ { "field": "channel", "equals": "flash-sale" } ],
+      "validFrom": "2026-07-01T00:00:00Z",
+      "validTo": "2026-07-02T00:00:00Z",
+      "recordedAt": "2026-06-15T00:00:00Z"
+    },
+    {
+      "id": "promo_loyal5",
+      "name": "loyalty-5-flat",
+      "kind": "amount-off",
+      "value": 5,
+      "stacking": "stackable",
+      "priority": 40,
+      "conditions": [ { "field": "audience", "equals": "loyalty" } ],
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2025-12-20T00:00:00Z"
+    }
+  ],
+  "stackingPolicy": { "maxStacked": 2, "maxTotalDiscountPct": 35, "exclusiveWinsBy": "priority" },
+  "bundles": [
+    {
+      "id": "bundle_outfit",
+      "name": "outfit-bundle",
+      "skus": ["TSHIRT-CLASSIC", "HOODIE-PREMIUM"],
+      "pricing": { "kind": "percent-off-total", "value": 15 },
+      "validFrom": "2026-01-01T00:00:00Z",
+      "validTo": null,
+      "recordedAt": "2025-12-20T00:00:00Z"
+    }
+  ],
+  "b2bTiers": [
+    {
+      "id": "tiers_default",
+      "appliesTo": "*",
+      "tiers": [
+        { "minQty": 1, "discountPct": 0 },
+        { "minQty": 50, "discountPct": 8 },
+        { "minQty": 500, "discountPct": 15 }
+      ]
+    }
+  ],
+  "mlGuardrails": {
+    "$comment": "Constitutional clamps on algorithmic prices (P4-AI-003): ML never sets a price outside these bounds.",
+    "floorPctOfList": 60,
+    "ceilingPctOfList": 140,
+    "maxDailyMovePct": 10
+  }
+}

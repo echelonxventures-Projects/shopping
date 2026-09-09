@@ -209,3 +209,62 @@ export class CryptoRegistry {
     return { ready: all.filter((c) => c.pqReady).length, total: all.length };
   }
 }
+
+// ---- Pack Simulation Harness (P0-GOV-004) ----
+// Tier-0 mechanics only: run scenario suites against a CANDIDATE pack before
+// publish; the scenarios, evaluators, and tolerances are all caller data.
+// A pack that fails simulation never reaches ConfigStore.publish.
+
+export interface SimulationScenario {
+  id: string;
+  description: string;
+  /** caller-supplied evaluation of the candidate pack against this scenario */
+  run: (candidate: unknown) => { observed: unknown };
+  expect: unknown;
+}
+
+export interface SimulationReport {
+  passed: boolean;
+  results: Array<{ scenarioId: string; observed: unknown; expected: unknown; passed: boolean; description: string }>;
+}
+
+export class PackSimulator {
+  /** simulate a candidate pack against a scenario suite — pure, no side effects */
+  simulate(candidate: unknown, scenarios: SimulationScenario[]): SimulationReport {
+    const results = scenarios.map((s) => {
+      let observed: unknown;
+      try {
+        observed = s.run(candidate).observed;
+      } catch (err) {
+        observed = `error: ${(err as Error).message}`;
+      }
+      return {
+        scenarioId: s.id,
+        observed,
+        expected: s.expect,
+        passed: JSON.stringify(observed) === JSON.stringify(s.expect),
+        description: s.description,
+      };
+    });
+    return { passed: results.every((r) => r.passed), results };
+  }
+
+  /** gate a ConfigStore publish behind a passing simulation (bad packs never land) */
+  publishGated(
+    store: ConfigStore,
+    entry: Omit<ConfigEntry, 'validFrom' | 'validTo'> & { validFrom?: string },
+    scenarios: SimulationScenario[]
+  ): { entry?: ConfigEntry; report: SimulationReport } {
+    const report = this.simulate(entry.value, scenarios);
+    if (!report.passed) {
+      const failed = report.results.filter((r) => !r.passed).map((r) => r.scenarioId);
+      try {
+        store.reject(entry.key, entry.publishedBy, `simulation failed: ${failed.join(', ')}`);
+      } catch {
+        /* audit recorded; swallow the throw to return the report */
+      }
+      return { report };
+    }
+    return { entry: store.publish(entry), report };
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$comment": "Geo core pack — zones (matching rules over country/region/postal prefix), geofences (polygon + radius), fulfillment nodes for ship-from-store/BOPIS, routing policy. Geography is DATA: countries/regions appear only as rule values in arrays, never as code branches.",
+  "pack": { "name": "geo-core", "version": "1.0.0", "kind": "capability-pack" },
+  "zones": [
+    { "id": "zone_us_west", "name": "us-west", "priority": 50, "match": [ { "country": "US", "regions": ["CA", "OR", "WA"] } ] },
+    { "id": "zone_us_rest", "name": "us-rest", "priority": 10, "match": [ { "country": "US" } ] },
+    { "id": "zone_eu_core", "name": "eu-core", "priority": 50, "match": [ { "country": "DE" }, { "country": "FR" }, { "country": "NL" } ] },
+    { "id": "zone_london_congestion", "name": "london-congestion", "priority": 90, "match": [ { "country": "GB", "postalPrefixes": ["EC", "WC", "SW1"] } ] },
+    { "id": "zone_gb", "name": "gb-national", "priority": 10, "match": [ { "country": "GB" } ] }
+  ],
+  "geofences": [
+    {
+      "id": "gf_sf_downtown",
+      "name": "sf-downtown-instant-delivery",
+      "kind": "polygon",
+      "polygon": [ [37.808, -122.42], [37.808, -122.39], [37.77, -122.39], [37.77, -122.42] ],
+      "effects": { "instantDelivery": true }
+    },
+    {
+      "id": "gf_berlin_10km",
+      "name": "berlin-10km-ring",
+      "kind": "radius",
+      "center": [52.52, 13.405],
+      "radiusKm": 10,
+      "effects": { "sameDay": true }
+    }
+  ],
+  "fulfillmentNodes": [
+    { "id": "store_sf_market", "name": "SF Market St Store", "kind": "store", "location": [37.788, -122.407], "capabilities": ["ship-from-store", "bopis", "returns"] },
+    { "id": "store_oakland", "name": "Oakland Store", "kind": "store", "location": [37.804, -122.271], "capabilities": ["bopis"] },
+    { "id": "fc_reno", "name": "Reno FC", "kind": "fulfillment-center", "location": [39.53, -119.81], "capabilities": ["ship-from-store"] },
+    { "id": "store_berlin_mitte", "name": "Berlin Mitte Store", "kind": "store", "location": [52.52, 13.40], "capabilities": ["ship-from-store", "bopis"] }
+  ],
+  "routingPolicy": {
+    "maxShipFromStoreKm": 400,
+    "maxBopisKm": 25,
+    "maxCandidates": 3
+  }
+}
