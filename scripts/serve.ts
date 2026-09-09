@@ -26,7 +26,7 @@ rt.bindHost(
   demoBilling
 );
 
-const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce'];
+const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization'];
 log('🚀 booting modules…');
 for (const s of MOUNT) {
   const h = await rt.register(join(ROOT, 'services', s));
@@ -54,7 +54,36 @@ for (const s of MOUNT) {
   const id = (JSON.parse(readFileSync(join(ROOT, 'services', s, 'module.json'), 'utf8')) as { id: string }).id;
   gw.mount(id, rt.api(id));
 }
-gw.mount('gateway', { routes: () => gw.listRoutes() });
+gw.mount('gateway', { routes: () => gw.listRoutes(), openapi: () => gw.openapi() });
+
+// ---- demo saga adapter: checkout with dummy PSP + in-memory stock ----
+const payApi = rt.api('mod-payments') as Record<string, (...a: unknown[]) => Promise<unknown>>;
+const invApi = rt.api('mod-inventory') as Record<string, (...a: unknown[]) => unknown>;
+const checkoutApi = rt.api('mod-checkout') as Record<string, (...a: unknown[]) => Promise<unknown>>;
+const sagaStock = new Map<string, number>(); // demo stock for saga lines
+gw.mountDemoSaga(async (args: Record<string, unknown>) => {
+  type Line = { offerId: string; productId: string; sellerId: string; price: number; currency: string; qty: number };
+  const lines = (args['cartLines'] as Line[]) ?? [];
+  const idem = (args['idem'] as string) === 'auto' ? `idem-${Date.now()}` : (args['idem'] as string);
+  // auto-seed demo stock if absent (demo behavior — production uses real inventory)
+  for (const l of lines) if (!sagaStock.has(l.offerId)) { sagaStock.set(l.offerId, 50); invApi.setStock(l.offerId, 50); }
+  const hooks = {
+    authorizePayment: async (total: number, currency: string) => {
+      const r = (await payApi.authorize(total, currency, 'tok_demo_saga')) as { ok: boolean; pspRef?: string };
+      return r.ok ? { ok: true, pspRef: r.pspRef } : { ok: false, reason: 'denied' };
+    },
+    reserveInventory: async (ls: Line[]) => invApi.reserve(ls) as { ok: boolean; failed?: string[] },
+    capturePayment: async (pspRef: string) => (await payApi.capture(pspRef)) as { ok: boolean },
+    commitInventory: async (ls: Line[]) => { void invApi.commit([]); },
+    releaseInventory: async (ls: Line[]) => { void invApi.release([]); },
+    refund: async (pspRef: string, amount: number) => { void (await payApi.refund(pspRef, amount)); },
+    notify: async (orderId: string) => { log(`   📬 saga notify: order ${orderId} confirmed`); },
+  };
+  const CartCtor = (await import(join(ROOT, 'services/checkout/src/index.ts'))) as { Cart: new () => { add(l: Line): void } };
+  const cart = new CartCtor.Cart();
+  for (const l of lines) cart.add(l);
+  return checkoutApi.checkout(String(args['tenantId'] ?? 'demo-tenant'), cart, hooks, idem);
+});
 
 const srv = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`);

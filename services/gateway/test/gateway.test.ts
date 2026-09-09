@@ -135,3 +135,20 @@ test('public route: /health answers WITHOUT any api key (auth:false from pack)',
   const r = await gw.handle(ctx('GET', '/health', {}, {}), () => {});
   assert.equal(r.status, 200);
 });
+
+test('OpenAPI 3.1 generated from the pack: every route present, params converted, security schemes', () => {
+  const gw = new GatewayService(pack);
+  const spec = gw.openapi() as { openapi: string; paths: Record<string, Record<string, unknown>>; components: { securitySchemes: Record<string, unknown> } };
+  assert.equal(spec.openapi, '3.1.0');
+  const paths = Object.keys(spec.paths);
+  assert.ok(paths.includes('/catalog/buybox/{id}')); // :id -> {id}
+  assert.ok(paths.includes('/tax/compute'));
+  assert.ok((spec.components.securitySchemes as Record<string, unknown>)['apiKey']);
+  // route count parity: every pack route appears in the spec
+  assert.equal(paths.length, pack.routes.length);
+  // scoped routes carry 403 doc; public ones don't
+  const buybox = spec.paths['/catalog/buybox/{id}']!.get as { responses: Record<string, unknown> };
+  assert.ok(buybox.responses['403']);
+  const health = spec.paths['/health']!.get as { responses: Record<string, unknown> };
+  assert.ok(!health.responses['403']);
+});

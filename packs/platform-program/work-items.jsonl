@@ -782,5 +782,16 @@
       "P0-CTR-002"
     ],
     "acceptance": "gateway tests 10/10 \u2014 route matching w/ :params, scope enforcement 401/403, JSON-path mapping + literal/fallback/coercion, rate-limit 429, self-describing /health, unmounted 503, handler errors 422; live curl E2E verified (search/tax/pricing/payments/geo)"
+  },
+  {
+    "tid": "PX-CTR-003",
+    "title": "Gateway expansion \u2014 checkout saga, orders lifecycle, monetization billing loop mounted over HTTP; OpenAPI 3.1 GENERATED from the route pack (docs cannot drift); demo-saga adapter pattern (dummy PSP + auto-seeded stock); idempotent replay verified",
+    "phase": "PX",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "PX-CTR-002"
+    ],
+    "acceptance": "live curl E2E: checkout saga w/ trace + compensations + idempotent replay; orders place/get/transition (illegal rejected w/ pack workflow msg)/bitemporal history; monetization subscribe->meter->usage->invoice w/ quota explainability; /openapi.json self-describes (11/11 gateway tests)"
   }
 ]

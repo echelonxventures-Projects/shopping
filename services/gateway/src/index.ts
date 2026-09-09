@@ -20,6 +20,7 @@ export interface GatewayRoute {
   desc: string;
   argsMode?: 'positional' | 'object'; // how to call the api fn (default: positional spread)
   auth?: boolean; // default true; false = public route (e.g. /health)
+  demoSaga?: boolean; // server provides a demo saga adapter (dummy PSP + in-memory stock)
 }
 
 export interface GatewayPack {
@@ -85,6 +86,7 @@ export class GatewayService {
   private pack: GatewayPack;
   private apis: Map<string, Record<string, unknown>> = new Map(); // moduleId -> api
   private rateWindow: Array<{ key: string; at: number }> = [];
+  private demoSaga: ((args: Record<string, unknown>) => Promise<unknown>) | null = null;
 
   constructor(pack: GatewayPack) {
     this.pack = pack;
@@ -99,8 +101,56 @@ export class GatewayService {
     this.apis.set(moduleId, api);
   }
 
+  /** wire a demo-saga adapter: routes with demoSaga=true call through this instead (checkout) */
+  mountDemoSaga(fn: (args: Record<string, unknown>) => Promise<unknown>): void {
+    this.demoSaga = fn;
+  }
+
   listRoutes(): Array<{ method: string; path: string; scope: string | null; desc: string }> {
     return this.routes.map((r) => ({ method: r.method, path: r.path, scope: r.scope, desc: r.desc }));
+  }
+
+  /** OpenAPI 3.1 doc GENERATED from the route pack (contract docs can never drift) */
+  openapi(): Record<string, unknown> {
+    const paths: Record<string, Record<string, unknown>> = {};
+    for (const r of this.routes) {
+      const oaPath = r.path.replace(/:([A-Za-z0-9_]+)/g, '{$1}');
+      const op: Record<string, unknown> = {
+        summary: r.desc,
+        operationId: `${r.method}_${r.api}_${r.module.replace(/^mod-/, '')}`,
+        security: r.scope === null ? [] : [{ apiKey: [r.scope] }],
+        responses: {
+          200: { description: 'ok — {data: <result>}' },
+          401: { description: 'invalid or missing x-api-key' },
+          ...(r.scope !== null ? { 403: { description: `scope "${r.scope}" required` } } : {}),
+          422: { description: 'handler error (message from pack data)' },
+          429: { description: 'rate limit exceeded' },
+        },
+      };
+      if (r.method === 'POST') {
+        (op as Record<string, unknown>)['requestBody'] = {
+          required: true,
+          content: { 'application/json': { schema: { type: 'object' } } },
+        };
+      }
+      paths[oaPath] = { [r.method.toLowerCase()]: op };
+    }
+    return {
+      openapi: '3.1.0',
+      info: {
+        title: 'AetherCommerce Local Demo API',
+        version: this.pack.pack.version,
+        description: 'Every route, scope, and key is PACK DATA (gateway-core.json). Generated from the pack — cannot drift.',
+      },
+      servers: [{ url: this.pack.server.publicBaseUrl }],
+      components: {
+        securitySchemes: {
+          apiKey: { type: 'apiKey', in: 'header', name: 'x-api-key', description: 'demo-admin-key-0000 / demo-shopper-key-0000 (pack data)' },
+        },
+      },
+      security: [{ apiKey: [] }],
+      paths,
+    };
   }
 
   private keyScopes(key: string | undefined): string[] | null {
@@ -169,6 +219,11 @@ export class GatewayService {
       args[argName] = resolveExpr(String(expr), { ...ctx, params });
     }
     try {
+      // demo-saga routes (checkout) route through the mounted adapter
+      if (route.demoSaga && this.demoSaga) {
+        const result = await this.demoSaga(args);
+        return { status: 200, body: { data: result ?? null } };
+      }
       const fn = (fnRaw as (...a: unknown[]) => unknown);
       const result = route.argsMode === 'object'
         ? await fn(args)
@@ -199,7 +254,9 @@ const gatewayModule: AetherModule = {
     const meter = (ev: string) => billing.meter(ev, 1);
     return {
       mount: (id: string, api: Record<string, unknown>) => svc.mount(id, api),
+      mountDemoSaga: (fn: (args: Record<string, unknown>) => Promise<unknown>) => svc.mountDemoSaga(fn),
       routes: () => (meter('gateway.request'), svc.listRoutes()),
+      openapi: () => (meter('gateway.request'), svc.openapi()),
       handle: (ctx: GatewayRequestCtx) => svc.handle(ctx, meter),
       __raw: svc,
     };

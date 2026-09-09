@@ -35,7 +35,11 @@
         "search:read",
         "payments:write",
         "ai:use",
-        "evidence:read"
+        "evidence:read",
+        "orders:read",
+        "orders:write",
+        "billing:read",
+        "billing:write"
       ]
     },
     {
@@ -47,7 +51,9 @@
         "pricing:read",
         "tax:read",
         "geo:read",
-        "ai:use"
+        "ai:use",
+        "orders:read",
+        "billing:read"
       ]
     }
   ],
@@ -56,6 +62,16 @@
     "burst": 50
   },
   "routes": [
+    {
+      "method": "GET",
+      "path": "/openapi.json",
+      "module": "gateway",
+      "api": "openapi",
+      "scope": null,
+      "auth": false,
+      "map": "{}",
+      "desc": "OpenAPI 3.1 spec generated from this pack"
+    },
     {
       "method": "GET",
       "path": "/health",
@@ -193,8 +209,106 @@
       "module": "mod-ai-commerce",
       "api": "visualQuery",
       "scope": "ai:use",
-      "map": "{\"text\":\"$.body.text\",\"candidates\":\"$.body.candidates\"}",
+      "map": "{\"text\":\"$.body.text\",\"candidates\":\"$.body.candidates||[]\"}",
       "desc": "Visual search query"
+    },
+    {
+      "method": "POST",
+      "path": "/orders",
+      "module": "mod-orders",
+      "api": "place",
+      "scope": "orders:write",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.order\"}",
+      "desc": "Place order (order record from body)"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/:id",
+      "module": "mod-orders",
+      "api": "get",
+      "scope": "orders:read",
+      "map": "{\"tenantId\":\"demo-tenant\",\"id\":\"$.params.id\"}",
+      "desc": "Get order (bitemporal current version)"
+    },
+    {
+      "method": "POST",
+      "path": "/orders/:id/transition",
+      "module": "mod-orders",
+      "api": "transition",
+      "scope": "orders:write",
+      "map": "{\"tenantId\":\"demo-tenant\",\"orderId\":\"$.params.id\",\"to\":\"$.body.to\",\"trigger\":\"$.body.trigger\"}",
+      "desc": "Lifecycle transition (pack workflow)"
+    },
+    {
+      "method": "GET",
+      "path": "/orders/:id/history",
+      "module": "mod-orders",
+      "api": "history",
+      "scope": "orders:read",
+      "map": "{\"tenantId\":\"demo-tenant\",\"orderId\":\"$.params.id\"}",
+      "desc": "Full bitemporal event history"
+    },
+    {
+      "method": "POST",
+      "path": "/checkout",
+      "module": "mod-checkout",
+      "api": "checkout",
+      "scope": "orders:write",
+      "argsMode": "object",
+      "demoSaga": true,
+      "map": "{\"tenantId\":\"demo-tenant\",\"cartLines\":\"$.body.lines\",\"idem\":\"$.body.idem||auto\"}",
+      "desc": "Checkout saga (authorize->reserve->capture->commit w/ compensation; demo PSP + in-memory stock)"
+    },
+    {
+      "method": "POST",
+      "path": "/monetization/meter",
+      "module": "mod-monetization",
+      "api": "meter",
+      "scope": "billing:write",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.event\"}",
+      "desc": "Meter usage event (tenantId, resource, qty, at)"
+    },
+    {
+      "method": "POST",
+      "path": "/monetization/invoice",
+      "module": "mod-monetization",
+      "api": "invoice",
+      "scope": "billing:write",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.tenantId||demo-tenant\",\"1\":\"$.body.periodStart\",\"2\":\"$.body.periodEnd\"}",
+      "desc": "Generate invoice for period"
+    },
+    {
+      "method": "GET",
+      "path": "/monetization/usage/:tenant",
+      "module": "mod-monetization",
+      "api": "usage",
+      "scope": "billing:read",
+      "map": "{\"0\":\"$.params.tenant\",\"1\":\"$.query.resource\"}",
+      "desc": "Usage totals for tenant/resource",
+      "argsMode": "positional"
+    },
+    {
+      "method": "GET",
+      "path": "/monetization/entitlement/:tenant",
+      "module": "mod-monetization",
+      "api": "entitlement",
+      "scope": "billing:read",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.params.tenant\",\"1\":\"$.query.feature\"}",
+      "desc": "Feature entitlement check (plan/addon/quota)"
+    },
+    {
+      "method": "POST",
+      "path": "/monetization/subscribe",
+      "module": "mod-monetization",
+      "api": "subscribe",
+      "scope": "billing:write",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.tenantId||demo-tenant\",\"1\":\"$.body.planId||plan_growth\"}",
+      "desc": "Subscribe tenant to a plan (plan_starter/plan_growth/plan_enterprise)"
     }
   ]
 }
