@@ -16,7 +16,8 @@ export type AttributeClassification =
   | 'card-data-prohibited';
 
 export interface AttributeDefinition {
-  name: string;
+  /** informational only — the attribute's Record key IS its name (canonical) */
+  name?: string;
   type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'reference';
   classification: AttributeClassification;
   required?: boolean;
@@ -152,6 +153,7 @@ export class RegistryDLPError extends Error {
         `rejected at registry write time (constitutional crypto floor, §4.5).`
     );
     this.name = 'RegistryDLPError';
+    this.attributeName = attributeName;
   }
 }
 

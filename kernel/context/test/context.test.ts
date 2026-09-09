@@ -25,9 +25,9 @@ test('tenant-scoped entry beats platform default; market beats tenant', () => {
   const anon = r.pick({ tenant: 'other' }, 'size-chart');
   const brand = r.pick({ tenant: 'acme' }, 'size-chart');
   const brandEu = r.pick({ tenant: 'acme', market: 'EU' }, 'size-chart');
-  assert.deepEqual((anon!.value as { sizes: string[] }).sizes, ['S', 'M', 'L']);
-  assert.deepEqual((brand!.value as { sizes: string[] }).sizes, ['XS', 'S', 'M']);
-  assert.deepEqual((brandEu!.value as { sizes: string[] }).sizes, ['EU-36', 'EU-38']);
+  assert.deepEqual((anon!.value as unknown as { sizes: string[] }).sizes, ['S', 'M', 'L']);
+  assert.deepEqual((brand!.value as unknown as { sizes: string[] }).sizes, ['XS', 'S', 'M']);
+  assert.deepEqual((brandEu!.value as unknown as { sizes: string[] }).sizes, ['EU-36', 'EU-38']);
 });
 
 test('bitemporal market gating: future-dated entry not resolved yet', () => {

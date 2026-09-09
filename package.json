@@ -2,7 +2,7 @@
   "name": "aethercommerce",
   "version": "0.1.0",
   "private": true,
-  "description": "AetherCommerce \u2014 global multi-tenant, multi-vendor, zero-hardcode commerce platform (ECR kernel)",
+  "description": "AetherCommerce — global multi-tenant, multi-vendor, zero-hardcode commerce platform (ECR kernel)",
   "type": "module",
   "workspaces": [
     "kernel/*",
@@ -22,6 +22,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@types/node": "^26.5.0",
     "typescript": "^7.0.2"
   }
 }
