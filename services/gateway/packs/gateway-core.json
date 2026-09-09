@@ -1,0 +1,200 @@
+{
+  "$comment": "Gateway core pack \u2014 the ENTIRE HTTP surface as data. Each route binds method+path to a module apiMethod with an argument mapper expression and required scope. Demo API keys are pack data (swap in real auth via KMS-backed packs in production). Rate limits and CORS are config.",
+  "pack": {
+    "name": "gateway-core",
+    "version": "1.0.0",
+    "kind": "capability-pack"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8080,
+    "publicBaseUrl": "http://127.0.0.1:8080"
+  },
+  "cors": {
+    "allowOrigins": [
+      "*"
+    ],
+    "allowMethods": [
+      "GET",
+      "POST"
+    ]
+  },
+  "apiKeys": [
+    {
+      "key": "demo-admin-key-0000",
+      "name": "demo-admin",
+      "scopes": [
+        "catalog:read",
+        "catalog:write",
+        "orders:read",
+        "orders:write",
+        "inventory:write",
+        "tax:read",
+        "pricing:read",
+        "geo:read",
+        "search:read",
+        "payments:write",
+        "ai:use",
+        "evidence:read"
+      ]
+    },
+    {
+      "key": "demo-shopper-key-0000",
+      "name": "demo-shopper",
+      "scopes": [
+        "catalog:read",
+        "search:read",
+        "pricing:read",
+        "tax:read",
+        "geo:read",
+        "ai:use"
+      ]
+    }
+  ],
+  "rateLimits": {
+    "requestsPerMinute": 600,
+    "burst": 50
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "module": "gateway",
+      "api": "routes",
+      "scope": null,
+      "map": "{}",
+      "desc": "List all routes (self-describing API)",
+      "auth": false
+    },
+    {
+      "method": "POST",
+      "path": "/catalog/products",
+      "module": "mod-catalog",
+      "api": "createProduct",
+      "scope": "catalog:write",
+      "map": "{\"tenantId\":\"demo-tenant\",\"attrs\":\"$.body\",\"aliases\":\"$.body.aliases||[]\"}",
+      "desc": "Create product (attrs from body)"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/products/:id/offers",
+      "module": "mod-catalog",
+      "api": "listOffers",
+      "scope": "catalog:read",
+      "map": "{\"tenantId\":\"demo-tenant\",\"productId\":\"$.params.id\"}",
+      "desc": "List offers for product"
+    },
+    {
+      "method": "GET",
+      "path": "/catalog/buybox/:id",
+      "module": "mod-catalog",
+      "api": "buyBox",
+      "scope": "catalog:read",
+      "map": "{\"tenantId\":\"demo-tenant\",\"productId\":\"$.params.id\"}",
+      "desc": "Buy-box winner"
+    },
+    {
+      "method": "POST",
+      "path": "/catalog/offers",
+      "module": "mod-catalog",
+      "api": "addOffer",
+      "scope": "catalog:write",
+      "map": "{\"tenantId\":\"demo-tenant\",\"productId\":\"$.body.productId\",\"offer\":\"$.body.offer\"}",
+      "desc": "Add offer to product"
+    },
+    {
+      "method": "GET",
+      "path": "/search",
+      "module": "mod-search",
+      "api": "search",
+      "scope": "search:read",
+      "map": "{\"tenantId\":\"demo-tenant\",\"text\":\"$.query.q\",\"limit\":\"$.query.limit||10\"}",
+      "desc": "Search products",
+      "argsMode": "object"
+    },
+    {
+      "method": "POST",
+      "path": "/search/index",
+      "module": "mod-search",
+      "api": "indexProduct",
+      "scope": "catalog:write",
+      "map": "{\"tenantId\":\"demo-tenant\",\"product\":\"$.body.product\",\"extra\":\"$.body.extra\"}",
+      "desc": "Index a product for search"
+    },
+    {
+      "method": "POST",
+      "path": "/inventory/reserve",
+      "module": "mod-inventory",
+      "api": "reserve",
+      "scope": "inventory:write",
+      "map": "{\"lines\":\"$.body.lines\"}",
+      "desc": "Atomic stock reserve",
+      "argsMode": "object"
+    },
+    {
+      "method": "POST",
+      "path": "/tax/compute",
+      "module": "mod-tax",
+      "api": "compute",
+      "scope": "tax:read",
+      "map": "{\"fact\":\"$.body.fact\",\"lines\":\"$.body.lines\"}",
+      "desc": "Compute tax for lines"
+    },
+    {
+      "method": "POST",
+      "path": "/pricing/quote",
+      "module": "mod-pricing",
+      "api": "quote",
+      "scope": "pricing:read",
+      "map": "{\"sku\":\"$.body.sku\",\"qty\":\"$.body.qty||1\",\"cartSkus\":\"$.body.cartSkus||[]\",\"ctx\":\"$.body.ctx\",\"at\":\"$.body.at\"}",
+      "desc": "Price quote w/ promos"
+    },
+    {
+      "method": "POST",
+      "path": "/geo/zones",
+      "module": "mod-geo",
+      "api": "resolveZones",
+      "scope": "geo:read",
+      "map": "{\"country\":\"$.body.country\",\"region\":\"$.body.region||null\",\"postalCode\":\"$.body.postalCode||null\"}",
+      "desc": "Resolve zones for address",
+      "argsMode": "object"
+    },
+    {
+      "method": "POST",
+      "path": "/geo/nearest",
+      "module": "mod-geo",
+      "api": "nearestNodes",
+      "scope": "geo:read",
+      "map": "{\"point\":\"$.body.point\",\"capability\":\"$.body.capability||ship-from-store\"}",
+      "desc": "Nearest fulfillment nodes",
+      "argsMode": "object"
+    },
+    {
+      "method": "POST",
+      "path": "/payments/authorize",
+      "module": "mod-payments",
+      "api": "authorize",
+      "scope": "payments:write",
+      "map": "{\"total\":\"$.body.total\",\"currency\":\"$.body.currency\",\"token\":\"$.body.token\"}",
+      "desc": "Authorize payment (token only \u2014 SAQ-A)"
+    },
+    {
+      "method": "POST",
+      "path": "/ai/assistant",
+      "module": "mod-ai-commerce",
+      "api": "assistantRespond",
+      "scope": "ai:use",
+      "map": "{\"sessionId\":\"$.body.sessionId\",\"message\":\"$.body.message\"}",
+      "desc": "Shopping assistant turn (EU AI Act disclosed)"
+    },
+    {
+      "method": "POST",
+      "path": "/ai/visual-search",
+      "module": "mod-ai-commerce",
+      "api": "visualQuery",
+      "scope": "ai:use",
+      "map": "{\"text\":\"$.body.text\",\"candidates\":\"$.body.candidates\"}",
+      "desc": "Visual search query"
+    }
+  ]
+}

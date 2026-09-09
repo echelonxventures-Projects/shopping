@@ -1,0 +1,24 @@
+{
+  "id": "mod-gateway",
+  "name": "@aether/service-gateway",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "API Gateway (Model-Driven HTTP Surface)",
+  "description": "Exposes the platform over HTTP with ZERO hand-written routes: every endpoint is a pack-declared binding of (HTTP method+path) → (module, apiMethod) with argument mappers, auth scopes, and rate limits. Endpoints are DATA — adding an API surface is a pack edit, never code. Ships with demo credentials (pack data) so the whole platform is curl-able locally.",
+  "capabilities": ["http-gateway", "model-driven-routes", "api-keys", "rate-limiting", "cors"],
+  "packs": ["packs/gateway-core.json"],
+  "publicApi": ["handle", "routes", "listen"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "gateway.request", "unit": "request", "description": "API request served" },
+      { "event": "gateway.4xx", "unit": "request", "description": "Client error" },
+      { "event": "gateway.401", "unit": "request", "description": "Auth failure" },
+      { "event": "gateway.429", "unit": "request", "description": "Rate limited" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.000015, "currency": "USD", "perUnit": "request" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
