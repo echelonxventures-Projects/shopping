@@ -222,6 +222,97 @@ export function deepMerge<T>(base: T, patch: Record<string, unknown>): T {
   return out as T;
 }
 
+// ---------- Portable Product Bundles (sellable to OTHER platforms) ----------
+// A registered module serializes to a self-contained product bundle:
+// manifest + bundled packs + entry reference + host/billing contract.
+// ANY host (this platform or an external one) can install() the bundle and
+// run the product against its own billing — plug-and-play across platforms.
+
+export interface PortableBundle {
+  bundleVersion: 1; // bundle format version (contract)
+  manifest: ModuleManifest;
+  packs: Record<string, unknown>; // full merged pack contents (all data ships)
+  sourceDir: string; // relative location of the module's code
+  installNotes: {
+    hostContract: string;
+    billingEvents: Array<{ event: string; unit: string; description: string }>;
+    requiredCapabilities: string[];
+  };
+}
+
+const moduleKernelDir = dirname(fileURLToPath(import.meta.url));
+const defaultServicesDir = join(moduleKernelDir, '../../../services');
+
+export class BundleExchange {
+  private bundles = new Map<string, PortableBundle>();
+
+  /** export a registered module as a portable product bundle */
+  export(runtime: ModuleRuntime, moduleId: string): PortableBundle {
+    const listed = runtime.catalog().find((c) => c.id === moduleId);
+    if (!listed) throw new Error(`Module "${moduleId}" not registered — nothing to export`);
+    const manifest = this.readManifest(moduleId);
+    const bundle: PortableBundle = {
+      bundleVersion: 1,
+      manifest,
+      packs: this.readPacks(moduleId),
+      sourceDir: moduleIdToDir(moduleId),
+      installNotes: {
+        hostContract: manifest.hostContract,
+        billingEvents: manifest.billing.meterableEvents,
+        requiredCapabilities: manifest.capabilities,
+      },
+    };
+    this.bundles.set(moduleId, bundle);
+    return bundle;
+  }
+
+  /** install a bundle into a ModuleRuntime (same or ANOTHER platform instance) — configured + ready to run */
+  async install(runtime: ModuleRuntime, bundle: PortableBundle, modulePath: string): Promise<ModuleHandle> {
+    if (bundle.bundleVersion !== 1) throw new Error(`Unsupported bundle version ${bundle.bundleVersion}`);
+    const handle = await runtime.register(modulePath);
+    if (handle.manifest.id !== bundle.manifest.id) {
+      throw new Error(`Bundle/module mismatch: bundle=${bundle.manifest.id} code=${handle.manifest.id}`);
+    }
+    await runtime.configure(bundle.manifest.id);
+    this.bundles.set(bundle.manifest.id, bundle);
+    return handle;
+  }
+
+  list(): Array<{ id: string; name: string; version: string; pricingModel: string }> {
+    return [...this.bundles.values()].map((b) => ({
+      id: b.manifest.id,
+      name: b.manifest.name,
+      version: b.manifest.version,
+      pricingModel: b.manifest.billing.pricingModel,
+    }));
+  }
+
+  private readManifest(moduleId: string): ModuleManifest {
+    // resolve from the live runtime's module map via the services dir convention
+    const p = join(defaultServicesDir, moduleIdToDir(moduleId), 'module.json');
+    return JSON.parse(readFileSync(p, 'utf8')) as ModuleManifest;
+  }
+
+  private readPacks(moduleId: string): Record<string, unknown> {
+    const manifest = this.readManifest(moduleId);
+    const out: Record<string, unknown> = {};
+    for (const rel of manifest.packs) {
+      const p = join(defaultServicesDir, moduleIdToDir(moduleId), rel);
+      const raw = JSON.parse(readFileSync(p, 'utf8')) as { pack?: { name?: string } };
+      out[raw.pack?.name ?? rel] = raw;
+    }
+    return out;
+  }
+}
+
+function moduleIdToDir(moduleId: string): string {
+  // mod-xyz -> xyz (services dir convention)
+  const stripped = moduleId.replace(/^mod-/, '');
+  if (existsSync(join(defaultServicesDir, stripped))) return stripped;
+  if (existsSync(join(defaultServicesDir, moduleId))) return moduleId;
+  throw new Error(`Cannot resolve service dir for module "${moduleId}"`);
+}
+
 function headlessHost(): HostPort {
   return {
     tenantId: () => 'headless',

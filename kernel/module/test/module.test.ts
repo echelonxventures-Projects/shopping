@@ -97,3 +97,77 @@ test('NullBillingPort: modules run unbilled without a billing host', () => {
   const p = new NullBillingPort();
   p.meter('anything', 1); // no-op, no throw
 });
+
+// ---------- Portable Product Bundles (sellable to OTHER platforms) ----------
+test('portable bundle: export a module as a self-contained product bundle', async () => {
+  const { BundleExchange } = await import('../src/index.ts');
+  const rt = new ModuleRuntime();
+  await rt.register(LOGISTICS);
+  await rt.configure('mod-logistics');
+  const market = new BundleExchange();
+  const bundle = market.export(rt, 'mod-logistics');
+  assert.equal(bundle.bundleVersion, 1);
+  assert.equal(bundle.manifest.id, 'mod-logistics');
+  assert.equal(bundle.installNotes.hostContract, bundle.manifest.hostContract);
+  assert.ok(bundle.installNotes.billingEvents.length >= 1);
+  assert.ok(Object.keys(bundle.packs).length >= 1, 'pack contents ship inside the bundle');
+  assert.ok(market.list().some((b) => b.id === 'mod-logistics'));
+  // every listed bundle is SELLABLE (has pricing model + version)
+  for (const b of market.list()) {
+    assert.ok(b.version && b.pricingModel);
+  }
+});
+
+test('portable bundle: install into ANOTHER runtime — same product, external host, external billing', async () => {
+  const { BundleExchange } = await import('../src/index.ts');
+  // platform A: registers + exports
+  const rtA = new ModuleRuntime();
+  await rtA.register(LOGISTICS);
+  await rtA.configure('mod-logistics');
+  const bundle = new BundleExchange().export(rtA, 'mod-logistics');
+
+  // platform B: a DIFFERENT runtime/host/billing installs the SAME bundle
+  const rtB = new ModuleRuntime();
+  const externalBilling = countingBilling();
+  rtB.bindHost({ tenantId: () => 'external-buyer', storage: () => null, log: () => undefined }, externalBilling);
+  const handle = await new BundleExchange().install(rtB, bundle, LOGISTICS);
+  assert.equal(handle.manifest.id, 'mod-logistics');
+  const api = rtB.api('mod-logistics') as Record<string, (...args: unknown[]) => unknown>;
+  const opts = api.rateOptions({ market: 'US', weightKg: 1 }) as Array<{ carrierId: string }>;
+  assert.ok(opts.length >= 1);
+  api.createShipment('external-buyer', opts[0]);
+  assert.ok(externalBilling.events.some((e) => e.event === 'label.generated'), 'external platform meters to ITS billing');
+});
+
+test('portable bundle: export requires registration (no phantom products)', async () => {
+  const { BundleExchange } = await import('../src/index.ts');
+  const rt = new ModuleRuntime();
+  assert.throws(() => new BundleExchange().export(rt, 'mod-does-not-exist'), /not registered/);
+});
+
+// ---------- 100% configurability proof: even the smallest value is overridable ----------
+test('smallest-value configurability: one nested pack number overridden, no code touched', async () => {
+  const rt = new ModuleRuntime();
+  // override the SINGLE smallest thing: the returnless-refund threshold value ($5 → $7.25)
+  rt.addConfigOverride({
+    scope: 'host',
+    packName: 'logistics-core',
+    patch: { returnPolicy: { returnlessRefundThreshold: { value: 7.25 } } },
+  });
+  rt.bindHost({ tenantId: () => 't', storage: () => null, log: () => undefined }, new NullBillingPort());
+  await rt.register(LOGISTICS);
+  await rt.configure('mod-logistics');
+  const entry = (rt as unknown as { modules: Map<string, { handle: { packs: Record<string, unknown> } }> }).modules.get('mod-logistics');
+  const merged = entry!.handle.packs['logistics-core'] as { returnPolicy: { returnlessRefundThreshold: { value: number; currency: string } } };
+  assert.equal(merged.returnPolicy.returnlessRefundThreshold.value, 7.25); // smallest value: overridden
+  assert.equal(merged.returnPolicy.returnlessRefundThreshold.currency, 'USD'); // sibling keys preserved (deep merge)
+  // tenant-scoped override lands for that tenant only
+  const rt2 = new ModuleRuntime();
+  rt2.addConfigOverride({ scope: 'tenant', tenantId: 'acme', packName: 'logistics-core', patch: { returnPolicy: { windowDays: 99 } } });
+  rt2.bindHost({ tenantId: () => 'acme', storage: () => null, log: () => undefined }, new NullBillingPort());
+  await rt2.register(LOGISTICS);
+  await rt2.configure('mod-logistics');
+  const h2 = (rt2 as unknown as { modules: Map<string, { handle: { packs: Record<string, unknown> } }> }).modules.get('mod-logistics');
+  const m2 = h2!.handle.packs['logistics-core'] as { returnPolicy: { windowDays: number } };
+  assert.equal(m2.returnPolicy.windowDays, 99);
+});

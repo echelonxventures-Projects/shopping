@@ -751,5 +751,16 @@
       "P0-KRN-002"
     ],
     "acceptance": "ecr-universe tests 10/10 \u2014 8 domains one graph, cross-domain chains, bitemporal amendments, runtime domain load w/ live rules, XX-NEW market live via data alone, unknown markets no invented fallback"
+  },
+  {
+    "tid": "PX-PRD-002",
+    "title": "Portable Product Bundles \u2014 Module-as-a-Product goes CROSS-PLATFORM: any registered module exports as a self-contained bundle (manifest + full pack contents + host/billing contract), installable into ANOTHER runtime/host with the buyer platform metering to ITS OWN billing; plus smallest-value configurability proof (single nested pack numbers host/tenant-overridable via deep merge)",
+    "phase": "PX",
+    "workstream": "PRD",
+    "status": "Done",
+    "dependencies": [
+      "P0-PRD-001"
+    ],
+    "acceptance": "kernel/module tests 12/12 \u2014 bundle export ships packs+contract; install into external runtime meters to EXTERNAL billing; phantom exports rejected; $5\u2192$7.25 single-value override + tenant-scoped windowDays=99 both land exactly"
   }
 ]
