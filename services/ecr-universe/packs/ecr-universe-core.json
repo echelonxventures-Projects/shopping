@@ -1,0 +1,61 @@
+{
+  "$comment": "ECR Universe core pack — THE proof pack. Every domain (payments, geo, gid, billing, seo, logistics, tax, audits) is expressed as pure RegistryEntry data: entity types, relationship types, rules, policies, context scopes. One kernel engine serves all. This pack demonstrates that a new domain (or a new market, vendor, gateway, carrier…) is a pack epoch, never code.",
+  "pack": { "name": "ecr-universe-core", "version": "1.0.0", "kind": "capability-pack" },
+  "domains": ["payments", "geo", "gid", "billing", "seo", "logistics", "tax", "audits"],
+  "entityTypes": [
+    { "id": "et_psp", "kind": "entity-type", "name": "PspGateway", "extends": "ExternalSystem", "attributes": { "pspClass": { "type": "string", "classification": "internal", "required": true }, "markets": { "type": "array", "classification": "internal", "required": true }, "saqACompliant": { "type": "boolean", "classification": "internal" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_payment_method", "kind": "entity-type", "name": "PaymentMethod", "extends": "Entity", "attributes": { "rail": { "type": "string", "classification": "internal", "required": true }, "token": { "type": "string", "classification": "sensitive-pii", "required": true } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_geo_zone", "kind": "entity-type", "name": "GeoZone", "extends": "Entity", "attributes": { "matchRules": { "type": "object", "classification": "internal", "required": true }, "priority": { "type": "number", "classification": "internal" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_identities", "kind": "entity-type", "name": "Identity", "extends": "Entity", "attributes": { "externalIds": { "type": "array", "classification": "pii", "required": true } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_billable", "kind": "entity-type", "name": "BillableResource", "extends": "Entity", "attributes": { "unit": { "type": "string", "classification": "internal", "required": true }, "meterEvent": { "type": "string", "classification": "internal", "required": true } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_seo_surface", "kind": "entity-type", "name": "SeoSurface", "extends": "Entity", "attributes": { "surface": { "type": "string", "classification": "public", "required": true }, "shardPlan": { "type": "object", "classification": "internal" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_carrier", "kind": "entity-type", "name": "Carrier", "extends": "ExternalSystem", "attributes": { "carrierClass": { "type": "string", "classification": "internal", "required": true }, "regions": { "type": "array", "classification": "internal" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_tax_jurisdiction", "kind": "entity-type", "name": "TaxJurisdiction", "extends": "Entity", "attributes": { "regime": { "type": "string", "classification": "internal", "required": true }, "rate": { "type": "number", "classification": "internal", "required": true } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "et_audit", "kind": "entity-type", "name": "AuditEvent", "extends": "Entity", "attributes": { "action": { "type": "string", "classification": "internal", "required": true }, "actor": { "type": "string", "classification": "pii", "required": true }, "evidence": { "type": "object", "classification": "sensitive-pii" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "relationshipTypes": [
+    { "id": "rt_routes_through", "kind": "relationship-type", "name": "routes-through", "fromType": "et_payment_method", "toType": "et_psp", "cardinality": "many-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_served_by", "kind": "relationship-type", "name": "served-by", "fromType": "et_seo_surface", "toType": "et_geo_zone", "cardinality": "many-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_ships_via", "kind": "relationship-type", "name": "ships-via", "fromType": "et_geo_zone", "toType": "et_carrier", "cardinality": "many-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_taxed_under", "kind": "relationship-type", "name": "taxed-under", "fromType": "et_geo_zone", "toType": "et_tax_jurisdiction", "cardinality": "many-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_alias_of", "kind": "relationship-type", "name": "alias-of", "fromType": "et_identities", "toType": "et_identities", "cardinality": "many-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_meters", "kind": "relationship-type", "name": "meters", "fromType": "et_billable", "toType": "et_billable", "cardinality": "one-many", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rt_evidences", "kind": "relationship-type", "name": "evidences", "fromType": "et_audit", "toType": "et_billable", "cardinality": "many-one", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "rules": [
+    { "id": "rule_psp_route_default", "kind": "rule", "name": "psp-route-default", "priority": 10, "decisionTable": [ { "field": "fact", "equals": "psp-route" }, { "field": "market", "in": ["US", "EU", "IN", "BR", "AE"], "then": { "psp": "psp-stripe-class", "reason": "default-adapter" } } ], "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rule_psp_route_in_upi", "kind": "rule", "name": "psp-route-upi", "priority": 50, "decisionTable": [ { "field": "fact", "equals": "psp-route" }, { "field": "rail", "equals": "upi", "then": { "psp": "psp-upi-adapter", "reason": "local-rail" } } ], "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "policies": [
+    { "id": "pol_saq_a_floor", "kind": "policy", "name": "saq-a-floor", "scope": "platform", "grants": [ { "subject": "psp:*", "resource": "card-data", "actions": ["reject"] } ], "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "contextScopes": [
+    { "key": "geo.zone.resolution", "tiers": [ { "scope": { "market": null }, "value": { "priority": 10 } }, { "scope": { "market": "EU" }, "value": { "priority": 90 } } ] },
+    { "key": "psp.routing", "tiers": [ { "scope": { "market": null }, "value": { "adapter": "psp-stripe-class" } } ] }
+  ],
+  "instances": [
+    { "id": "psp-stripe-class", "typeId": "et_psp", "attributes": { "pspClass": "stripe-class", "markets": ["US", "EU", "IN", "BR", "AE"], "saqACompliant": true }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "psp-upi-adapter", "typeId": "et_psp", "attributes": { "pspClass": "upi-class", "markets": ["IN"], "saqACompliant": true }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "zone_eu_vat", "typeId": "et_geo_zone", "attributes": { "matchRules": { "country": "any-eu" }, "priority": 50 }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "zone_us_west_ecr", "typeId": "et_geo_zone", "attributes": { "matchRules": { "regions": ["CA", "OR", "WA"] }, "priority": 50 }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "carrier_dhl", "typeId": "et_carrier", "attributes": { "carrierClass": "dhl-class", "regions": ["EU", "IN", "AE"] }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "carrier_regional_in", "typeId": "et_carrier", "attributes": { "carrierClass": "delhivery-class", "regions": ["IN"] }, "carrier": true, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "jurisdiction_eu_vat", "typeId": "et_tax_jurisdiction", "attributes": { "regime": "vat-inclusive", "rate": 0.2 }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "id_shopper_001", "typeId": "et_identities", "attributes": { "externalIds": ["email:dev@shop.test", "phone:+15550100"] }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "billable_order_fee", "typeId": "et_billable", "attributes": { "unit": "order", "meterEvent": "order.placed" }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "seo_sitemap_surface", "typeId": "et_seo_surface", "attributes": { "surface": "sitemaps", "shardPlan": { "shardsPerMillionSkus": 4 } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "audit_0001", "typeId": "et_audit", "attributes": { "action": "psp.route.selected", "actor": "checkout-service", "evidence": { "ruleId": "rule_psp_route_default" } }, "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "relationshipInstances": [
+    { "id": "rel_upi_routes", "typeId": "rt_routes_through", "fromId": "zone_eu_vat", "toId": "psp-stripe-class", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_sitemap_served", "typeId": "rt_served_by", "fromId": "seo_sitemap_surface", "toId": "zone_eu_vat", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_eu_ships_dhl", "typeId": "rt_ships_via", "fromId": "zone_eu_vat", "toId": "carrier_dhl", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_eu_taxed_vat", "typeId": "rt_taxed_under", "fromId": "zone_eu_vat", "toId": "jurisdiction_eu_vat", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_alias", "typeId": "rt_alias_of", "fromId": "id_shopper_001", "toId": "id_shopper_001", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_order_meters_fee", "typeId": "rt_meters", "fromId": "billable_order_fee", "toId": "billable_order_fee", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" },
+    { "id": "rel_audit_evidences_fee", "typeId": "rt_evidences", "fromId": "audit_0001", "toId": "billable_order_fee", "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2026-01-01T00:00:00Z" }
+  ],
+  "$comment-factories": "Factories below show: instances + relationships generated by config, not enumeration",
+  "zoneFactory": { "templateTypeId": "et_geo_zone", "defaults": { "priority": 10 } },
+  "pspFactory": { "templateTypeId": "et_psp", "defaults": { "saqACompliant": true } }
+}

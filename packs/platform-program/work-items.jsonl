@@ -740,5 +740,16 @@
     "status": "Done",
     "dependencies": [],
     "acceptance": "full return lifecycle + grading + abuse rules in logistics pack; delivered with P1-LOG-001"
+  },
+  {
+    "tid": "PX-ECR-001",
+    "title": "ECR Universe \u2014 zero-exception proof: payments, geo, GID, billing, SEO, logistics, tax, audits ALL project onto Entity x Context x Temporal x Relationship; domain packs are registry epochs (entity/relationship types + rules + policies), state is instances + relationship instances, ALL questions answered by generic kernel engines (Registry/EntityStore/ContextResolver/RuleEngine); new domain/market/vendor = pack epoch, live rules, zero code",
+    "phase": "PX",
+    "workstream": "ECR",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-002"
+    ],
+    "acceptance": "ecr-universe tests 10/10 \u2014 8 domains one graph, cross-domain chains, bitemporal amendments, runtime domain load w/ live rules, XX-NEW market live via data alone, unknown markets no invented fallback"
   }
 ]

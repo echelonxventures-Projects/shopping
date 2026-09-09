@@ -198,7 +198,7 @@ export class ModuleRuntime {
   private validateManifest(m: ModuleManifest): void {
     const required = ['name', 'id', 'version', 'displayName', 'capabilities', 'packs', 'publicApi', 'billing', 'hostContract'] as const;
     for (const f of required) {
-      if (!(f in m) || (m as Record<string, unknown>)[f] === undefined) {
+      if (!(f in m) || (m as unknown as Record<string, unknown>)[f] === undefined) {
         throw new Error(`Module manifest missing "${f}": ${m.name ?? 'unknown'}`);
       }
     }

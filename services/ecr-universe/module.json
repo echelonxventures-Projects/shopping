@@ -1,0 +1,29 @@
+{
+  "id": "mod-ecr-universe",
+  "name": "@aether/service-ecr-universe",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "ECR Universe (Everything-Is-A-Projection Proof)",
+  "description": "Proves the zero-exception doctrine: Payment gateway, Geo, GID, Billing, SEO, Logistics, Tax, Audits (and any future domain) are not special cases — every one is composed from the SAME five kernel primitives: Entity, Context, Temporal (bitemporal), Relationship, Behavior/Rule/Policy. Domain packs ship as REGISTRY ENTRIES (entity types + relationship types + rules + policies), domain state as EntityInstances + RelationshipInstances, and every domain question is answered by the generic engines: entity queries, context resolution, point-in-time reconstruction, relationship traversal. Adding a new domain = publishing a new pack epoch. Zero code.",
+  "capabilities": [
+    "ecr-universe",
+    "domain-projection",
+    "entity-context-temporal-relationship",
+    "zero-hardcode-proof",
+    "infinite-extensibility"
+  ],
+  "packs": ["packs/ecr-universe-core.json"],
+  "publicApi": ["loadDomain", "entityAt", "relate", "traverse", "resolveContext", "evaluateRule", "domainSummary"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "ecr.entity.reconstructed", "unit": "projection", "description": "Point-in-time entity projection" },
+      { "event": "ecr.relationship.traversed", "unit": "hop", "description": "Relationship traversal hop" },
+      { "event": "ecr.domain.loaded", "unit": "domain", "description": "Domain pack projected into the registry" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.00005, "currency": "USD", "perUnit": "projection" }
+  },
+  "dependencies": [{ "id": "mod-world", "optional": true }],
+  "hostContract": "aether-host-1"
+}
