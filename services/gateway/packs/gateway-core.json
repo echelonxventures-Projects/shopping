@@ -7,8 +7,8 @@
   },
   "server": {
     "host": "127.0.0.1",
-    "port": 8080,
-    "publicBaseUrl": "http://127.0.0.1:8080"
+    "port": 8787,
+    "publicBaseUrl": "http://127.0.0.1:8787"
   },
   "cors": {
     "allowOrigins": [
@@ -309,6 +309,90 @@
       "argsMode": "positional",
       "map": "{\"0\":\"$.body.tenantId||demo-tenant\",\"1\":\"$.body.planId||plan_growth\"}",
       "desc": "Subscribe tenant to a plan (plan_starter/plan_growth/plan_enterprise)"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "module": "mod-identity",
+      "api": "register",
+      "scope": null,
+      "auth": false,
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.email\",\"1\":\"$.body.password\",\"2\":\"$.body.name||\"}",
+      "desc": "Register customer -> customer id + session token"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "module": "mod-identity",
+      "api": "login",
+      "scope": null,
+      "auth": false,
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.body.email\",\"1\":\"$.body.password\"}",
+      "desc": "Login -> session token (Authorization: Bearer <token>)"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "module": "mod-identity",
+      "api": "me",
+      "scope": "shopper",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.session_token\"}",
+      "desc": "Who am I (session-resolved)"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/add",
+      "module": "mod-cart",
+      "api": "add",
+      "scope": "shopper",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.session.customerId\",\"1\":\"$.body.line\"}",
+      "desc": "Add item to cart {offerId, productId, title, sellerId, price, qty}"
+    },
+    {
+      "method": "GET",
+      "path": "/cart",
+      "module": "mod-cart",
+      "api": "get",
+      "scope": "shopper",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.session.customerId\"}",
+      "desc": "View cart with totals"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/update",
+      "module": "mod-cart",
+      "api": "update",
+      "scope": "shopper",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.session.customerId\",\"1\":\"$.body.offerId\",\"2\":\"$.body.qty\"}",
+      "desc": "Update line qty (0 removes)"
+    },
+    {
+      "method": "POST",
+      "path": "/cart/remove",
+      "module": "mod-cart",
+      "api": "remove",
+      "scope": "shopper",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.session.customerId\",\"1\":\"$.body.offerId\"}",
+      "desc": "Remove line"
+    },
+    {
+      "method": "POST",
+      "path": "/shop/checkout",
+      "module": "mod-checkout",
+      "api": "checkout",
+      "scope": "shopper",
+      "argsMode": "object",
+      "demoSaga": true,
+      "shopperSaga": true,
+      "map": "{\"tenantId\":\"demo-tenant\",\"cartLines\":\"$.cart_lines\",\"idem\":\"$.body.idem||auto\"}",
+      "desc": "Checkout the session cart via saga (demo PSP + stock)"
     }
   ]
 }

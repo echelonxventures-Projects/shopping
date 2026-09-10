@@ -793,5 +793,17 @@
       "PX-CTR-002"
     ],
     "acceptance": "live curl E2E: checkout saga w/ trace + compensations + idempotent replay; orders place/get/transition (illegal rejected w/ pack workflow msg)/bitemporal history; monetization subscribe->meter->usage->invoice w/ quota explainability; /openapi.json self-describes (11/11 gateway tests)"
+  },
+  {
+    "tid": "PX-CTR-004",
+    "title": "Shopper flow over HTTP \u2014 identity (register/login/sessions: scrypt-salted hashes, timing-safe compare, pack TTL policy) + session-scoped carts (pack caps, checkout consumes cart) + seeded shoppable catalog; gateway session-auth mechanism (Bearer tokens, $.session mappers, shopper scope); full journey live-verified: register -> browse -> add-to-cart -> checkout saga -> cart emptied",
+    "phase": "PX",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "PX-CTR-002",
+      "PX-CTR-003"
+    ],
+    "acceptance": "identity 5/5 + cart 5/5 + gateway session tests 13/13; live curl: register returns cust_00001 + Bearer token; /auth/me resolves; cart totals correct; /shop/checkout saga reserves+authorizes+captures with commission fee; cart auto-empties"
   }
 ]

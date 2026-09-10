@@ -1,0 +1,8 @@
+{
+  "$comment": "Cart core pack — limits as data.",
+  "pack": { "name": "cart-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": {
+    "maxLines": 50,
+    "maxQtyPerLine": 99
+  }
+}

@@ -24,7 +24,7 @@ export interface GatewayRoute {
 }
 
 export interface GatewayPack {
-  pack: { name: string };
+  pack: { name: string; version: string };
   server: { host: string; port: number; publicBaseUrl: string };
   cors: { allowOrigins: string[]; allowMethods: string[] };
   apiKeys: Array<{ key: string; name: string; scopes: string[] }>;
@@ -44,14 +44,14 @@ export interface GatewayRequestCtx {
 export type Responder = (status: number, body: unknown, meter: (ev: string) => void, headers?: Record<string, string>) => void;
 
 /** JSON-path mini-resolver: $.body.productId / $.params.id / $.query.q / literal (quoted or bare) / expr||fallback */
-export function resolveExpr(expr: string, ctx: GatewayRequestCtx): unknown {
+export function resolveExpr(expr: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartTake?: ((customerId: string) => Array<Record<string, unknown>>) | null): unknown {
   const trimmed = expr.trim();
   // full literal (quoted string)
   if (/^".*"$/.test(trimmed)) return trimmed.slice(1, -1);
   // bare literal (no path prefix, no fallback operator)
   if (!trimmed.startsWith('$.') && !trimmed.includes('||')) return trimmed;
   const [path, fallback] = trimmed.split('||');
-  const raw = getPath(path.trim(), ctx);
+  const raw = getPath(path.trim(), ctx, session, cartTake);
   if (raw !== undefined && raw !== null) {
     // coerce to number when the fallback (or the raw value itself) is numeric
     const fv = fallback?.trim();
@@ -71,10 +71,15 @@ export function resolveExpr(expr: string, ctx: GatewayRequestCtx): unknown {
   return undefined;
 }
 
-function getPath(p: string, ctx: GatewayRequestCtx): unknown {
+function getPath(p: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartTake?: ((customerId: string) => Array<Record<string, unknown>>) | null): unknown {
+  if (p === '$.session_token') {
+    const auth = ctx.headers['authorization'] ?? '';
+    return auth.startsWith('Bearer ') ? auth.slice(7) : '';
+  }
+  if (p === '$.cart_lines' && session && cartTake) return cartTake(session.customerId);
   if (!p.startsWith('$.')) return undefined;
   const parts = p.slice(2).split('.');
-  let cur: unknown = { body: ctx.body, params: ctx.params, query: ctx.query, headers: ctx.headers };
+  let cur: unknown = { body: ctx.body, params: ctx.params, query: ctx.query, headers: ctx.headers, session: session ?? undefined };
   for (const part of parts) {
     if (cur === null || typeof cur !== 'object') return undefined;
     cur = (cur as Record<string, unknown>)[part];
@@ -87,11 +92,13 @@ export class GatewayService {
   private apis: Map<string, Record<string, unknown>> = new Map(); // moduleId -> api
   private rateWindow: Array<{ key: string; at: number }> = [];
   private demoSaga: ((args: Record<string, unknown>) => Promise<unknown>) | null = null;
+  private identityMe: ((token: string) => { customerId: string; email: string } | null) | null = null;
+  private cartTake: ((customerId: string) => Array<Record<string, unknown>>) | null = null;
 
   constructor(pack: GatewayPack) {
     this.pack = pack;
     // route maps arrive as JSON strings in the pack — parse once
-    this.routes = pack.routes.map((r) => ({ ...r, map: JSON.parse(r.map) as Record<string, unknown> }));
+    this.routes = pack.routes.map((r) => ({ ...r, method: r.method as 'GET' | 'POST', map: JSON.parse(r.map) as Record<string, unknown> } as GatewayRoute));
   }
 
   routes: GatewayRoute[];
@@ -104,6 +111,16 @@ export class GatewayService {
   /** wire a demo-saga adapter: routes with demoSaga=true call through this instead (checkout) */
   mountDemoSaga(fn: (args: Record<string, unknown>) => Promise<unknown>): void {
     this.demoSaga = fn;
+  }
+
+  /** wire the identity service for session-authenticated shopper routes (scope: 'shopper') */
+  mountIdentity(me: (token: string) => { customerId: string; email: string } | null): void {
+    this.identityMe = me;
+  }
+
+  /** wire cart consumption for shopper checkout ($.cart_lines resolver) */
+  mountCartConsume(take: (customerId: string) => Array<Record<string, unknown>>): void {
+    this.cartTake = take;
   }
 
   listRoutes(): Array<{ method: string; path: string; scope: string | null; desc: string }> {
@@ -190,8 +207,11 @@ export class GatewayService {
     meter('gateway.request');
     const apiKey = ctx.headers['x-api-key'];
     const scopes = this.keyScopes(apiKey);
-    const routeAuth = this.match(ctx.method, ctx.path)?.route.auth ?? true;
-    if (routeAuth && this.pack.apiKeys.length > 0 && scopes === null) {
+    const preMatch = this.match(ctx.method, ctx.path);
+    const routeAuth = preMatch?.route.auth ?? true;
+    // shopper routes authenticate via Bearer session (not api-key); everything else via api-key
+    const isShopperRoute = preMatch?.route.scope === 'shopper';
+    if (routeAuth && !isShopperRoute && this.pack.apiKeys.length > 0 && scopes === null) {
       meter('gateway.401');
       return { status: 401, body: { error: 'invalid or missing x-api-key', hint: 'demo keys are pack data — see gateway-core pack apiKeys' } };
     }
@@ -205,7 +225,18 @@ export class GatewayService {
       return { status: 404, body: { error: 'no such route', available: this.listRoutes().length, hint: 'GET /health lists routes' } };
     }
     const { route, params } = matched;
-    if (route.scope !== null && !scopes!.includes(route.scope)) {
+    // session-authenticated shopper routes: Bearer token from login/register
+    let session: { customerId: string; email: string } | null = null;
+    if (route.scope === 'shopper') {
+      const auth = ctx.headers['authorization'] ?? '';
+      const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+      session = this.identityMe ? this.identityMe(token) : null;
+      if (!session) {
+        meter('gateway.401');
+        return { status: 401, body: { error: 'login required — POST /auth/login first, then Authorization: Bearer <token>' } };
+      }
+    }
+    if (route.scope !== null && route.scope !== 'shopper' && !scopes!.includes(route.scope)) {
       meter('gateway.401');
       return { status: 403, body: { error: `scope "${route.scope}" required`, keyScopes: scopes } };
     }
@@ -216,7 +247,7 @@ export class GatewayService {
     }
     const args: Record<string, unknown> = {};
     for (const [argName, expr] of Object.entries(route.map)) {
-      args[argName] = resolveExpr(String(expr), { ...ctx, params });
+      args[argName] = resolveExpr(String(expr), { ...ctx, params }, session, this.cartTake);
     }
     try {
       // demo-saga routes (checkout) route through the mounted adapter

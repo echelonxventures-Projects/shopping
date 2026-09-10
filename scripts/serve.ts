@@ -26,7 +26,7 @@ rt.bindHost(
   demoBilling
 );
 
-const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization'];
+const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization', 'identity', 'cart'];
 log('🚀 booting modules…');
 for (const s of MOUNT) {
   const h = await rt.register(join(ROOT, 'services', s));
@@ -45,8 +45,6 @@ pay.route('demo-psp');
 
 // seed search with a couple of demo products
 const search = rt.api('mod-search') as Record<string, (...a: unknown[]) => unknown>;
-await search.indexProduct('demo-tenant', { id: 'demo-tee-1', title: 'Navy Cotton Tee', attributes: { color: 'navy', size: 'm' } });
-await search.indexProduct('demo-tenant', { id: 'demo-hoodie-1', title: 'Fleece Hoodie', attributes: { color: 'grey' } });
 
 const gwPack = JSON.parse(readFileSync(join(ROOT, 'services/gateway/packs/gateway-core.json'), 'utf8')) as GatewayPack;
 const gw = new GatewayService(gwPack);
@@ -55,6 +53,13 @@ for (const s of MOUNT) {
   gw.mount(id, rt.api(id));
 }
 gw.mount('gateway', { routes: () => gw.listRoutes(), openapi: () => gw.openapi() });
+
+// ---- shopper flow: identity sessions + cart consumption ----
+const identityApi = rt.api('mod-identity') as Record<string, (...a: unknown[]) => unknown>;
+const cartApi = rt.api('mod-cart') as Record<string, (...a: unknown[]) => unknown>;
+gw.mountIdentity((token: string) => identityApi['me'] as (t: string) => { customerId: string; email: string } | null ? (identityApi['me'] as (t: string) => { customerId: string; email: string } | null)(token) : null);
+gw.mountCartConsume((customerId: string) => (cartApi['take'] as (c: string) => Array<Record<string, unknown>>)(customerId));
+
 
 // ---- demo saga adapter: checkout with dummy PSP + in-memory stock ----
 const payApi = rt.api('mod-payments') as Record<string, (...a: unknown[]) => Promise<unknown>>;
@@ -84,6 +89,24 @@ gw.mountDemoSaga(async (args: Record<string, unknown>) => {
   for (const l of lines) cart.add(l);
   return checkoutApi.checkout(String(args['tenantId'] ?? 'demo-tenant'), cart, hooks, idem);
 });
+
+// ---- seed demo catalog: 3 products with offers + stock (shopper-ready) ----
+const catalogApi = rt.api('mod-catalog') as Record<string, (...a: unknown[]) => Promise<unknown>>;
+const seeded: Array<{ title: string; hs: string; price: number; seller: string; mode: string }> = [
+  { title: 'Aether Classic Tee', hs: '6109.10', price: 25, seller: 'seller-1', mode: 'seller-fulfilled' },
+  { title: 'Aether Fleece Hoodie', hs: '6110.20', price: 79, seller: 'seller-2', mode: 'platform-fulfilled' },
+  { title: 'Aether Cap', hs: '6505.00', price: 19, seller: 'seller-1', mode: 'seller-fulfilled' },
+];
+const demoOffers: Array<{ productId: string; offerId: string; title: string; price: number; sellerId: string }> = [];
+for (const s of seeded) {
+  const p = (await catalogApi.createProduct('demo-tenant', { title: s.title, hsCode: s.hs, countryOfOrigin: 'IN' }, [])) as { id: string };
+  const o = (await catalogApi.addOffer('demo-tenant', p.id, { sellerId: s.seller, price: s.price, currency: 'USD', fulfillmentMode: s.mode })) as { offerId: string };
+  invApi.setStock(o.offerId, 50);
+  demoOffers.push({ productId: p.id, offerId: o.offerId, title: s.title, price: s.price, sellerId: s.seller });
+  await search.indexProduct('demo-tenant', { id: p.id, title: s.title, attributes: { category: 'apparel' } });
+}
+log(`🛍️  seeded ${demoOffers.length} shoppable products (${demoOffers.map((d) => `${d.title} @ $${d.price} [${d.offerId}]`).join(' · ')})`);
+(gw as unknown as { demoOffers?: unknown }).demoOffers = demoOffers;
 
 const srv = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`);

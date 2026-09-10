@@ -1,0 +1,22 @@
+{
+  "id": "mod-identity",
+  "name": "@aether/service-identity",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Customer Identity (Register, Login, Sessions)",
+  "description": "Shopper identity as a product: registration with pack-declared password policy, scrypt-hashed credentials (salted, timing-safe compare), session tokens with pack TTL, email uniqueness. Password rules, token size, session lifetime — ALL pack data. Demo-grade token store (production swaps in KMS/JWT-class adapters via the same API).",
+  "capabilities": ["identity", "registration", "login", "sessions", "password-policy"],
+  "packs": ["packs/identity-core.json"],
+  "publicApi": ["register", "login", "me"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "identity.registered", "unit": "customer", "description": "Customer registered" },
+      { "event": "identity.login", "unit": "login", "description": "Login succeeded" }
+    ],
+    "pricingModel": "usage",
+    "suggestedRate": { "amount": 0.01, "currency": "USD", "perUnit": "customer" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

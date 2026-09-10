@@ -12,7 +12,7 @@ const pack = JSON.parse(readFileSync(join(here, '../packs/gateway-core.json'), '
 const ADMIN = { 'x-api-key': 'demo-admin-key-0000' };
 const SHOPPER = { 'x-api-key': 'demo-shopper-key-0000' };
 
-function ctx(method: string, path: string, body: Record<string, unknown> = {}, headers = ADMIN, query: Record<string, string> = {}): GatewayRequestCtx {
+function ctx(method: string, path: string, body: Record<string, unknown> = {}, headers: Record<string, string> = ADMIN, query: Record<string, string> = {}): GatewayRequestCtx {
   return { method, path, params: {}, query, body, headers };
 }
 
@@ -151,4 +151,39 @@ test('OpenAPI 3.1 generated from the pack: every route present, params converted
   assert.ok(buybox.responses['403']);
   const health = spec.paths['/health']!.get as { responses: Record<string, unknown> };
   assert.ok(!health.responses['403']);
+});
+
+test('shopper session routes: Bearer auth via mounted identity; $.session.customerId reaches the mapper', async () => {
+  const gw = new GatewayService(pack);
+  gw.mountIdentity((t) => (t === 'tok_valid' ? { customerId: 'cust_9', email: 'e@t.co' } : null));
+  const cart: unknown[][] = [];
+  gw.mount('mod-cart', {
+    add: (c: string, l: unknown) => (cart.push([c, l]), { customerId: c, lines: [l], total: 0, currency: 'USD' }),
+    get: (c: string) => ({ customerId: c, lines: [], total: 0, currency: 'USD' }),
+    update: () => null, remove: () => null, clear: () => null, take: () => [],
+  });
+  // no token → 401 login required
+  const anon = await gw.handle(ctx('POST', '/cart/add', { line: { offerId: 'x', qty: 1 } }, {}), () => {});
+  assert.equal(anon.status, 401);
+  assert.ok(JSON.stringify(anon.body).includes('login required'));
+  // bad token → 401
+  const bad = await gw.handle(ctx('POST', '/cart/add', { line: { offerId: 'x', qty: 1 } }, { authorization: 'Bearer wrong' }), () => {});
+  assert.equal(bad.status, 401);
+  // valid token → session resolves, customerId maps through
+  const ok = await gw.handle(ctx('POST', '/cart/add', { line: { offerId: 'off_x', price: 5, qty: 2 } }, { authorization: 'Bearer tok_valid' }), () => {});
+  assert.equal(ok.status, 200);
+  assert.equal(cart[0]![0], 'cust_9'); // session.customerId
+});
+
+test('auth routes are public (register/login need no api key)', async () => {
+  const gw = new GatewayService(pack);
+  gw.mount('mod-identity', {
+    register: () => ({ customer: { customerId: 'c1' }, session: { token: 't' } }),
+    login: () => ({ customer: { customerId: 'c1' }, session: { token: 't' } }),
+    me: () => null, logout: () => true,
+  });
+  const reg = await gw.handle(ctx('POST', '/auth/register', { email: 'a@b.co', password: 'pass1234' }, {}), () => {});
+  assert.equal(reg.status, 200);
+  const login = await gw.handle(ctx('POST', '/auth/login', {}, {}), () => {});
+  assert.equal(login.status, 200);
 });

@@ -1,0 +1,20 @@
+{
+  "id": "mod-cart",
+  "name": "@aether/service-cart",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Shopping Cart (Session-Scoped)",
+  "description": "Shopper cart as a product: add/update/remove lines per customer session, quantity caps and max-lines from pack, totals computed per line, clear on demand. Cart retention policy, line limits, per-line qty caps are ALL pack data. Production swaps the in-memory store for a Storage-SPI engine behind the same API.",
+  "capabilities": ["cart", "shopping", "checkout-input"],
+  "packs": ["packs/cart-core.json"],
+  "publicApi": ["add", "update", "remove", "get", "clear"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "cart.line.added", "unit": "line", "description": "Item added to cart" }
+    ],
+    "pricingModel": "free"
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

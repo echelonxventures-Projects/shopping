@@ -1,0 +1,11 @@
+{
+  "$comment": "Identity core pack — password policy, token size, session TTL are all data. Demo-grade for local testing; production swaps the session store/token via adapters (API unchanged).",
+  "pack": { "name": "identity-core", "version": "1.0.0", "kind": "capability-pack" },
+  "policy": {
+    "passwordMinLength": 8,
+    "passwordRequireDigit": true,
+    "passwordRequireLetter": true,
+    "sessionTtlMinutes": 240,
+    "tokenBytes": 24
+  }
+}
