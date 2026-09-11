@@ -19,6 +19,7 @@ import { OrdersService } from '../../services/orders/src/index.ts';
 import { InventoryService } from '../../services/inventory/src/index.ts';
 import { MemoryEngine, FileEngine } from '../../kernel/storage/src/index.ts';
 import { SqlEngine } from '../../kernel/storage-sql/src/index.ts';
+import { PgEngine } from '../../kernel/storage-pg/src/index.ts';
 import { EngineAdmission } from '../../kernel/conformance/src/index.ts';
 import { MarketRegistryService } from '../../services/market-registry/src/index.ts';
 import type { MarketsPack } from '../../services/market-registry/src/index.ts';
@@ -30,14 +31,17 @@ const flowsPack = read('../../packs/commerce-flows/pack.json');
 const taxPack = read('../../packs/tax-core/pack.json');
 const marketsPack = read('../../services/market-registry/packs/markets.json') as MarketsPack;
 
-async function runGoldenCommerce(engineKind: 'memory' | 'file' | 'sql'): Promise<{ orderId: string; payable: number; tax: number }> {
+async function runGoldenCommerce(engineKind: 'memory' | 'file' | 'sql' | 'pg'): Promise<{ orderId: string; payable: number; tax: number }> {
   // one full commerce chain on the given engine — admitted via conformance first
   const admission = new EngineAdmission();
+  const pgDsn = process.env.AETHER_PG_DSN ?? 'postgres://aether:aether@127.0.0.1:55433/aether';
   const makeEngine = () => engineKind === 'memory'
     ? new MemoryEngine()
     : engineKind === 'file'
       ? new FileEngine(join(tmpdir(), `agn-${Date.now()}-${Math.random()}.jsonl`))
-      : new SqlEngine(join(tmpdir(), `agn-sql-${Date.now()}-${Math.random()}.db`));
+      : engineKind === 'pg'
+        ? new PgEngine({ connectionString: pgDsn, tablePrefix: 'agn_' })
+        : new SqlEngine(join(tmpdir(), `agn-sql-${Date.now()}-${Math.random()}.db`));
   const candidate = makeEngine();
   const conformance = await admission.admit(candidate);
   if (!conformance.admitted) throw new Error(`${engineKind} engine failed conformance: ${conformance.failures.map((f) => f.error).join('; ')}`);
@@ -100,7 +104,7 @@ test('PROOF A: new market onboarding = pure config (zero code deploys)', () => {
   assert.ok(true, 'config-only market onboarding proven');
 });
 
-test('PROOF B: identical golden commerce results on BOTH conformance-admitted engines', async () => {
+test('PROOF B: identical golden commerce results on ALL conformance-admitted engines', async () => {
   const [onMemory, onFile, onSql] = await Promise.all([runGoldenCommerce('memory'), runGoldenCommerce('file'), runGoldenCommerce('sql')]);
   // equivalence across engines — the agnosticism contract
   assert.equal(onMemory.payable, onFile.payable); // identical across engines
@@ -110,6 +114,18 @@ test('PROOF B: identical golden commerce results on BOTH conformance-admitted en
   assert.equal(onMemory.payable, 90);
   assert.equal(onMemory.tax, 7);
   assert.notEqual(onMemory.orderId, onFile.orderId); // different U²IDs, same economics
+});
+
+test('PROOF B (production path): SAME golden commerce on the PostgreSQL WIRE engine', async (t) => {
+  // skip-not-fail when no PG server is reachable (CI provides the service)
+  const { Client } = await import('pg');
+  const probe = new Client({ connectionString: process.env.AETHER_PG_DSN ?? 'postgres://aether:aether@127.0.0.1:55433/aether' });
+  try { await probe.connect(); await probe.end(); } catch { return t.skip('no PG server reachable — wire-engine equivalence skipped'); }
+  const onPg = await runGoldenCommerce('pg');
+  const onMemory = await runGoldenCommerce('memory');
+  assert.equal(onPg.payable, onMemory.payable); // wire engine = identical economics
+  assert.equal(onPg.tax, onMemory.tax);
+  assert.equal(onPg.payable, 90);
 });
 
 test('PROOF B (runtime half): RuntimeTarget descriptors are swappable registry data', async () => {

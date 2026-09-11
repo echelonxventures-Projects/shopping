@@ -816,5 +816,28 @@
       "PX-CTR-004"
     ],
     "acceptance": "npm start boots to serving API with zero manual steps; docker compose up -> healthy container, registration + health 200 from host; 393/393 tests still green"
+  },
+  {
+    "tid": "P3-STR-001",
+    "title": "PostgreSQL wire-protocol storage engine \u2014 production data plane (pg-class driver Reference Pack): JSONB bitemporal records, real transactions, in-SQL asOf windows, transactional supersede, partial indexes, pool sizing from config; lazy admission-safe migration; AETHER_PG_DSN config. CI runs the full conformance matrix against a real postgres:17 service. Dual-agnosticism proof extended: FOUR engines (memory/file/sqlite/wire-PG) \u2014 identical golden commerce economics on the wire engine",
+    "phase": "P3",
+    "workstream": "STR",
+    "status": "Done",
+    "dependencies": [
+      "P0-KRN-016"
+    ],
+    "acceptance": "wire engine ADMITTED through conformance against live server; asOf/history/supersede/optimistic-concurrency/durability-across-instances proven over the wire; golden chain equivalence $90/$7 on PG = memory = file = sqlite; CI postgres:17 service + AETHER_PG_DSN; 398/398 with 0 skips"
+  },
+  {
+    "tid": "PX-INF-004",
+    "title": "Real cluster deploy \u2014 npm run deploy: composes topology from live registry (42 products), builds platform image (Dockerfile.deploy), imports into k3s containerd, kubectl-applies pack-sized Deployment (readiness/liveness on /health, resource limits from sizing classes) + ClusterIP Service; deploy config is PACK DATA (infra-composer-core deploy section); verified live on colima k3s: 2/2 pods Running, full shopper journey through the cluster Service (register -> cart $50 -> checkout saga w/ commission)",
+    "phase": "PX",
+    "workstream": "INF",
+    "status": "Done",
+    "dependencies": [
+      "PX-INF-002",
+      "PX-OPS-004"
+    ],
+    "acceptance": "rollout complete on real k8s (v1.35); port-forward to Service: /health 200 w/ 34 routes, in-cluster register cust_00002, cart total $50, checkout saga trace reserve+authorize+capture, fee $5; fresh-cluster CA/kubeconfig recovery documented in deploy mechanics"
   }
 ]

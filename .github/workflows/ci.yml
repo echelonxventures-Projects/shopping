@@ -2,17 +2,33 @@ name: ci
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]
   pull_request:
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: aether
+          POSTGRES_PASSWORD: aether
+          POSTGRES_DB: aether
+        ports:
+          - 55433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      AETHER_PG_DSN: postgres://aether:aether@127.0.0.1:55433/aether
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 26
       - run: npm ci
       - name: Lint (rules from packs/platform-program lintRulePack)
         run: npm run lint

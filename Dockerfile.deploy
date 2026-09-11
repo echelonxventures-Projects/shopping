@@ -1,0 +1,17 @@
+# DEPLOY-MODE IMAGE — the self-hosted platform server (single-image mode).
+# The infra-composer's per-product topology renders the same app image with
+# per-product sizing in multi-image mode; both are pack data (deploy section).
+FROM node:26-slim
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY kernel/ kernel/
+COPY services/ services/
+COPY packs/ packs/
+COPY scripts/ scripts/
+COPY tsconfig.json ./
+RUN npm install --no-audit --no-fund
+
+ENV AETHER_BIND_HOST=0.0.0.0
+EXPOSE 8787
+CMD ["node", "scripts/serve.ts"]
