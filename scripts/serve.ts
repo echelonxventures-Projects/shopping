@@ -131,7 +131,10 @@ const srv = createServer(async (req, res) => {
 });
 
 const { host, port } = gwPack.server;
-srv.listen(port, host, () => {
+// container deployments override the pack default via env (pack stays source of truth locally)
+const bindHost = process.env.AETHER_BIND_HOST ?? host;
+const bindPort = Number(process.env.AETHER_BIND_PORT ?? port);
+srv.listen(bindPort, bindHost, () => {
   log(`\n🌐 AetherCommerce local API — http://${host}:${port}`);
   log('   GET  /health                     (no auth) — self-describing route list');
   log('   Auth header:  x-api-key: demo-admin-key-0000    (full access)');

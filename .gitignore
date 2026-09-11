@@ -49,3 +49,5 @@ logs/
 
 # Opencode
 .opencode/
+# Local server log (npm start/serve demo output)
+.serve.log

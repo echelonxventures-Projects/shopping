@@ -18,7 +18,8 @@
     "register:check": "node scripts/check-register-consistency.mjs",
     "register:fix": "node scripts/fix-wbs-rows.mjs",
     "typecheck": "tsc --noEmit",
-    "serve": "node scripts/serve.ts"
+    "serve": "node scripts/serve.ts",
+    "start": "node scripts/start.mjs"
   },
   "engines": {
     "node": ">=20"

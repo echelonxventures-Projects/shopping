@@ -805,5 +805,16 @@
       "PX-CTR-003"
     ],
     "acceptance": "identity 5/5 + cart 5/5 + gateway session tests 13/13; live curl: register returns cust_00001 + Bearer token; /auth/me resolves; cart totals correct; /shop/checkout saga reserves+authorizes+captures with commission fee; cart auto-empties"
+  },
+  {
+    "tid": "PX-OPS-004",
+    "title": "Single-click self-hosting \u2014 npm start bootstrapper (Node check -> install-if-needed -> boot -> serve) + Docker single-command (Dockerfile, docker compose up w/ healthcheck, AETHER_BIND_HOST env override of pack default) + README quickstart with 60-second test drive; container verified live (health 200, register 200 through mapped port)",
+    "phase": "PX",
+    "workstream": "OPS",
+    "status": "Done",
+    "dependencies": [
+      "PX-CTR-004"
+    ],
+    "acceptance": "npm start boots to serving API with zero manual steps; docker compose up -> healthy container, registration + health 200 from host; 393/393 tests still green"
   }
 ]
