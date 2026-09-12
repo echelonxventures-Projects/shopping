@@ -77,3 +77,18 @@ test('unknown product rejected — the registry is the only door', () => {
   const s = svc();
   assert.throws(() => s.compose(['mod-nonexistent']), /must be registered/);
 });
+
+// ---------- Doctrine 6 applied to deploy tooling: runtime adapters are data ----------
+test('deployPlan: tooling is a swappable Reference Pack — docker-class vs podman-class vs registry-class', () => {
+  const docker = svc().deployPlan(undefined, 'aether-platform:local');
+  assert.equal(docker.adapterId, 'docker-colima-class');
+  assert.equal(docker.imageRef, 'docker.io/library/aether-platform:local');
+  assert.ok(docker.steps.includes('node-import'));
+  const podman = svc().deployPlan('podman-kind-class', 'aether-platform:local');
+  assert.ok(podman.steps.includes('node-load') && !podman.steps.includes('node-import'));
+  assert.notEqual(podman.imageRef, docker.imageRef); // different plan, zero code change
+  const registry = svc().deployPlan('registry-class', 'aether-platform:v1');
+  assert.deepEqual(registry.steps, ['apply', 'rollout']); // production path: no local import
+  // unknown adapter → pack-data message, never a code path
+  assert.throws(() => svc().deployPlan('firecracker-class'), /add a pack entry, never code/);
+});

@@ -14,10 +14,13 @@ plug-and-play modules, seeds a shoppable catalog, and serves the HTTP API.
 
 **Testing URL:** http://127.0.0.1:8787
 
-### Docker (single command, no Node needed)
+### Container (single command, no Node needed)
+
+Any OCI-class runtime works — the `Dockerfile`/`docker-compose.yml` are
+Reference Pack *instances* (container-class), not bindings. Docker-class:
 
 ```bash
-docker compose up
+docker compose up        # or: podman-compose up (podman-class, same OCI file)
 # → http://localhost:8787
 ```
 
@@ -69,6 +72,7 @@ curl -H "Authorization: Bearer <TOKEN>" -X POST -d '{"idem":"shop-001"}' \
 | Command | What it does |
 |---|---|
 | `npm start` | install-if-needed + boot + serve (the one-click) |
+| `npm run deploy` | agnostic cluster deploy — runtime tooling resolved from the infra pack's `runtimeAdapters` (docker-colima-class / podman-kind-class / registry-class) |
 | `npm test` | 394 tests — the whole platform proven in-process |
 | `npm run demo` | scripted full purchase tour (no server) |
 | `npm run lint` | doctrine gates (product law, hardcode bans) |
@@ -82,7 +86,7 @@ curl -H "Authorization: Bearer <TOKEN>" -X POST -d '{"idem":"shop-001"}' \
 - **Markets (tax rules):** US 7% / US-CA 9.25% · EU VAT 20% incl. · IN · BR · AE
 
 All state is in-memory (restart = fresh). Production swaps: KMS-backed keys,
-wire-protocol SQL engine, real PSP adapters — all Reference Pack changes,
+wire-protocol engines, real PSP adapters — all Reference Pack changes,
 zero code.
 
 **The single living plan:** `docs/PLATFORM-PLAN.md` (Living-Document Protocol).

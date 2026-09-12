@@ -51,3 +51,4 @@ logs/
 .opencode/
 # Local server log (npm start/serve demo output)
 .serve.log
+.pf.log

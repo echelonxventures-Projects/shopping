@@ -1,14 +1,13 @@
 #!/usr/bin/env node
-// PRODUCTION DEPLOY — IaC-as-data end-to-end:
-//   1. compose topology FROM the live product registry (infra-composer)
-//   2. render k8s manifests (pack-defined sizing/shapes)
-//   3. build the platform image (Dockerfile — the self-hosted server)
-//   4. import into the cluster (colima/k3s containerd via kubectl or docker)
-//   5. kubectl apply + wait for readiness
-// Everything swappable: cluster context, image name, namespace are PACK DATA
-// (infra-composer-core.json deploy section) — this script is pure mechanics.
-// Usage: npm run deploy
-import { execSync, spawnSync } from 'node:child_process';
+// DEPLOY EXECUTOR — invariant mechanics only (Doctrine 2 + Doctrine 6).
+// Zero technology names in this file: the ordered deploy plan (steps,
+// commands, args) is resolved from the infra pack's `runtimeAdapters`
+// Reference Pack (swappable: AETHER_DEPLOY_ADAPTER or pack 'selected').
+// Steps run in order; templates substitute {image} {tarball} {dockerfile}
+// {releaseName} {namespace} {timeout} {registry} {cluster}. A `skipIf`
+// probe makes a step conditional (idempotent re-runs). `stdin: manifests`
+// feeds the rendered YAML. New tooling = new pack entry, zero code.
+import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,60 +15,77 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(here, '..');
 const log = (m: string) => console.log(m);
-const run = (cmd: string, opts: Record<string, unknown> = {}) => execSync(cmd, { cwd: ROOT, stdio: 'inherit', ...opts });
+
+interface CommandSpec { cmd: string; args: string[]; stdin?: string; skipIf?: { cmd: string; args: string[]; expectSuccess: boolean } }
 
 const infraPack = JSON.parse(readFileSync(join(ROOT, 'services/infra-composer/packs/infra-composer-core.json'), 'utf8'));
-const deploy = infraPack.deploy ?? { namespace: 'aether', imageName: 'aether-platform', imageTag: 'local', context: 'colima', replicas: 2 };
-const NS = deploy.namespace;
-const IMAGE = `${deploy.imageName}:${deploy.imageTag}`; // imported as docker.io/library/<name>:<tag> by containerd
+const deploy = infraPack.deploy;
 
-log('🧩 1/5 composing topology from the live product registry…');
 const { InfraComposerService } = await import(join(ROOT, 'services/infra-composer/src/index.ts'));
 const composer = new InfraComposerService(infraPack);
+
+// ---- compose topology from the LIVE product registry (IaC-as-data) ----
+log('🧩 composing topology from the live product registry…');
 const topology = composer.compose();
-log(`    ${topology.productsCovered} products → ${topology.deployments.length} deployments (namespace: ${NS})`);
+log(`    ${topology.productsCovered} products → ${topology.deployments.length} deployments (namespace: ${topology.namespace})`);
 
-log('📦 2/5 building the platform image…');
-// idempotent: reuse the local image when present (offline-friendly)
-const haveImage = spawnSync('docker', ['image', 'inspect', IMAGE], { encoding: 'utf8' }).status === 0;
-if (haveImage) {
-  log(`    image ${IMAGE} already present — skipping build (delete to force rebuild)`);
-} else {
-  run(`docker build -t ${IMAGE} -f Dockerfile.deploy . --quiet`);
+// ---- resolve the deploy plan FROM the adapter Reference Pack (product API) ----
+const adapterId = process.env.AETHER_DEPLOY_ADAPTER ?? infraPack.runtimeAdapters?.selected;
+const imageBase = `${deploy.imageName}:${deploy.imageTag}`;
+const plan = composer.deployPlan(adapterId, imageBase);
+const NS = deploy.namespace;
+const RELEASE = deploy.releaseName ?? `${NS}-platform`;
+const subs: Record<string, string> = {
+  image: imageBase,
+  imageRef: plan.imageRef,
+  tarball: `/tmp/${deploy.imageName}.tar`,
+  dockerfile: deploy.dockerfile ?? 'Dockerfile.deploy',
+  releaseName: RELEASE,
+  namespace: NS,
+  timeout: process.env.AETHER_DEPLOY_TIMEOUT ?? (infraPack.runtimeAdapters?.defaultTimeout ?? '180s'),
+  registry: deploy.registry ?? 'registry.local',
+  cluster: deploy.cluster ?? '',
+};
+const manifests = renderManifests(subs.imageRef);
+log(`📄 release plan via adapter "${plan.adapterId}" (${plan.kind}): ${plan.steps.join(' → ')}`);
+
+// ---- execute the data-declared steps (commands live in the pack adapter) ----
+const stepCommands: Record<string, CommandSpec | { multi: CommandSpec[] }> =
+  (infraPack.runtimeAdapters.adapters[plan.adapterId] as unknown as { commands: Record<string, CommandSpec | { multi: CommandSpec[] }> }).commands;
+for (const step of plan.steps) {
+  const spec = stepCommands[step];
+  if (!spec) throw new Error(`adapter "${adapterId}" has no command for step "${step}" — pack data gap`);
+  const cmds: CommandSpec[] = 'multi' in spec ? spec.multi : [spec as CommandSpec];
+  for (const c of cmds) {
+    if (c.skipIf) {
+      const probe = spawnSync(fill(c.skipIf.cmd), c.skipIf.args.map(fill), { encoding: 'utf8' });
+      const present = probe.status === 0;
+      if (present === c.skipIf.expectSuccess) { log(`    ⏭ ${step}: skipped (probe says present)`); continue; }
+    }
+    const args = c.args.map(fill);
+    if (c.stdin === 'manifests') {
+      const r = spawnSync(fill(c.cmd), args, { input: manifests, stdio: ['pipe', 'inherit', 'inherit'] });
+      if (r.status !== 0) process.exit(r.status ?? 1);
+    } else {
+      const r = spawnSync(fill(c.cmd), args, { stdio: 'inherit' });
+      if (r.status !== 0) { log(`❌ step "${step}" failed`); process.exit(r.status ?? 1); }
+    }
+  }
 }
 
-log('🚚 3/5 importing image into the cluster (k3s containerd via colima)…');
-try {
-  run(`docker save ${IMAGE} -o /tmp/aether-platform.tar`);
-  run(`scp -F ~/.colima/ssh_config /tmp/aether-platform.tar colima:/tmp/aether-platform.tar`);
-  run(`scp -F ~/.colima/ssh_config ${join(ROOT, 'scripts/vm-import.sh')} colima:/tmp/import.sh`);
-  run(`colima ssh -- sh /tmp/import.sh`);
-  log('    image imported into k3s containerd');
-} catch (err) {
-  log(`    ⚠ import failed: ${(err as Error).message}`);
-  throw err;
+log(`\n✅ DEPLOYED via ${plan.adapterId} — namespace ${NS}, image ${subs.imageRef}`);
+
+function fill(t: string): string {
+  let out = t.startsWith('~/') ? join(process.env.HOME ?? '', t.slice(2)) : t;
+  for (const [k, v] of Object.entries(subs)) out = out.replaceAll(`{${k}}`, v);
+  return out;
 }
 
-log('📄 4/5 rendering + applying manifests (pack sizing)…');
-const manifests = renderManifests();
-run(`printf '%s' '${manifests.replace(/'/g, "'\\''")}' | kubectl apply -f -`, { shell: '/bin/bash' });
-
-log('⏳ 5/5 waiting for rollout…');
-const ok = spawnSync('kubectl', ['rollout', 'status', `deployment/aether-platform`, `-n`, NS, '--timeout=180s'], { stdio: 'inherit', cwd: ROOT });
-if (ok.status !== 0) {
-  log('❌ rollout failed — check: kubectl -n ' + NS + ' describe pod -l app=aether-platform');
-  process.exit(1);
-}
-log(`\n✅ DEPLOYED — namespace ${NS}, image ${IMAGE}`);
-log(`   test: kubectl -n ${NS} port-forward svc/aether-platform 8787:8787`);
-log(`   then: curl http://127.0.0.1:8787/health`);
-
-// ---------- manifest rendering (sizing from pack; single platform image) ----------
-function renderManifests(): string {
-  const sizing = infraPack.sizingClasses.kernel; // in-process monolith sizing for the single-image deploy mode
-  const svc = infraPack.deploy?.service ?? { type: 'ClusterIP', port: 8787 };
-  return [
-    `apiVersion: v1
+// ---------- manifest rendering (sizing from pack; single-image release mode) ----------
+function renderManifests(image: string): string {
+  const sizing = infraPack.sizingClasses.kernel;
+  const svc = deploy.service ?? { type: 'ClusterIP', port: 8787 };
+  return `apiVersion: v1
 kind: Namespace
 metadata:
   name: ${NS}
@@ -77,18 +93,18 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: aether-platform
+  name: ${RELEASE}
   namespace: ${NS}
-  labels: { app: aether-platform, aether-product: "true", sizing: kernel, composed-by: infra-composer }
+  labels: { app: ${RELEASE}, aether-product: "true", sizing: kernel, composed-by: infra-composer }
 spec:
   replicas: ${deploy.replicas ?? sizing.replicas}
-  selector: { matchLabels: { app: aether-platform } }
+  selector: { matchLabels: { app: ${RELEASE} } }
   template:
-    metadata: { labels: { app: aether-platform } }
+    metadata: { labels: { app: ${RELEASE} } }
     spec:
       containers:
-      - name: aether-platform
-        image: ${IMAGE}
+      - name: ${RELEASE}
+        image: ${image}
         imagePullPolicy: ${deploy.imageTag === 'local' ? 'Never' : 'IfNotPresent'}
         env:
         - name: AETHER_BIND_HOST
@@ -103,12 +119,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: aether-platform
+  name: ${RELEASE}
   namespace: ${NS}
 spec:
   type: ${svc.type}
-  selector: { app: aether-platform }
+  selector: { app: ${RELEASE} }
   ports: [{ port: ${svc.port}, targetPort: ${svc.port} }]
-`,
-  ].join('\n');
+`;
 }

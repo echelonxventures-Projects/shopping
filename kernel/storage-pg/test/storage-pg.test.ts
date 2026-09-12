@@ -33,7 +33,7 @@ function record(over: Record<string, unknown> = {}): StoredRecord {
 }
 
 test('POSTGRES ENGINE ADMITTED through the full conformance matrix (wire protocol, production path)', async (t) => {
-  if (!(await pgReachable())) return t.skip('no PG server on AETHER_PG_DSN — run: docker run -d -e POSTGRES_USER=aether -e POSTGRES_PASSWORD=aether -e POSTGRES_DB=aether -p 55433:5432 postgres:17-alpine');
+  if (!(await pgReachable())) return t.skip('no PG server on AETHER_PG_DSN — start any postgres:17-class server, e.g. via your container-class runtime: -e POSTGRES_USER=aether -e POSTGRES_PASSWORD=aether -e POSTGRES_DB=aether -p 55433:5432');
   const engine = new PgEngine({ connectionString: DSN });
   await engine.init();
   await engine.deleteAll();

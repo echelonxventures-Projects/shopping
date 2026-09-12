@@ -129,11 +129,213 @@
     "imageName": "aether-platform",
     "imageTag": "local",
     "namespace": "aether",
-    "context": "colima",
     "replicas": 2,
     "service": {
       "type": "ClusterIP",
       "port": 8787
+    },
+    "adapter": "{runtimeAdapters.selected}"
+  },
+  "runtimeAdapters": {
+    "$comment": "Total Agnosticism applied to the deploy tooling itself: cluster runtimes (docker-class, podman-class, registry-class, ...) are swappable Reference Packs declared as ordered step lists of command TEMPLATES (pack data). The executor (scripts/deploy.ts) is invariant mechanics \u2014 it resolves the selected adapter and runs its steps. Swapping tooling = change 'selected' (or AETHER_DEPLOY_ADAPTER), zero code. Placeholders: {image} {imageRef} {tarball} {dockerfile} {releaseName} {namespace} {timeout}.",
+    "selected": "docker-colima-class",
+    "defaultTimeout": "180s",
+    "adapters": {
+      "docker-colima-class": {
+        "kind": "container-cli-class",
+        "imageRef": "docker.io/library/{image}",
+        "steps": [
+          "build",
+          "save",
+          "copy-to-node",
+          "node-import",
+          "apply",
+          "rollout"
+        ],
+        "commands": {
+          "build": {
+            "cmd": "docker",
+            "args": [
+              "build",
+              "-t",
+              "{image}",
+              "-f",
+              "{dockerfile}",
+              ".",
+              "--quiet"
+            ],
+            "skipIf": {
+              "cmd": "docker",
+              "args": [
+                "image",
+                "inspect",
+                "{image}"
+              ],
+              "expectSuccess": true
+            }
+          },
+          "save": {
+            "cmd": "docker",
+            "args": [
+              "save",
+              "{image}",
+              "-o",
+              "{tarball}"
+            ]
+          },
+          "copy-to-node": {
+            "multi": [
+              {
+                "cmd": "scp",
+                "args": [
+                  "-F",
+                  "~/.colima/ssh_config",
+                  "{tarball}",
+                  "colima:{tarball}"
+                ]
+              },
+              {
+                "cmd": "scp",
+                "args": [
+                  "-F",
+                  "~/.colima/ssh_config",
+                  "scripts/adapters/docker-colima-class/import.sh",
+                  "colima:/tmp/import.sh"
+                ]
+              }
+            ]
+          },
+          "node-import": {
+            "cmd": "colima",
+            "args": [
+              "ssh",
+              "--",
+              "sh",
+              "/tmp/import.sh"
+            ]
+          },
+          "apply": {
+            "cmd": "kubectl",
+            "args": [
+              "apply",
+              "-f",
+              "-"
+            ],
+            "stdin": "manifests"
+          },
+          "rollout": {
+            "cmd": "kubectl",
+            "args": [
+              "rollout",
+              "status",
+              "deployment/{releaseName}",
+              "-n",
+              "{namespace}",
+              "--timeout={timeout}"
+            ]
+          }
+        }
+      },
+      "podman-kind-class": {
+        "kind": "container-cli-class",
+        "steps": [
+          "build",
+          "save",
+          "node-load",
+          "apply",
+          "rollout"
+        ],
+        "commands": {
+          "build": {
+            "cmd": "podman",
+            "args": [
+              "build",
+              "-t",
+              "{image}",
+              "-f",
+              "{dockerfile}",
+              "."
+            ],
+            "skipIf": {
+              "cmd": "podman",
+              "args": [
+                "image",
+                "exists",
+                "{image}"
+              ],
+              "expectSuccess": true
+            }
+          },
+          "save": {
+            "cmd": "podman",
+            "args": [
+              "save",
+              "-o",
+              "{tarball}",
+              "{image}"
+            ]
+          },
+          "node-load": {
+            "cmd": "kind",
+            "args": [
+              "load",
+              "image-archive",
+              "{tarball}"
+            ]
+          },
+          "apply": {
+            "cmd": "kubectl",
+            "args": [
+              "apply",
+              "-f",
+              "-"
+            ],
+            "stdin": "manifests"
+          },
+          "rollout": {
+            "cmd": "kubectl",
+            "args": [
+              "rollout",
+              "status",
+              "deployment/{releaseName}",
+              "-n",
+              "{namespace}",
+              "--timeout={timeout}"
+            ]
+          }
+        }
+      },
+      "registry-class": {
+        "kind": "registry-class",
+        "$comment": "production path: image pushed to a registry by CI; nodes pull \u2014 no build/load steps in the plan.",
+        "imageRef": "{registry}/{image}",
+        "steps": [
+          "apply",
+          "rollout"
+        ],
+        "commands": {
+          "apply": {
+            "cmd": "kubectl",
+            "args": [
+              "apply",
+              "-f",
+              "-"
+            ],
+            "stdin": "manifests"
+          },
+          "rollout": {
+            "cmd": "kubectl",
+            "args": [
+              "rollout",
+              "status",
+              "deployment/{releaseName}",
+              "-n",
+              "{namespace}",
+              "--timeout={timeout}"
+            ]
+          }
+        }
+      }
     }
   }
 }

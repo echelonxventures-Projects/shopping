@@ -17,8 +17,15 @@ export interface DeploymentShape {
   deployment: string;
 }
 
+export interface RuntimeAdapterSpec {
+  kind: string;
+  imageRef?: string;
+  steps: string[];
+}
+
 export interface InfraPack {
   pack: { name: string };
+  runtimeAdapters?: { selected: string; defaultTimeout?: string; adapters: Record<string, RuntimeAdapterSpec> };
   runtimeTarget: { id: string; kind: string; apiVersion: string; runtime: string };
   sizingClasses: Record<string, { replicas: number; cpuMilli: number; memoryMi: number; hpa: { min: number; max: number; targetCpuPct: number } | null }>;
   deploymentShapes: DeploymentShape[];
@@ -53,6 +60,20 @@ export class InfraComposerService {
     this.pack = pack;
     this.registry = new ProductRegistry();
     this.registry.scanDirectory(servicesDir);
+  }
+
+  /** resolve the agnostic deploy plan: ordered steps + imageRef from a
+   *  runtimeAdapters Reference Pack (swappable tooling — zero code names it) */
+  deployPlan(adapterId?: string, imageBase?: string): { adapterId: string; kind: string; imageRef: string; steps: string[] } {
+    const ra = this.pack.runtimeAdapters;
+    if (!ra) throw new Error('No runtimeAdapters in pack — deploy tooling is pack data, register an adapter');
+    const id = adapterId ?? ra.selected;
+    const adapter = ra.adapters[id];
+    if (!adapter) {
+      throw new Error(`Unknown deploy adapter "${id}" — registered: ${Object.keys(ra.adapters).join(', ')} (add a pack entry, never code)`);
+    }
+    const imageRef = (adapter.imageRef ?? '{image}').replace('{image}', imageBase ?? 'image:tag');
+    return { adapterId: id, kind: adapter.kind, imageRef, steps: adapter.steps };
   }
 
   /** match a product to its shape — specific entries beat the '*' fallback */
@@ -161,10 +182,11 @@ const infraComposerModule: AetherModule = {
   async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
     const pack = Object.values(packs)[0] as InfraPack;
     const svc = new InfraComposerService(pack);
-    const meter = (ev: string) => billing.meter(ev);
+    const meter = (ev: string) => billing.meter(ev, 1);
     return {
       compose: (ids?: string[]) => (meter('topology.composed'), svc.compose(ids)),
       renderK8s: (t: ComposedTopology) => (meter('topology.rendered'), svc.renderK8s(t)),
+      deployPlan: (id?: string, img?: string) => (meter('deploy.plan.resolved'), svc.deployPlan(id, img)),
       renderDataPlane: () => svc.renderDataPlane(),
       productCount: () => svc.productCount(),
       __raw: svc,

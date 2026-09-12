@@ -839,5 +839,16 @@
       "PX-OPS-004"
     ],
     "acceptance": "rollout complete on real k8s (v1.35); port-forward to Service: /health 200 w/ 34 routes, in-cluster register cust_00002, cart total $50, checkout saga trace reserve+authorize+capture, fee $5; fresh-cluster CA/kubeconfig recovery documented in deploy mechanics"
+  },
+  {
+    "tid": "PX-INF-005",
+    "title": "Agnostic deploy tooling \u2014 Doctrine 6 applied to the deploy pipeline itself: runtime tooling is now runtimeAdapters Reference Packs in the infra pack (docker-colima-class / podman-kind-class / registry-class), each an ordered step list of command TEMPLATES; InfraComposer.deployPlan() resolves the plan (product API); scripts/deploy.ts is an invariant executor with ZERO tech names in code; adapter swap = AETHER_DEPLOY_ADAPTER env or pack selected entry, verified live (redeploy through executor onto real k3s) + unit proof of 3 distinct plans",
+    "phase": "PX",
+    "workstream": "INF",
+    "status": "Done",
+    "dependencies": [
+      "PX-INF-004"
+    ],
+    "acceptance": "infra-composer tests 7/7 \u2014 docker/podman/registry plans differ by steps+imageRef with zero code, unknown adapter rejected (pack-data message); live deploy via executor rolled out 2/2; README/skip-hints de-vendored (-class language); tilde expansion fix in executor"
   }
 ]
