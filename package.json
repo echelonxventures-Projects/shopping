@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "serve": "node scripts/serve.ts",
     "start": "node scripts/start.mjs",
-    "deploy": "node scripts/deploy.ts"
+    "deploy": "node scripts/deploy.ts",
+    "gameday": "node scripts/gameday.ts"
   },
   "engines": {
     "node": ">=20"

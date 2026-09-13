@@ -2,6 +2,7 @@
 // Doctrine 6: the search ENGINE is an adapter behind a SearchEngine SPI; the
 // default memory adapter ships in the Reference Pack; OpenSearch-class adapters
 // are admitted via the conformance harness. Analyzer behavior (tokenization,
+import type { StorageEngine } from '@aether/kernel-storage';
 // fuzzy distance) is config. The service projects catalog entities into the
 // index via events (CQRS read model).
 
@@ -227,6 +228,57 @@ export async function admitSearchEngine(e: SearchEngine): Promise<{ engine: Sear
 }
 
 // ---- Search service (CQRS read model over any admitted engine) ----
+// ---------- Durable search adapter (Storage SPI) ----------
+// The SAME read model + scoring as MemorySearchEngine, but writes mirror to
+// any conformance-admitted Storage engine and the index can be REHYDRATED on
+// a fresh pod (durable across restarts and shared across replicas). The
+// ranking logic is reused verbatim from MemorySearchEngine, so query results
+// are identical across storage engines (agnosticism contract).
+export class StorageSearchEngine implements SearchEngine {
+  readonly name = 'storage-search';
+  readonly capabilities: SearchCapabilities = { fullText: true, fuzzy: true, facets: true, incrementalIndex: true };
+  private memory = new MemorySearchEngine();
+  private engine: StorageEngine;
+  private hydrated = false;
+
+  constructor(engine: StorageEngine) {
+    this.engine = engine;
+  }
+
+  /** rebuild the read model from durable storage (call on pod boot) */
+  async hydrate(): Promise<void> {
+    const recs = await this.engine.query({ typeId: 'et_search_doc', limit: 100_000 });
+    for (const r of recs) {
+      await this.memory.index({
+        id: r.id, tenantId: r.tenantId, typeId: 'et_product',
+        title: String(r.attributes.title), attributes: (r.attributes.attributes ?? {}) as Record<string, unknown>,
+        text: String(r.attributes.text), keywords: (r.attributes.keywords ?? []) as string[],
+      });
+    }
+    this.hydrated = true;
+  }
+
+  async index(doc: SearchDoc): Promise<void> {
+    await this.memory.index(doc);
+    await this.engine.put({
+      id: doc.id, tenantId: doc.tenantId, typeId: 'et_search_doc',
+      validFrom: new Date().toISOString(), validTo: null, recordedAt: new Date().toISOString(), epoch: 1,
+      attributes: { title: doc.title, text: doc.text, keywords: doc.keywords ?? [], attributes: doc.attributes },
+    }, { upsert: true });
+  }
+
+  async remove(id: string, tenantId: string): Promise<void> {
+    await this.memory.remove(id, tenantId);
+    const rec = await this.engine.get(id, tenantId);
+    if (rec) await this.engine.closeVersion(id, tenantId, new Date().toISOString());
+  }
+
+  async query(q: SearchQuery): Promise<SearchResult> {
+    if (!this.hydrated) await this.hydrate();
+    return this.memory.query(q);
+  }
+}
+
 export class SearchService {
   private engine: SearchEngine;
   constructor(engine: SearchEngine) {
@@ -259,10 +311,14 @@ import { fileURLToPath as __fileURLToPath } from 'node:url';
 
 const searchModule: AetherModule = {
   manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
-  async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
+  async create(host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
     const policy = (Object.values(packs)[0] as { policy?: { fuzzyEnabled?: boolean; defaultLimit?: number } }).policy;
-    const svc = new SearchService(new MemorySearchEngine());
+    // host supplies storage → durable, rehydratable search read model; else in-memory
+    const rawEngine = host.storage() as StorageEngine | null;
+    const engine: SearchEngine = rawEngine ? new StorageSearchEngine(rawEngine) : new MemorySearchEngine();
+    const svc = new SearchService(engine);
     const meter = (ev: string) => billing.meter(ev);
+    if (engine instanceof StorageSearchEngine) await engine.hydrate();
     return {
       indexProduct: (t: string, p: { id: string; title: string; attributes: Record<string, unknown> }, extra?: string) => svc.indexProduct(t, p, extra),
       search: (q: SearchQuery) => (meter('search.query'), svc.search({ ...q, fuzzy: q.fuzzy ?? policy?.fuzzyEnabled ?? true })),

@@ -850,5 +850,39 @@
       "PX-INF-004"
     ],
     "acceptance": "infra-composer tests 7/7 \u2014 docker/podman/registry plans differ by steps+imageRef with zero code, unknown adapter rejected (pack-data message); live deploy via executor rolled out 2/2; README/skip-hints de-vendored (-class language); tilde expansion fix in executor"
+  },
+  {
+    "tid": "PX-HRD-001",
+    "title": "Edge security \u2014 gateway credential sources as pack data (demo-inline | secret-file KMS-mount | host-resolved injection); unknown mode rejected; TLS + HSTS via pack-declared env names (live-verified: https health + strict-transport-security header from pack maxAge)",
+    "phase": "PX",
+    "workstream": "HRD",
+    "status": "Done",
+    "dependencies": [
+      "PX-CTR-002"
+    ],
+    "acceptance": "gateway tests 15/15 \u2014 demo key DEAD in secret-file mode, mounted key works, host resolver works; TLS verified with self-signed cert"
+  },
+  {
+    "tid": "PX-HRD-002",
+    "title": "Distributed shopper state \u2014 users, sessions, carts store-backed on Storage SPI (conformance-admitted engines; store-authoritative reads; stable cart record windows; upsert-safe), PostgresRateLimiter shared-window cluster-wide limiter wired into gateway",
+    "phase": "PX",
+    "workstream": "HRD",
+    "status": "Done",
+    "dependencies": [
+      "P3-STR-001"
+    ],
+    "acceptance": "cross-pod tests: register A\u2192login B, cart A\u2192take B; live 2-process proof (pod B resolves pod A session + cart $50 through wire engine); limiter unit-proven across instances"
+  },
+  {
+    "tid": "PX-HRD-003",
+    "title": "Durable search + real-cluster game day \u2014 StorageSearchEngine (mirrors writes to Storage SPI, rehydrates full index on fresh pod, identical ranking reused verbatim); ops-center runDrill async-harness upgrade; drill_pod_kill pack scenario executed against live k3s via scripts/gameday.ts",
+    "phase": "PX",
+    "workstream": "HRD",
+    "status": "Done",
+    "dependencies": [
+      "P3-STR-001",
+      "PX-INF-004"
+    ],
+    "acceptance": "search: writes mirror, pod-B rehydrate = full index, removal durable; GAME DAY LIVE: pod killed grace=0, self-heal 8s, replicas 2/2, service health 200 through ClusterIP, rollback verified, incident evidence written"
   }
 ]

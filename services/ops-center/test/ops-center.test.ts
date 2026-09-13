@@ -42,9 +42,9 @@ function healthyHarness(): DrillHarness & { injected: string[]; rolledBack: stri
   return h;
 }
 
-test('chaos drill passes: fault injected, all invariants verified, rollback executed + verified (P3-SCL-004)', () => {
+test('chaos drill passes: fault injected, all invariants verified, rollback executed + verified (P3-SCL-004)', async () => {
   const h = healthyHarness();
-  const r = svc.runDrill('drill_store_outage', h);
+  const r = await svc.runDrill('drill_store_outage', h);
   assert.equal(r.passed, true);
   assert.equal(r.aborted, false);
   assert.deepEqual(h.injected, ['kill-dependency:storage-primary']);
@@ -53,14 +53,14 @@ test('chaos drill passes: fault injected, all invariants verified, rollback exec
   assert.deepEqual(h.rolledBack, ['restore-primary', 'verify-replication-lag-zero', 'return-traffic']);
 });
 
-test('invariant breach aborts the drill (pack policy) but rollback STILL runs', () => {
+test('invariant breach aborts the drill (pack policy) but rollback STILL runs', async () => {
   const h = healthyHarness();
   const bad: DrillHarness = {
     inject: h.inject,
     measure: (check) => (check === 'oversell-count' ? 3 : h.measure(check)), // oversold!
     executeRollbackStep: h.executeRollbackStep,
   };
-  const r = svc.runDrill('drill_burst_overload', bad);
+  const r = await svc.runDrill('drill_burst_overload', bad);
   assert.equal(r.passed, false);
   assert.equal(r.aborted, true);
   const oversell = r.invariantResults.find((i) => i.check === 'oversell-count')!;
@@ -69,16 +69,16 @@ test('invariant breach aborts the drill (pack policy) but rollback STILL runs', 
   assert.ok(h.rolledBack.length > 0, 'rollback must run even on abort');
 });
 
-test('unknown drill rejected — drills are pack data, not code paths', () => {
-  assert.throws(() => svc.runDrill('drill_nonexistent', healthyHarness()), /pack data/);
+test('unknown drill rejected — drills are pack data, not code paths', async () => {
+  await assert.rejects(async () => {await svc.runDrill('drill_nonexistent', healthyHarness());}, /pack data/);
 });
 
-test('control-plane drill: bad pack publish rejected at gate, running config unchanged', () => {
-  const r = svc.runDrill('drill_bad_pack_publish', healthyHarness());
+test('control-plane drill: bad pack publish rejected at gate, running config unchanged', async () => {
+  const r = await svc.runDrill('drill_bad_pack_publish', healthyHarness());
   assert.equal(r.passed, true);
 });
 
-test('runbook generated from live product listing — sections from template, content from registry (PX-OPS-001)', () => {
+test('runbook generated from live product listing — sections from template, content from registry (PX-OPS-001)', async () => {
   const rb = svc.runbookFor('mod-tax');
   assert.equal(rb.productId, 'mod-tax');
   assert.ok(String(rb.sections['overview']).includes('Tax'));
@@ -88,7 +88,7 @@ test('runbook generated from live product listing — sections from template, co
   assert.equal((rb.sections['escalation'] as Record<string, string>)['l3'], 'platform-constitution-quorum');
 });
 
-test('runbook coverage is TOTAL by construction: one per registered product (35+)', () => {
+test('runbook coverage is TOTAL by construction: one per registered product (35+)', async () => {
   const all = svc.allRunbooks();
   assert.ok(all.length >= 35, `expected >=35 runbooks, got ${all.length}`);
   const ids = new Set(all.map((r) => r.productId));
@@ -98,7 +98,7 @@ test('runbook coverage is TOTAL by construction: one per registered product (35+
   for (const rb of all) assert.ok(Object.keys(rb.sections).length === pack.runbookTemplate.sections.length);
 });
 
-test('FinOps attribution: metered usage x pack cost table -> per-tenant cost, unknown resource rejected (PX-FIN-001)', () => {
+test('FinOps attribution: metered usage x pack cost table -> per-tenant cost, unknown resource rejected (PX-FIN-001)', async () => {
   const usage = [
     { tenantId: 't-acme', resource: 'request', qty: 1_000_000 },
     { tenantId: 't-acme', resource: 'storage-gb-day', qty: 200 },
@@ -111,7 +111,7 @@ test('FinOps attribution: metered usage x pack cost table -> per-tenant cost, un
   assert.throws(() => svc.attribute([{ tenantId: 't', resource: 'quantum-flux', qty: 1 }]), /finops pack/);
 });
 
-test('unit economics: margin vs pack target', () => {
+test('unit economics: margin vs pack target', async () => {
   const usage = [{ tenantId: 't-acme', resource: 'request', qty: 1_000_000 }]; // cost 12,000,000 micros = $12
   const good = svc.tenantUnitEconomics('t-acme', usage, 40_000_000); // $40 revenue → 70% margin
   assert.equal(good.marginPct, 70);
@@ -129,12 +129,12 @@ test('module contract: default export AetherModule with metered drill execution'
     { meter: (e: string) => events.push(e) },
     { 'ops-center-core': pack }
   );
-  const r = (api['runDrill'] as (id: string, h: DrillHarness) => { passed: boolean })('drill_store_outage', healthyHarness());
+  const r = await (api['runDrill'] as (id: string, h: DrillHarness) => Promise<{ passed: boolean }>)('drill_store_outage', healthyHarness());
   assert.equal(r.passed, true);
   assert.deepEqual(events, ['ops.drill.executed']);
 });
 
-test('listDrills: the drill catalog is pack data (every drill declared is listed)', () => {
+test('listDrills: the drill catalog is pack data (every drill declared is listed)', async () => {
   const drills = svc.listDrills();
   assert.equal(drills.length, pack.drills.length);
   assert.ok(drills.every((d) => d.invariants.length >= 1 && d.rollback.length >= 1));

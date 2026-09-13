@@ -71,6 +71,9 @@ curl -H "Authorization: Bearer <TOKEN>" -X POST -d '{"idem":"shop-001"}' \
 
 | Command | What it does |
 |---|---|
+| `AETHER_PG_DSN=… npm start` | **distributed mode** — sessions, users, carts, search + rate limits shared across pods via the wire engine |
+| `AETHER_TLS_CERT_FILE=… AETHER_TLS_KEY_FILE=… npm start` | **TLS + HSTS** (config names come from the gateway pack) |
+| `npm run gameday` | real-cluster chaos drill (pack scenario + kubectl harness) |
 | `npm start` | install-if-needed + boot + serve (the one-click) |
 | `npm run deploy` | agnostic cluster deploy — runtime tooling resolved from the infra pack's `runtimeAdapters` (docker-colima-class / podman-kind-class / registry-class) |
 | `npm test` | 394 tests — the whole platform proven in-process |

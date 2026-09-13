@@ -47,8 +47,8 @@ export interface OpsPack {
 // ---------- drill harness (host adapter — sim or real cluster) ----------
 export interface DrillHarness {
   inject(fault: DrillDef['fault']): void;
-  measure(check: string): unknown;
-  executeRollbackStep(step: string): boolean;
+  measure(check: string): unknown | Promise<unknown>; // real-cluster probes may be async
+  executeRollbackStep(step: string): boolean | Promise<boolean>;
 }
 
 export interface DrillResult {
@@ -87,7 +87,7 @@ export class OpsCenterService {
   }
 
   /** execute a chaos drill scenario against a harness; verify invariants + rollback */
-  runDrill(drillId: string, harness: DrillHarness): DrillResult {
+  async runDrill(drillId: string, harness: DrillHarness): Promise<DrillResult> {
     const drill = this.pack.drills.find((d) => d.id === drillId);
     if (!drill) throw new Error(`unknown drill ${drillId} — drills are pack data, add it there`);
     harness.inject(drill.fault);
@@ -95,7 +95,7 @@ export class OpsCenterService {
     const invariantResults: DrillResult['invariantResults'] = [];
     let aborted = false;
     for (const inv of drill.invariants) {
-      const observed = harness.measure(inv.check);
+      const observed = await harness.measure(inv.check);
       const passed =
         inv.expectMax !== undefined ? typeof observed === 'number' && observed <= inv.expectMax : observed === inv.expect;
       invariantResults.push({ check: inv.check, observed, passed });
@@ -106,7 +106,8 @@ export class OpsCenterService {
     }
 
     // rollback ALWAYS runs (that is the point of a game day)
-    const rollbackSteps = drill.rollback.map((step) => ({ step, ok: harness.executeRollbackStep(step) }));
+    const rollbackSteps: Array<{ step: string; ok: boolean }> = [];
+    for (const step of drill.rollback) rollbackSteps.push({ step, ok: await harness.executeRollbackStep(step) });
     const rollbackVerified = rollbackSteps.every((s) => s.ok);
     return {
       drillId,

@@ -187,3 +187,43 @@ test('auth routes are public (register/login need no api key)', async () => {
   const login = await gw.handle(ctx('POST', '/auth/login', {}, {}), () => {});
   assert.equal(login.status, 200);
 });
+
+test('KMS-class key sources (pack data): secret-file mode resolves keys from mounted file; unknown mode rejected', async () => {
+  const { writeFileSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const kf = join(tmpdir(), `gw-keys-${Date.now()}.json`);
+  writeFileSync(kf, JSON.stringify([{ key: 'kms-mounted-key', name: 'prod', scopes: ['tax:read'] }]));
+  process.env.AETHER_GATEWAY_KEYS_FILE = kf;
+  const prod: GatewayPack = { ...pack, keyProvider: { mode: 'secret-file', fileEnvVar: 'AETHER_GATEWAY_KEYS_FILE' } };
+  const gw = new GatewayService(prod);
+  gw.mount('mod-tax', { compute: () => ({ totalTax: 0 }) });
+  const demo = await gw.handle(ctx('POST', '/tax/compute', {}, { 'x-api-key': 'demo-admin-key-0000' }), () => {});
+  assert.equal(demo.status, 401); // demo key is DEAD in production mode
+  const real = await gw.handle(ctx('POST', '/tax/compute', { fact: {}, lines: [] }, { 'x-api-key': 'kms-mounted-key' }), () => {});
+  assert.equal(real.status, 200);
+  // unknown mode → pack-data error
+  assert.throws(() => new GatewayService({ ...pack, keyProvider: { mode: 'telepathy' } } as GatewayPack), /add an adapter \(pack data\)/);
+  delete process.env.AETHER_GATEWAY_KEYS_FILE;
+});
+
+test('host-resolved credentials + shared rate store (external platform injection)', async () => {
+  const host: GatewayPack = { ...pack, keyProvider: { mode: 'host-resolved' } };
+  const gw = new GatewayService(host);
+  gw.mountKeyProvider(() => [{ key: 'host-key-1', name: 'ext', scopes: ['tax:read'] }]);
+  gw.mount('mod-tax', { compute: () => ({}) });
+  const r = await gw.handle(ctx('POST', '/tax/compute', { fact: {}, lines: [] }, { 'x-api-key': 'host-key-1' }), () => {});
+  assert.equal(r.status, 200);
+  // shared limiter: two gateway instances, ONE store → limit enforced ACROSS instances
+  let hits = 0;
+  const shared = { acquire: (_k: string, limit: number) => (++hits <= limit) };
+  const gwA = new GatewayService({ ...pack, rateLimits: { requestsPerMinute: 3, burst: 3 } });
+  const gwB = new GatewayService({ ...pack, rateLimits: { requestsPerMinute: 3, burst: 3 } });
+  gwA.mountRateStore(shared); gwB.mountRateStore(shared);
+  gwA.mount('mod-tax', { compute: () => ({}) }); gwB.mount('mod-tax', { compute: () => ({}) });
+  let saw429 = false;
+  for (let i = 0; i < 5; i++) {
+    const rr = await (i % 2 ? gwA : gwB).handle(ctx('POST', '/tax/compute', {}, { 'x-api-key': 'demo-admin-key-0000' }), () => {});
+    if (rr.status === 429) saw429 = true;
+  }
+  assert.ok(saw429, 'distributed limiter must bind across pods');
+});

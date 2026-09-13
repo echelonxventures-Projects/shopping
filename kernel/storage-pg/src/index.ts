@@ -204,3 +204,50 @@ export class PgEngine implements HistoryCapableEngine {
     await this.pool.end();
   }
 }
+
+// ---------- Distributed rate limiter (shared window counter on PG) ----------
+// Multi-pod deployments: every gateway replica calls acquire() against the
+// SAME window row — the limiter is cluster-wide, not per-process. Pack data
+// (gateway rateLimits.requestsPerMinute) decides the budget per key.
+
+export class PostgresRateLimiter {
+  private pool: Pool;
+  private table: string;
+  private ready: Promise<void>;
+
+  constructor(opts: PgEngineOptions & { tablePrefix?: string } = {}) {
+    const cfg = opts.connectionString
+      ? { connectionString: opts.connectionString }
+      : {
+          host: process.env.PGHOST ?? '127.0.0.1',
+          port: Number(process.env.PGPORT ?? 5432),
+          user: process.env.PGUSER ?? 'aether',
+          password: process.env.PGPASSWORD ?? 'aether',
+          database: opts.database ?? process.env.PGDATABASE ?? 'aether',
+        };
+    this.pool = new Pool({ ...cfg, max: 4 });
+    this.table = `${opts.tablePrefix ?? ''}rate_windows`;
+    this.ready = this.pool.query(`
+      CREATE TABLE IF NOT EXISTS ${this.table} (
+        rkey TEXT NOT NULL, w BIGINT NOT NULL, count INTEGER NOT NULL,
+        PRIMARY KEY (rkey, w)
+      )`).then(() => undefined);
+  }
+
+  /** count this request; true = within budget, false = rate-limited */
+  async acquire(key: string, limitPerMinute: number): Promise<boolean> {
+    await this.ready;
+    const window = Math.floor(Date.now() / 60_000);
+    const r = await this.pool.query(
+      `INSERT INTO ${this.table} (rkey, w, count) VALUES ($1, $2, 1)
+       ON CONFLICT (rkey, w) DO UPDATE SET count = ${this.table}.count + 1
+       RETURNING count`,
+      [key, window]
+    );
+    return Number(r.rows[0]!.count) <= limitPerMinute;
+  }
+
+  async close(): Promise<void> {
+    await this.pool.end();
+  }
+}

@@ -8,6 +8,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { createServer as createTlsServer } from 'node:https';
 import { ModuleRuntime, type BillingPort } from '../kernel/module/src/index.ts';
 import { GatewayService, type GatewayPack } from '../services/gateway/src/index.ts';
 
@@ -20,17 +21,34 @@ const demoBilling: BillingPort = {
   meter(event: string) { (this.ledger as string[]).push(event); },
 };
 
+// ---- STATE MODE: distributed (postgres-wire class) or single-pod in-memory ----
+const pgDsn = process.env.AETHER_PG_DSN;
+let stateEngine: import('../kernel/storage/src/index.ts').StorageEngine | null = null;
+if (pgDsn) {
+  const { PgEngine } = await import('../kernel/storage-pg/src/index.ts');
+  const engine = new PgEngine({ connectionString: pgDsn, tablePrefix: 'platform_' });
+  await engine.init();
+  stateEngine = engine;
+}
 const rt = new ModuleRuntime();
 rt.bindHost(
-  { tenantId: () => 'demo-tenant', storage: () => null, log: () => undefined },
+  { tenantId: () => 'demo-tenant', storage: () => stateEngine, log: () => undefined },
   demoBilling
 );
+log(stateEngine ? '   STATE: distributed (postgres-wire engine — sessions, carts, search, rate limits shared across pods)' : '   STATE: in-memory (single-pod dev mode)');
 
 const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization', 'identity', 'cart'];
 log('🚀 booting modules…');
 for (const s of MOUNT) {
   const h = await rt.register(join(ROOT, 'services', s));
   await rt.configure(h.manifest.id);
+}
+
+if (stateEngine) {
+  const ident = rt.api('mod-identity') as Record<string, unknown>;
+  (ident['__raw'] as { attachStore: (e: unknown) => void }).attachStore(stateEngine);
+  const cart = rt.api('mod-cart') as Record<string, unknown>;
+  (cart['__raw'] as { attachStore: (e: unknown) => void }).attachStore(stateEngine);
 }
 
 // demo PSP (pack data declares routing; adapter here is the dummy)
@@ -53,6 +71,11 @@ for (const s of MOUNT) {
   gw.mount(id, rt.api(id));
 }
 gw.mount('gateway', { routes: () => gw.listRoutes(), openapi: () => gw.openapi() });
+if (pgDsn) {
+  const { PostgresRateLimiter } = await import('../kernel/storage-pg/src/index.ts');
+  const limiter = new PostgresRateLimiter({ connectionString: pgDsn, tablePrefix: 'platform_' });
+  gw.mountRateStore(limiter);
+}
 
 // ---- shopper flow: identity sessions + cart consumption ----
 const identityApi = rt.api('mod-identity') as Record<string, (...a: unknown[]) => unknown>;
@@ -108,9 +131,19 @@ for (const s of seeded) {
 log(`🛍️  seeded ${demoOffers.length} shoppable products (${demoOffers.map((d) => `${d.title} @ $${d.price} [${d.offerId}]`).join(' · ')})`);
 (gw as unknown as { demoOffers?: unknown }).demoOffers = demoOffers;
 
-const srv = createServer(async (req, res) => {
+const tlsCfg = gwPack.server['tls'] as { envCert: string; envKey: string; hstsMaxAgeSeconds: number } | undefined;
+const certFile = tlsCfg ? process.env[tlsCfg.envCert] : undefined;
+const keyFile = tlsCfg ? process.env[tlsCfg.envKey] : undefined;
+const tlsEnabled = Boolean(certFile && keyFile);
+
+const srv = (tlsEnabled
+  ? createTlsServer({ cert: readFileSync(certFile!), key: readFileSync(keyFile!) }, handler)
+  : createServer(handler)) as import('node:http').Server;
+
+async function handler(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '/', `http://${req.headers.host}`);
-  const cors = { 'access-control-allow-origin': gwPack.cors.allowOrigins[0]!, 'content-type': 'application/json' };
+  const cors: Record<string, string> = { 'access-control-allow-origin': gwPack.cors.allowOrigins[0]!, 'content-type': 'application/json' };
+  if (tlsEnabled && tlsCfg) cors['strict-transport-security'] = `max-age=${tlsCfg.hstsMaxAgeSeconds}; includeSubDomains`;
   if (req.method === 'OPTIONS') {
     res.writeHead(204, { ...cors, 'access-control-allow-methods': gwPack.cors.allowMethods.join(', '), 'access-control-allow-headers': 'content-type,x-api-key' });
     return res.end();
@@ -128,19 +161,21 @@ const srv = createServer(async (req, res) => {
   );
   res.writeHead(status, cors);
   res.end(JSON.stringify(out));
-});
+}
 
 const { host, port } = gwPack.server;
 // container deployments override the pack default via env (pack stays source of truth locally)
 const bindHost = process.env.AETHER_BIND_HOST ?? host;
 const bindPort = Number(process.env.AETHER_BIND_PORT ?? port);
 srv.listen(bindPort, bindHost, () => {
-  log(`\n🌐 AetherCommerce local API — http://${host}:${port}`);
-  log('   GET  /health                     (no auth) — self-describing route list');
+  const scheme = tlsEnabled ? 'https' : 'http';
+  log(`\n🌐 AetherCommerce local API — ${scheme}://${host}:${port}${tlsEnabled ? ' (TLS + HSTS from pack config)' : ''}`);
+  log(`   GET  /health                     (no auth) — self-describing route list`);
+  log(`   STATE: ${stateEngine ? 'distributed (postgres-wire)' : 'in-memory demo'}`);
   log('   Auth header:  x-api-key: demo-admin-key-0000    (full access)');
   log('                x-api-key: demo-shopper-key-0000  (read-only + ai)');
   log('   Try:');
-  log(`     curl http://${host}:${port}/health`);
+  log(`     curl ${tlsEnabled ? '-k ' : ''}${scheme}://${host}:${port}/health`);
   log(`     curl -H 'x-api-key: demo-shopper-key-0000' '${gwPack.server.publicBaseUrl}/search?q=tee'`);
   log(`     curl -H 'x-api-key: demo-admin-key-0000' -X POST -d '{"fact":{"market":"US","region":"CA"},"lines":[{"lineId":"l1","netAmount":100}]}' ${gwPack.server.publicBaseUrl}/tax/compute`);
   log('   Rate limit: 600 req/min (pack data). Ctrl-C to stop.\n');

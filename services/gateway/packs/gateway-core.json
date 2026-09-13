@@ -8,7 +8,12 @@
   "server": {
     "host": "127.0.0.1",
     "port": 8787,
-    "publicBaseUrl": "http://127.0.0.1:8787"
+    "publicBaseUrl": "http://127.0.0.1:8787",
+    "tls": {
+      "envCert": "AETHER_TLS_CERT_FILE",
+      "envKey": "AETHER_TLS_KEY_FILE",
+      "hstsMaxAgeSeconds": 31536000
+    }
   },
   "cors": {
     "allowOrigins": [
@@ -59,7 +64,8 @@
   ],
   "rateLimits": {
     "requestsPerMinute": 600,
-    "burst": 50
+    "burst": 50,
+    "store": "inline"
   },
   "routes": [
     {
@@ -394,5 +400,9 @@
       "map": "{\"tenantId\":\"demo-tenant\",\"cartLines\":\"$.cart_lines\",\"idem\":\"$.body.idem||auto\"}",
       "desc": "Checkout the session cart via saga (demo PSP + stock)"
     }
-  ]
+  ],
+  "keyProvider": {
+    "mode": "demo-inline",
+    "$comment": "Credential source: demo-inline = keys in this pack (dev only). production-class adapters: secret-file (KMS/Vault-agent mounted JSON file) or host-resolved (external host supplies via mountKeyProvider). Zero code change to swap."
+  }
 }

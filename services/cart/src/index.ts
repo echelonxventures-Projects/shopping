@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
+import type { StorageEngine } from '@aether/kernel-storage';
 
 export interface CartPack {
   pack: { name: string };
@@ -38,14 +39,40 @@ export class CartError extends Error {
 
 export class CartService {
   private pack: CartPack;
-  private carts = new Map<string, CartLine[]>(); // customerId → lines
+  private carts = new Map<string, CartLine[]>(); // customerId → lines (cache)
+  private cartValidFrom = new Map<string, string>(); // stable record window per cart
+  private store: StorageEngine | null = null; // distributed carts (multi-pod)
 
   constructor(pack: CartPack) {
     this.pack = pack;
   }
 
-  add(customerId: string, line: Omit<CartLine, 'currency'> & { currency?: string }): CartView {
-    const cart = this.carts.get(customerId) ?? [];
+  /** attach a durable cart store (Storage SPI — conformance-admitted engines) */
+  attachStore(engine: StorageEngine): void {
+    this.store = engine;
+  }
+
+  private async loadCart(customerId: string): Promise<{ lines: CartLine[]; validFrom: string | null }> {
+    if (!this.store) return { lines: this.carts.get(customerId) ?? [], validFrom: null };
+    const rec = await this.store.get(`cart_${customerId}`, 'aether-carts');
+    return rec ? { lines: rec.attributes.lines as CartLine[], validFrom: rec.validFrom } : { lines: [], validFrom: null };
+  }
+
+  private async saveLines(customerId: string, lines: CartLine[], validFrom?: string | null): Promise<void> {
+    this.carts.set(customerId, lines);
+    if (!this.store) return;
+    const now = new Date().toISOString();
+    const stableFrom = validFrom ?? this.cartValidFrom.get(customerId) ?? now; // reuse record window → single current row
+    this.cartValidFrom.set(customerId, stableFrom);
+    await this.store.put({
+      id: `cart_${customerId}`, tenantId: 'aether-carts', typeId: 'et_cart',
+      validFrom: stableFrom, validTo: null, recordedAt: now, epoch: 1,
+      attributes: { lines },
+    }, { upsert: true }); // cart replaces its own current version
+  }
+
+  async add(customerId: string, line: Omit<CartLine, 'currency'> & { currency?: string }): Promise<CartView> {
+    const { lines: cart, validFrom } = await this.loadCart(customerId);
     const existing = cart.find((l) => l.offerId === line.offerId);
     if (existing) {
       existing.qty = Math.min(existing.qty + line.qty, this.pack.policy.maxQtyPerLine);
@@ -55,41 +82,44 @@ export class CartService {
       if (line.qty > this.pack.policy.maxQtyPerLine) throw new CartError(`qty cap is ${this.pack.policy.maxQtyPerLine}`);
       cart.push({ ...line, currency: line.currency ?? 'USD' } as CartLine);
     }
-    this.carts.set(customerId, cart);
+    await this.saveLines(customerId, cart, validFrom);
     return this.view(customerId);
   }
 
-  update(customerId: string, offerId: string, qty: number): CartView {
-    const cart = this.carts.get(customerId);
-    if (!cart) throw new CartError('no cart', 404);
+  async update(customerId: string, offerId: string, qty: number): Promise<CartView> {
+    const { lines: cart, validFrom } = await this.loadCart(customerId);
     const line = cart.find((l) => l.offerId === offerId);
     if (!line) throw new CartError('no such line', 404);
     if (qty < 1) return this.remove(customerId, offerId);
     if (qty > this.pack.policy.maxQtyPerLine) throw new CartError(`qty cap is ${this.pack.policy.maxQtyPerLine}`);
     line.qty = qty;
+    await this.saveLines(customerId, cart, validFrom);
     return this.view(customerId);
   }
 
-  remove(customerId: string, offerId: string): CartView {
-    const cart = this.carts.get(customerId);
-    if (!cart) throw new CartError('no cart', 404);
-    this.carts.set(customerId, cart.filter((l) => l.offerId !== offerId));
+  async remove(customerId: string, offerId: string): Promise<CartView> {
+    const { lines: cart, validFrom } = await this.loadCart(customerId);
+    if (cart.length === 0) throw new CartError('no cart', 404);
+    await this.saveLines(customerId, cart.filter((l) => l.offerId !== offerId), validFrom);
     return this.view(customerId);
   }
 
-  get(customerId: string): CartView {
+  async get(customerId: string): Promise<CartView> {
+    const { lines } = await this.loadCart(customerId);
+    this.carts.set(customerId, lines);
     return this.view(customerId);
   }
 
-  clear(customerId: string): CartView {
-    this.carts.set(customerId, []);
+  async clear(customerId: string): Promise<CartView> {
+    const { validFrom } = await this.loadCart(customerId);
+    await this.saveLines(customerId, [], validFrom);
     return this.view(customerId);
   }
 
   /** consume the cart for checkout (returns lines, clears cart) */
-  take(customerId: string): CartLine[] {
-    const lines = [...(this.carts.get(customerId) ?? [])];
-    this.carts.set(customerId, []);
+  async take(customerId: string): Promise<CartLine[]> {
+    const { lines, validFrom } = await this.loadCart(customerId);
+    await this.saveLines(customerId, [], validFrom);
     return lines;
   }
 

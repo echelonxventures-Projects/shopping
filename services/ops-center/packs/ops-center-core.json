@@ -1,61 +1,178 @@
 {
-  "$comment": "Ops Center core pack — chaos drill scenarios (fault kinds, blast radius, invariants, rollback steps), runbook template sections, on-call policy, FinOps resource cost table. Every drill, template line, and cost rate is DATA.",
-  "pack": { "name": "ops-center-core", "version": "1.0.0", "kind": "capability-pack" },
+  "$comment": "Ops Center core pack \u2014 chaos drill scenarios (fault kinds, blast radius, invariants, rollback steps), runbook template sections, on-call policy, FinOps resource cost table. Every drill, template line, and cost rate is DATA.",
+  "pack": {
+    "name": "ops-center-core",
+    "version": "1.0.0",
+    "kind": "capability-pack"
+  },
   "drills": [
     {
       "id": "drill_store_outage",
       "name": "primary-store-outage",
-      "fault": { "kind": "kill-dependency", "target": "storage-primary" },
+      "fault": {
+        "kind": "kill-dependency",
+        "target": "storage-primary"
+      },
       "blastRadius": "single-cell",
       "invariants": [
-        { "check": "no-acknowledged-write-lost", "expect": true },
-        { "check": "failover-under-seconds", "expectMax": 30 },
-        { "check": "error-budget-burn-pct", "expectMax": 5 }
+        {
+          "check": "no-acknowledged-write-lost",
+          "expect": true
+        },
+        {
+          "check": "failover-under-seconds",
+          "expectMax": 30
+        },
+        {
+          "check": "error-budget-burn-pct",
+          "expectMax": 5
+        }
       ],
-      "rollback": ["restore-primary", "verify-replication-lag-zero", "return-traffic"]
+      "rollback": [
+        "restore-primary",
+        "verify-replication-lag-zero",
+        "return-traffic"
+      ]
     },
     {
       "id": "drill_burst_overload",
       "name": "flash-sale-overload",
-      "fault": { "kind": "traffic-burst", "target": "checkout", "multiplier": 10 },
+      "fault": {
+        "kind": "traffic-burst",
+        "target": "checkout",
+        "multiplier": 10
+      },
       "blastRadius": "service",
       "invariants": [
-        { "check": "oversell-count", "expectMax": 0 },
-        { "check": "waiting-room-engaged", "expect": true },
-        { "check": "p95-under-ms", "expectMax": 500 }
+        {
+          "check": "oversell-count",
+          "expectMax": 0
+        },
+        {
+          "check": "waiting-room-engaged",
+          "expect": true
+        },
+        {
+          "check": "p95-under-ms",
+          "expectMax": 500
+        }
       ],
-      "rollback": ["drain-queue", "scale-down", "verify-inventory-integrity"]
+      "rollback": [
+        "drain-queue",
+        "scale-down",
+        "verify-inventory-integrity"
+      ]
     },
     {
       "id": "drill_bad_pack_publish",
       "name": "bad-config-pack-publish",
-      "fault": { "kind": "publish-invalid-pack", "target": "governance" },
+      "fault": {
+        "kind": "publish-invalid-pack",
+        "target": "governance"
+      },
       "blastRadius": "control-plane",
       "invariants": [
-        { "check": "publish-rejected-at-gate", "expect": true },
-        { "check": "running-config-unchanged", "expect": true }
+        {
+          "check": "publish-rejected-at-gate",
+          "expect": true
+        },
+        {
+          "check": "running-config-unchanged",
+          "expect": true
+        }
       ],
-      "rollback": ["verify-epoch-unchanged", "audit-entry-present"]
+      "rollback": [
+        "verify-epoch-unchanged",
+        "audit-entry-present"
+      ]
+    },
+    {
+      "id": "drill_pod_kill",
+      "name": "cluster-pod-kill",
+      "fault": {
+        "kind": "delete-pod",
+        "target": "deployment/{releaseName}"
+      },
+      "blastRadius": "single-pod",
+      "invariants": [
+        {
+          "check": "self-heal-under-seconds",
+          "expectMax": 120
+        },
+        {
+          "check": "replicas-ready",
+          "expect": 2
+        },
+        {
+          "check": "service-health-200",
+          "expect": true
+        }
+      ],
+      "rollback": [
+        "confirm-rollout-clean",
+        "write-incident-evidence"
+      ]
     }
   ],
-  "drillPolicy": { "requiredCadenceDays": 90, "breakGlassApprovers": 2, "abortOnInvariantBreach": true },
-  "runbookTemplate": {
-    "sections": ["overview", "capabilities", "public-api", "meterable-signals", "packs-to-check", "common-failures", "escalation"],
-    "commonFailures": [
-      { "symptom": "elevated error rate", "firstMove": "check last pack epoch publish — rollback via governance if correlated" },
-      { "symptom": "latency regression", "firstMove": "check HPA saturation in composed topology; verify sizing class" },
-      { "symptom": "billing gap", "firstMove": "verify meterable events flowing for this product's declared events" }
-    ],
-    "escalation": { "l1": "on-call-primary", "l2": "service-owner", "l3": "platform-constitution-quorum" }
+  "drillPolicy": {
+    "requiredCadenceDays": 90,
+    "breakGlassApprovers": 2,
+    "abortOnInvariantBreach": true
   },
-  "onCallPolicy": { "rotationDays": 7, "ackMinutes": 5, "pageEscalationMinutes": 15 },
+  "runbookTemplate": {
+    "sections": [
+      "overview",
+      "capabilities",
+      "public-api",
+      "meterable-signals",
+      "packs-to-check",
+      "common-failures",
+      "escalation"
+    ],
+    "commonFailures": [
+      {
+        "symptom": "elevated error rate",
+        "firstMove": "check last pack epoch publish \u2014 rollback via governance if correlated"
+      },
+      {
+        "symptom": "latency regression",
+        "firstMove": "check HPA saturation in composed topology; verify sizing class"
+      },
+      {
+        "symptom": "billing gap",
+        "firstMove": "verify meterable events flowing for this product's declared events"
+      }
+    ],
+    "escalation": {
+      "l1": "on-call-primary",
+      "l2": "service-owner",
+      "l3": "platform-constitution-quorum"
+    }
+  },
+  "onCallPolicy": {
+    "rotationDays": 7,
+    "ackMinutes": 5,
+    "pageEscalationMinutes": 15
+  },
   "finops": {
-    "$comment": "Resource cost table — rates are config; attribution multiplies metered usage by these rates.",
+    "$comment": "Resource cost table \u2014 rates are config; attribution multiplies metered usage by these rates.",
     "resourceCosts": [
-      { "resource": "request", "unitCostMicros": 12 },
-      { "resource": "storage-gb-day", "unitCostMicros": 900 },
-      { "resource": "compute-cpu-second", "unitCostMicros": 4 },
-      { "resource": "egress-gb", "unitCostMicros": 55000 }
+      {
+        "resource": "request",
+        "unitCostMicros": 12
+      },
+      {
+        "resource": "storage-gb-day",
+        "unitCostMicros": 900
+      },
+      {
+        "resource": "compute-cpu-second",
+        "unitCostMicros": 4
+      },
+      {
+        "resource": "egress-gb",
+        "unitCostMicros": 55000
+      }
     ],
     "currency": "USD",
     "marginTargetPct": 65

@@ -25,10 +25,11 @@ export interface GatewayRoute {
 
 export interface GatewayPack {
   pack: { name: string; version: string };
+  keyProvider?: { mode: string; fileEnvVar?: string };
   server: { host: string; port: number; publicBaseUrl: string };
   cors: { allowOrigins: string[]; allowMethods: string[] };
   apiKeys: Array<{ key: string; name: string; scopes: string[] }>;
-  rateLimits: { requestsPerMinute: number; burst: number };
+  rateLimits: { requestsPerMinute: number; burst: number; store?: string };
   routes: Array<{ method: string; path: string; module: string; api: string; scope: string | null; map: string; desc: string }>;
 }
 
@@ -44,14 +45,14 @@ export interface GatewayRequestCtx {
 export type Responder = (status: number, body: unknown, meter: (ev: string) => void, headers?: Record<string, string>) => void;
 
 /** JSON-path mini-resolver: $.body.productId / $.params.id / $.query.q / literal (quoted or bare) / expr||fallback */
-export function resolveExpr(expr: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartTake?: ((customerId: string) => Array<Record<string, unknown>>) | null): unknown {
+export function resolveExpr(expr: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartLines?: Array<Record<string, unknown>> | null): unknown {
   const trimmed = expr.trim();
   // full literal (quoted string)
   if (/^".*"$/.test(trimmed)) return trimmed.slice(1, -1);
   // bare literal (no path prefix, no fallback operator)
   if (!trimmed.startsWith('$.') && !trimmed.includes('||')) return trimmed;
   const [path, fallback] = trimmed.split('||');
-  const raw = getPath(path.trim(), ctx, session, cartTake);
+  const raw = getPath(path.trim(), ctx, session, cartLines);
   if (raw !== undefined && raw !== null) {
     // coerce to number when the fallback (or the raw value itself) is numeric
     const fv = fallback?.trim();
@@ -71,12 +72,12 @@ export function resolveExpr(expr: string, ctx: GatewayRequestCtx, session?: { cu
   return undefined;
 }
 
-function getPath(p: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartTake?: ((customerId: string) => Array<Record<string, unknown>>) | null): unknown {
+function getPath(p: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartLines?: Array<Record<string, unknown>> | null): unknown {
   if (p === '$.session_token') {
     const auth = ctx.headers['authorization'] ?? '';
     return auth.startsWith('Bearer ') ? auth.slice(7) : '';
   }
-  if (p === '$.cart_lines' && session && cartTake) return cartTake(session.customerId);
+  if (p === '$.cart_lines') return cartLines;
   if (!p.startsWith('$.')) return undefined;
   const parts = p.slice(2).split('.');
   let cur: unknown = { body: ctx.body, params: ctx.params, query: ctx.query, headers: ctx.headers, session: session ?? undefined };
@@ -94,11 +95,40 @@ export class GatewayService {
   private demoSaga: ((args: Record<string, unknown>) => Promise<unknown>) | null = null;
   private identityMe: ((token: string) => { customerId: string; email: string } | null) | null = null;
   private cartTake: ((customerId: string) => Array<Record<string, unknown>>) | null = null;
+  private keyProvider: (() => Array<{ key: string; name: string; scopes: string[] }>) | null = null;
+  private rateStore: { acquire(key: string, limitPerMinute: number): boolean | Promise<boolean> } | null = null;
+  private apiKeys: Array<{ key: string; name: string; scopes: string[] }> = [];
 
   constructor(pack: GatewayPack) {
     this.pack = pack;
     // route maps arrive as JSON strings in the pack — parse once
     this.routes = pack.routes.map((r) => ({ ...r, method: r.method as 'GET' | 'POST', map: JSON.parse(r.map) as Record<string, unknown> } as GatewayRoute));
+    this.apiKeys = this.resolveKeys();
+  }
+
+  /** credential source is pack data: demo-inline | secret-file | host-resolved */
+  private resolveKeys(): Array<{ key: string; name: string; scopes: string[] }> {
+    const mode = this.pack.keyProvider?.mode ?? 'demo-inline';
+    if (mode === 'demo-inline') return this.pack.apiKeys;
+    if (mode === 'secret-file') {
+      const envVar = this.pack.keyProvider?.fileEnvVar ?? 'AETHER_GATEWAY_KEYS_FILE';
+      const file = process.env[envVar];
+      if (!file) throw new Error(`keyProvider mode secret-file but ${envVar} unset — mount the KMS/Vault agent file (pack data)`);
+      return JSON.parse(readFileSync(file, 'utf8')) as Array<{ key: string; name: string; scopes: string[] }>;
+    }
+    if (mode === 'host-resolved') return []; // host supplies via mountKeyProvider
+    throw new Error(`unknown keyProvider mode "${mode}" — add an adapter (pack data), never code`);
+  }
+
+  /** external hosts (KMS/Vault-class) inject their own key resolver — plug-and-play */
+  mountKeyProvider(resolver: () => Array<{ key: string; name: string; scopes: string[] }>): void {
+    this.keyProvider = resolver;
+    this.apiKeys = resolver();
+  }
+
+  /** shared distributed rate limiter (production pods share one store) */
+  mountRateStore(store: { acquire(key: string, limitPerMinute: number): boolean | Promise<boolean> }): void {
+    this.rateStore = store;
   }
 
   routes: GatewayRoute[];
@@ -113,9 +143,9 @@ export class GatewayService {
     this.demoSaga = fn;
   }
 
-  /** wire the identity service for session-authenticated shopper routes (scope: 'shopper') */
-  mountIdentity(me: (token: string) => { customerId: string; email: string } | null): void {
-    this.identityMe = me;
+  /** wire the identity service for session-authenticated shopper routes (scope: 'shopper'; sync or async resolver) */
+  mountIdentity(me: (token: string) => { customerId: string; email: string } | null | Promise<{ customerId: string; email: string } | null>): void {
+    this.identityMe = me as (token: string) => { customerId: string; email: string } | null;
   }
 
   /** wire cart consumption for shopper checkout ($.cart_lines resolver) */
@@ -172,11 +202,12 @@ export class GatewayService {
 
   private keyScopes(key: string | undefined): string[] | null {
     if (!key) return null;
-    const k = this.pack.apiKeys.find((x) => x.key === key);
+    const k = this.apiKeys.find((x) => x.key === key);
     return k ? k.scopes : null;
   }
 
-  private rateOk(key: string): boolean {
+  private async rateOk(key: string): Promise<boolean> {
+    if (this.rateStore) return await this.rateStore.acquire(key, this.pack.rateLimits.requestsPerMinute);
     const now = Date.now();
     this.rateWindow = this.rateWindow.filter((r) => now - r.at < 60_000);
     const mine = this.rateWindow.filter((r) => r.key === key).length;
@@ -211,11 +242,11 @@ export class GatewayService {
     const routeAuth = preMatch?.route.auth ?? true;
     // shopper routes authenticate via Bearer session (not api-key); everything else via api-key
     const isShopperRoute = preMatch?.route.scope === 'shopper';
-    if (routeAuth && !isShopperRoute && this.pack.apiKeys.length > 0 && scopes === null) {
+    if (routeAuth && !isShopperRoute && this.apiKeys.length > 0 && scopes === null) {
       meter('gateway.401');
       return { status: 401, body: { error: 'invalid or missing x-api-key', hint: 'demo keys are pack data — see gateway-core pack apiKeys' } };
     }
-    if (!this.rateOk(apiKey ?? 'anon')) {
+    if (!(await this.rateOk(apiKey ?? 'anon'))) {
       meter('gateway.429');
       return { status: 429, body: { error: 'rate limit exceeded', limitPerMinute: this.pack.rateLimits.requestsPerMinute } };
     }
@@ -230,7 +261,7 @@ export class GatewayService {
     if (route.scope === 'shopper') {
       const auth = ctx.headers['authorization'] ?? '';
       const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
-      session = this.identityMe ? this.identityMe(token) : null;
+      session = (this.identityMe ? await this.identityMe(token) : null) as { customerId: string; email: string } | null;
       if (!session) {
         meter('gateway.401');
         return { status: 401, body: { error: 'login required — POST /auth/login first, then Authorization: Bearer <token>' } };
@@ -245,9 +276,14 @@ export class GatewayService {
     if (typeof fnRaw !== 'function') {
       return { status: 503, body: { error: `module "${route.module}" not mounted or api "${route.api}" missing` } };
     }
+    // $.cart_lines needs the session's cart resolved BEFORE sync mapping (store may be async)
+    let cartLines: Array<Record<string, unknown>> | undefined;
+    if (session && Object.values(route.map).some((v) => String(v).includes('$.cart_lines'))) {
+      cartLines = this.cartTake ? await (this.cartTake(session.customerId) as unknown as Array<Record<string, unknown>>) : undefined;
+    }
     const args: Record<string, unknown> = {};
     for (const [argName, expr] of Object.entries(route.map)) {
-      args[argName] = resolveExpr(String(expr), { ...ctx, params }, session, this.cartTake);
+      args[argName] = resolveExpr(String(expr), { ...ctx, params }, session, cartLines);
     }
     try {
       // demo-saga routes (checkout) route through the mounted adapter
