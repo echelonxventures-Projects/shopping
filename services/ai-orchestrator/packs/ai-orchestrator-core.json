@@ -1,0 +1,62 @@
+{
+  "$comment": "AI Orchestrator core pack — the ENTIRE AI tool policy as data. Providers (free + paid classes), per-task quality scores, bitemporal pricing (price changes = new rows, reconstructable at any T), routing decision-tables (priority-resolved, per task/tenant/tier/customer), billing tiers with markup, budget guards, fallback policy. Zero provider names in code — even the ones listed here are examples the platform can swap wholesale. credentialRef values are KMS/Vault POINTERS, never secrets.",
+  "pack": { "name": "ai-orchestrator-core", "version": "1.0.0", "kind": "capability-pack" },
+  "providers": [
+    { "id": "gemini-free-class", "kind": "hosted-free-class", "freeTier": true, "unitCosts": { "1k-tokens": 0, "image": 0 }, "quality": { "default": 0.72, "recommendation": 0.78, "assistant-turn": 0.75 }, "capabilities": ["text", "embeddings", "vision"], "credentialRef": null, "rateLimitRpm": 1500, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "local-inference-class", "kind": "self-hosted-free-class", "freeTier": true, "unitCosts": { "1k-tokens": 0, "image": 0 }, "quality": { "default": 0.55, "data-cleaning": 0.85, "data-analysis": 0.7, "reporting": 0.6, "image-processing": 0.62 }, "capabilities": ["text", "embeddings", "analysis", "cleaning", "image"], "credentialRef": null, "rateLimitRpm": 10000, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "openai-class", "kind": "hosted-paid-class", "freeTier": false, "unitCosts": { "1k-tokens": 2.5, "image": 0.04 }, "quality": { "default": 0.9, "recommendation": 0.92, "reporting": 0.88 }, "capabilities": ["text", "embeddings", "image"], "credentialRef": "kms://ai/openai/platform-key", "rateLimitRpm": 3000, "validFrom": "2026-01-01T00:00:00Z", "validTo": "2026-08-01T00:00:00Z", "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "openai-class", "kind": "hosted-paid-class", "freeTier": false, "unitCosts": { "1k-tokens": 3.2, "image": 0.05 }, "quality": { "default": 0.95, "recommendation": 0.96, "reporting": 0.93 }, "capabilities": ["text", "embeddings", "image"], "credentialRef": "kms://ai/openai/platform-key", "rateLimitRpm": 3000, "validFrom": "2026-08-01T00:00:00Z", "validTo": null, "recordedAt": "2026-07-20T00:00:00Z" },
+    { "id": "anthropic-class", "kind": "hosted-paid-class", "freeTier": false, "unitCosts": { "1k-tokens": 3.0, "image": 0.06 }, "quality": { "default": 0.93, "recommendation": 0.93, "reporting": 0.91 }, "capabilities": ["text", "analysis", "image"], "credentialRef": "kms://ai/anthropic/platform-key", "rateLimitRpm": 2000, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" }
+  ],
+  "tasks": [
+    { "id": "recommendation", "requires": ["embeddings"], "unit": "1k-tokens", "defaultUnits": 0.8 },
+    { "id": "assistant-turn", "requires": ["text"], "unit": "1k-tokens", "defaultUnits": 0.4 },
+    { "id": "image-processing", "requires": ["image"], "unit": "image", "defaultUnits": 1 },
+    { "id": "data-analysis", "requires": ["analysis"], "unit": "1k-tokens", "defaultUnits": 4 },
+    { "id": "data-cleaning", "requires": ["cleaning"], "unit": "1k-tokens", "defaultUnits": 6 },
+    { "id": "reporting", "requires": ["text"], "unit": "1k-tokens", "defaultUnits": 2 }
+  ],
+  "routingRules": [
+    { "id": "rule_route_free_only", "kind": "rule", "name": "free-customers-never-pay", "priority": 90,
+      "decisionTable": [
+        { "field": "fact", "equals": "ai-route" },
+        { "field": "tier", "equals": "free", "then": { "allowPaid": false, "prefer": "cost", "budgetUsdMonthly": 5, "budgetAction": "degrade" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "rule_route_paid_quality", "kind": "rule", "name": "paying-customers-prefer-quality", "priority": 80,
+      "decisionTable": [
+        { "field": "fact", "equals": "ai-route" },
+        { "field": "tier", "in": ["growth", "enterprise"], "then": { "allowPaid": true, "prefer": "quality", "budgetUsdMonthly": 500, "budgetAction": "degrade" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "rule_route_internal_ops_stay_free", "kind": "rule", "name": "internal-ops-cost-first", "priority": 85,
+      "decisionTable": [
+        { "field": "fact", "equals": "ai-route" },
+        { "field": "tier", "in": ["growth", "enterprise"] },
+        { "field": "task", "in": ["data-cleaning", "data-analysis", "reporting"], "then": { "allowPaid": false, "prefer": "cost", "budgetUsdMonthly": 0, "budgetAction": "degrade" } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "rule_route_tenant_acme_ent", "kind": "rule", "name": "tenant-acme-enterprise-premium", "priority": 95,
+      "decisionTable": [
+        { "field": "fact", "equals": "ai-route" },
+        { "field": "tenant", "equals": "t-acme-ent", "then": { "allowPaid": true, "prefer": "quality", "budgetUsdMonthly": 2000 } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" },
+    { "id": "rule_route_default", "kind": "rule", "name": "free-first-global-default", "priority": 10,
+      "decisionTable": [
+        { "field": "fact", "equals": "ai-route", "then": { "allowPaid": false, "prefer": "cost", "budgetUsdMonthly": 5 } }
+      ],
+      "epoch": 1, "validFrom": "2026-01-01T00:00:00Z", "validTo": null, "recordedAt": "2025-12-01T00:00:00Z" }
+  ],
+  "billingTiers": {
+    "free": { "allowsPaidModels": false, "markupPct": 0, "platformAbsorbs": true },
+    "growth": { "allowsPaidModels": true, "markupPct": 25, "platformAbsorbs": false },
+    "enterprise": { "allowsPaidModels": true, "markupPct": 10, "platformAbsorbs": false }
+  },
+  "fallback": { "onRateLimit": "next-in-chain", "maxCandidates": 4, "retryPerCandidate": 1 },
+  "attribution": {
+    "$comment": "who pays per task — per-tenant config knobs; free users never generate customer billables",
+    "billToCustomerTasks": ["recommendation", "assistant-turn", "image-processing"],
+    "platformTasks": ["data-cleaning", "data-analysis", "reporting"]
+  }
+}

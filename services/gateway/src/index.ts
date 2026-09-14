@@ -44,6 +44,18 @@ export interface GatewayRequestCtx {
 
 export type Responder = (status: number, body: unknown, meter: (ev: string) => void, headers?: Record<string, string>) => void;
 
+/** deep arg resolution: strings are expressions; objects/arrays resolve recursively (config ctx literals) */
+function resolveDeep(expr: unknown, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartLines?: Array<Record<string, unknown>> | null): unknown {
+  if (typeof expr === 'string') return resolveExpr(expr, ctx, session, cartLines);
+  if (Array.isArray(expr)) return expr.map((e) => resolveDeep(e, ctx, session, cartLines));
+  if (expr !== null && typeof expr === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(expr)) out[k] = resolveDeep(v, ctx, session, cartLines);
+    return out;
+  }
+  return expr;
+}
+
 /** JSON-path mini-resolver: $.body.productId / $.params.id / $.query.q / literal (quoted or bare) / expr||fallback */
 export function resolveExpr(expr: string, ctx: GatewayRequestCtx, session?: { customerId: string; email: string } | null, cartLines?: Array<Record<string, unknown>> | null): unknown {
   const trimmed = expr.trim();
@@ -283,7 +295,7 @@ export class GatewayService {
     }
     const args: Record<string, unknown> = {};
     for (const [argName, expr] of Object.entries(route.map)) {
-      args[argName] = resolveExpr(String(expr), { ...ctx, params }, session, cartLines);
+      args[argName] = resolveDeep(expr, { ...ctx, params }, session, cartLines);
     }
     try {
       // demo-saga routes (checkout) route through the mounted adapter

@@ -884,5 +884,18 @@
       "PX-INF-004"
     ],
     "acceptance": "search: writes mirror, pod-B rehydrate = full index, removal durable; GAME DAY LIVE: pod killed grace=0, self-heal 8s, replicas 2/2, service health 200 through ClusterIP, rollback verified, incident evidence written"
+  },
+  {
+    "tid": "PX-AI-001",
+    "title": "AI Tool Orchestrator \u2014 free-first model routing as pure configuration: providers/prices/quality (bitemporal), per-task capability requirements, routing decision-tables (priority per task/tenant/tier/customer), constitutional billing-tier gate (free NEVER gets paid models), budget guard (degrade-to-free vs reject), fallback chains, markup-based tenant billing with platform absorption, BYOK KMS credential POINTERS, host-injected model adapters (zero SDK imports). Sold as a product in-platform + to tenants/clients",
+    "phase": "PX",
+    "workstream": "AI",
+    "status": "Done",
+    "dependencies": [
+      "P1-REC-001",
+      "P1-MON-001",
+      "P0-KRN-005"
+    ],
+    "acceptance": "11/11 orchestrator tests: free-first law, paid quality unlock, internal-ops-stay-free rule, bitemporal price reconstruction incl. knowledge time, constitutional tier gate beats tenant override, budget degrade, rate-limit fallback, markup billing (free absorbs, growth +25%), BYOK pointer-only; live /ai/route: free\u2192$0 chain-only, growth images\u2192paid+KMS ref, enterprise data-cleaning\u2192local free"
   }
 ]

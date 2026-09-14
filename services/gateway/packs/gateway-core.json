@@ -44,7 +44,8 @@
         "orders:read",
         "orders:write",
         "billing:read",
-        "billing:write"
+        "billing:write",
+        "ai:route"
       ]
     },
     {
@@ -399,6 +400,26 @@
       "shopperSaga": true,
       "map": "{\"tenantId\":\"demo-tenant\",\"cartLines\":\"$.cart_lines\",\"idem\":\"$.body.idem||auto\"}",
       "desc": "Checkout the session cart via saga (demo PSP + stock)"
+    },
+    {
+      "method": "GET",
+      "path": "/ai/route",
+      "module": "mod-ai-orchestrator",
+      "api": "select",
+      "scope": "pricing:read",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.query.task\",\"1\":{\"tenantId\":\"demo-tenant\",\"customerTier\":\"$.query.tier||free\"}}",
+      "desc": "Which model would serve this task for this billing tier (config-driven)"
+    },
+    {
+      "method": "GET",
+      "path": "/ai/usage/:tenant",
+      "module": "mod-ai-orchestrator",
+      "api": "usageReport",
+      "scope": "billing:read",
+      "argsMode": "positional",
+      "map": "{\"0\":\"$.params.tenant\"}",
+      "desc": "AI usage: cost, billable (markup), absorbed"
     }
   ],
   "keyProvider": {

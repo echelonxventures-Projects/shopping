@@ -37,7 +37,7 @@ rt.bindHost(
 );
 log(stateEngine ? '   STATE: distributed (postgres-wire engine — sessions, carts, search, rate limits shared across pods)' : '   STATE: in-memory (single-pod dev mode)');
 
-const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization', 'identity', 'cart'];
+const MOUNT = ['catalog', 'inventory', 'search', 'tax', 'pricing', 'geo', 'payments', 'ai-commerce', 'orders', 'checkout', 'monetization', 'identity', 'cart', 'ai-orchestrator'];
 log('🚀 booting modules…');
 for (const s of MOUNT) {
   const h = await rt.register(join(ROOT, 'services', s));

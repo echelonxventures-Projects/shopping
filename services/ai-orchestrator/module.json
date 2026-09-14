@@ -1,0 +1,33 @@
+{
+  "id": "mod-ai-orchestrator",
+  "name": "@aether/service-ai-orchestrator",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "AI Tool Orchestrator (Free-First, Billing-Aware Model Routing)",
+  "description": "Every AI capability — product recommendations, image processing, data analysis, data cleaning, reporting, assistant turns — routed by CONFIG, never code. Priority policy: always-free providers first; paid models unlock ONLY for paying customers (billing-tier entitlement); per-task / per-tenant / per-customer routing directives are bitemporal decision-table rules from the pack. Budget guards (degrade-to-free or reject), fallback chains on rate limits, cost estimation, markup-based tenant billing with platform absorption for free users, BYOK credential references (KMS pointers, never keys). Swap providers, prices, policies, tiers — pack epoch, zero code. Plugs into any host via injected model adapters.",
+  "capabilities": [
+    "ai-routing",
+    "free-first",
+    "billing-tier-gating",
+    "per-task-model-config",
+    "budget-guard",
+    "fallback-chains",
+    "ai-cost-markup",
+    "byok-credentials",
+    "bitemporal-pricing"
+  ],
+  "packs": ["packs/ai-orchestrator-core.json"],
+  "publicApi": ["select", "execute", "estimate", "usageReport", "providers", "billingTierOf"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "ai.route.selected", "unit": "route", "description": "Model routing decision computed" },
+      { "event": "ai.task.executed", "unit": "task", "description": "AI task executed through a model adapter" },
+      { "event": "ai.usage.metered", "unit": "usage", "description": "Token/image usage recorded for billing" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 49, "currency": "USD", "perUnit": "month" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
