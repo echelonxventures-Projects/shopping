@@ -6,6 +6,7 @@
 // This is what makes "infinite adapters, guaranteed interoperability" real (§2.7).
 
 import type { StorageEngine, StoredRecord } from '@aether/kernel-storage';
+import type { RuntimeAdapter, RuntimeTargetDef, DeploymentSpec, DeploymentHandle } from '@aether/kernel-runtime-target';
 
 export interface ConformanceCase {
   id: string;
@@ -93,7 +94,7 @@ export const STORAGE_CONFORMANCE_MATRIX: ConformanceCase[] = [
       await e.put(rec(7, { id: 'h', tenantId: 't-1', validFrom: '2026-01-01T00:00:00Z' }), { upsert: true });
       await e.put(rec(8, { id: 'h', tenantId: 't-1', validFrom: '2026-01-02T00:00:00Z' }), { upsert: true });
       await e.put(rec(9, { id: 'h', tenantId: 't-1', validFrom: '2026-01-03T00:00:00Z' }), { upsert: true });
-      const hist = await eng.historyAll('t-1', 'h');
+      const hist = await eng.historyAll!('t-1', 'h');
       assert(hist.length === 3, `expected 3 windows, got ${hist.length}`);
       assert(hist[0]!.validFrom < hist[1]!.validFrom && hist[1]!.validFrom < hist[2]!.validFrom, 'history not ordered');
     },
@@ -143,6 +144,164 @@ export function runStorageConformance(engine: StorageEngine): Promise<Conformanc
       admitted: failures.length === 0,
     };
   })();
+}
+
+// ---------- Runtime conformance (P0-CTR-002) ----------
+// Same law as storage: a runtime adapter is admitted ONLY by passing the
+// generated matrix. No hand-written per-adapter tests, no exceptions.
+
+export interface RuntimeConformanceCase {
+  id: string;
+  name: string;
+  requirement: string;
+  run: (adapter: RuntimeAdapter) => Promise<void>;
+}
+
+export interface RuntimeConformanceResult {
+  adapterName: string;
+  passed: number;
+  failed: number;
+  failures: Array<{ caseId: string; name: string; error: string }>;
+  admitted: boolean;
+}
+
+function target(kind: string, over: Partial<RuntimeTargetDef> = {}): RuntimeTargetDef {
+  return {
+    id: `rt-${kind}`,
+    kind,
+    computeClass: 'general',
+    scalingSemantics: 'horizontal',
+    networkModel: 'service-mesh',
+    placementConstraints: [],
+    teeCapable: false,
+    capabilities: ['containers'],
+    validFrom: '2026-01-01T00:00:00Z',
+    validTo: null,
+    recordedAt: '2026-01-01T00:00:00Z',
+    ...over,
+  };
+}
+
+const SPEC: DeploymentSpec = { serviceId: 'svc-conformance', image: 'registry.local/conformance:1', replicas: 1, cpuMilli: 100, memoryMi: 128, port: 8080 };
+
+export const RUNTIME_CONFORMANCE_MATRIX: RuntimeConformanceCase[] = [
+  {
+    id: 'RT-DEPLOY',
+    name: 'deploy reaches desired ready count',
+    requirement: 'SPI.deploy + SPI.status',
+    run: async (a) => {
+      const h = await a.deploy(SPEC, target(a.targetKind));
+      const st = await a.status(h);
+      assert(st.ready === SPEC.replicas, `ready=${st.ready} desired=${SPEC.replicas}`);
+      assert(st.healthy, 'deployment not healthy right after deploy');
+    },
+  },
+  {
+    id: 'RT-SCALE',
+    name: 'scale changes desired and converges',
+    requirement: 'SPI.scale',
+    run: async (a) => {
+      const caps = a.capabilities();
+      const h = await a.deploy(SPEC, target(a.targetKind));
+      const want = caps.horizontalScaling ? 3 : 1;
+      const scaled = await a.scale(h, want);
+      assert(scaled.replicas === want, `scale did not update replicas (${scaled.replicas})`);
+      const st = await a.status(scaled);
+      assert(st.ready === want, `not converged: ready=${st.ready} want=${want}`);
+    },
+  },
+  {
+    id: 'RT-HEALTH',
+    name: 'status reports healthy only when converged',
+    requirement: 'SPI.status.healthy is a convergence invariant',
+    run: async (a) => {
+      const h = await a.deploy(SPEC, target(a.targetKind));
+      const st = await a.status(h);
+      assert(st.healthy === (st.ready === st.desired), 'healthy must mean ready==desired');
+      const unknown = await a.status({ ...h, deploymentId: 'does-not-exist' } as DeploymentHandle);
+      assert(unknown.healthy === false, 'unknown deployment reported healthy');
+    },
+  },
+  {
+    id: 'RT-UNDEPLOY',
+    name: 'undeploy drains to zero ready',
+    requirement: 'SPI.undeploy',
+    run: async (a) => {
+      const h = await a.deploy(SPEC, target(a.targetKind));
+      await a.undeploy(h);
+      const st = await a.status(h);
+      assert(st.ready === 0, `undeploy left ready=${st.ready}`);
+      assert(st.healthy === false, 'undeployed deployment reported healthy');
+    },
+  },
+  {
+    id: 'RT-CAPS',
+    name: 'capabilities() is a complete descriptor',
+    requirement: 'every declared capability flag is present',
+    run: async (a) => {
+      const c = a.capabilities();
+      for (const k of ['horizontalScaling', 'autoscaling', 'rollingUpdate', 'tee', 'persistentVolumes'] as const) {
+        assert(typeof c[k] === 'boolean', `capability "${k}" missing from adapter descriptor`);
+      }
+    },
+  },
+  {
+    id: 'RT-TARGET-MATCH',
+    name: 'target-kind mismatch is refused',
+    requirement: 'an adapter may only deploy onto targets of its own kind',
+    run: async (a) => {
+      let refused = false;
+      try {
+        await a.deploy(SPEC, target('incompatible-kind'));
+      } catch {
+        refused = true;
+      }
+      assert(refused, 'adapter accepted a target of an incompatible kind');
+    },
+  },
+];
+
+export function runRuntimeConformance(adapter: RuntimeAdapter): Promise<RuntimeConformanceResult> {
+  return (async () => {
+    const failures: RuntimeConformanceResult['failures'] = [];
+    for (const c of RUNTIME_CONFORMANCE_MATRIX) {
+      try {
+        await c.run(adapter);
+      } catch (err) {
+        failures.push({ caseId: c.id, name: c.name, error: (err as Error).message });
+      }
+    }
+    return {
+      adapterName: adapter.name,
+      passed: RUNTIME_CONFORMANCE_MATRIX.length - failures.length,
+      failed: failures.length,
+      failures,
+      admitted: failures.length === 0,
+    };
+  })();
+}
+
+/** registry of admitted runtime adapters — the only path to production use */
+export class RuntimeAdmission {
+  private admitted = new Map<string, { adapter: RuntimeAdapter; result: RuntimeConformanceResult; admittedAt: string }>();
+
+  async admit(adapter: RuntimeAdapter): Promise<RuntimeConformanceResult> {
+    const result = await runRuntimeConformance(adapter);
+    if (result.admitted) {
+      this.admitted.set(adapter.name, { adapter, result, admittedAt: new Date().toISOString() });
+    }
+    return result;
+  }
+
+  get(adapterName: string): RuntimeAdapter {
+    const entry = this.admitted.get(adapterName);
+    if (!entry) throw new Error(`Runtime adapter "${adapterName}" NOT admitted — pass the runtime conformance matrix first`);
+    return entry.adapter;
+  }
+
+  list(): string[] {
+    return [...this.admitted.keys()];
+  }
 }
 
 /** registry of admitted engines — the ONLY way an engine enters production use */

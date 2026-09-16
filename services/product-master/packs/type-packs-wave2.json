@@ -1,0 +1,165 @@
+{
+  "$comment": "Product Type Packs — WAVE 2 (P1-CAT-003). Ten new commerce mechanisms as pure data: regulated goods, CPQ configurability, freight/LTL, used/C2C, auctions, trade-in, group-buy, live/social, AR/3D, voice, charity, fractional ownership. Same meta-model as the base pack — zero new code, zero new columns. Merged onto the base pack by union semantics.",
+  "pack": { "name": "product-types-wave2", "version": "1.0.0", "kind": "capability-pack" },
+  "taxonomy": [
+    { "id": "dom_logistics", "kind": "domain", "name": "Logistics & Freight", "parentId": null },
+    { "id": "cat_freight", "kind": "category", "name": "Freight & Cargo", "parentId": "dom_logistics" },
+    { "id": "dom_marketplace", "kind": "domain", "name": "Marketplace & Resale", "parentId": null },
+    { "id": "cat_used_c2c", "kind": "category", "name": "Used & Peer-to-Peer", "parentId": "dom_marketplace" },
+    { "id": "cat_auction", "kind": "category", "name": "Auctions", "parentId": "dom_marketplace" },
+    { "id": "cat_fractional", "kind": "category", "name": "Fractional Ownership", "parentId": "dom_marketplace" },
+    { "id": "dom_media", "kind": "domain", "name": "Media & Experience", "parentId": null },
+    { "id": "cat_live_social", "kind": "category", "name": "Live & Social Commerce", "parentId": "dom_media" },
+    { "id": "cat_ar3d", "kind": "category", "name": "AR / 3D Assets", "parentId": "dom_media" },
+    { "id": "cat_voice", "kind": "category", "name": "Voice Commerce", "parentId": "dom_media" },
+    { "id": "dom_industrial", "kind": "domain", "name": "Industrial & Configured", "parentId": null },
+    { "id": "cat_cpq", "kind": "category", "name": "Configured Products", "parentId": "dom_industrial" },
+    { "id": "dom_impact", "kind": "domain", "name": "Charitable & Impact", "parentId": null },
+    { "id": "cat_charity", "kind": "category", "name": "Charitable Giving", "parentId": "dom_impact" }
+  ],
+  "attributeSets": [
+    {
+      "id": "attrs_regulated_compliance",
+      "name": "regulated_compliance",
+      "bindsTo": { "productType": "regulated" },
+      "attributes": [
+        { "name": "regulatoryAuthority", "group": "compliance", "type": "string", "validation": { "required": true } },
+        { "name": "approvalNumber", "group": "compliance", "type": "string", "validation": { "required": true, "pattern": "^[A-Za-z0-9/.-]{4,40}$" } },
+        { "name": "controlledFlag", "group": "compliance", "type": "boolean" },
+        { "name": "handlingClass", "group": "compliance", "type": "enum", "enumValues": ["standard", "controlled", "hazardous", "temperature-controlled"] }
+      ]
+    },
+    {
+      "id": "attrs_cpq_config",
+      "name": "cpq_config",
+      "bindsTo": { "productType": "cpq" },
+      "attributes": [
+        { "name": "configModelCode", "group": "configuration", "type": "string", "validation": { "required": true } },
+        { "name": "optionMatrix", "group": "configuration", "type": "object" },
+        { "name": "bomReference", "group": "configuration", "type": "reference" },
+        { "name": "leadTimeDays", "group": "configuration", "type": "number", "validation": { "min": 0 } },
+        { "name": "configuredToOrder", "group": "configuration", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "attrs_freight_core",
+      "name": "freight_core",
+      "bindsTo": { "productType": "freight" },
+      "attributes": [
+        { "name": "freightClass", "group": "freight", "type": "enum", "enumValues": ["parcel", "ltl", "ftl", "air", "ocean", "rail"], "validation": { "required": true } },
+        { "name": "grossWeightKg", "group": "freight", "type": "measure", "unit": "kg", "validation": { "required": true, "min": 0 } },
+        { "name": "hazardousClass", "group": "freight", "type": "string" },
+        { "name": "incoterm", "group": "freight", "type": "enum", "enumValues": ["exw", "fca", "fob", "cif", "dap", "ddp"] },
+        { "name": "stackable", "group": "freight", "type": "boolean" }
+      ]
+    },
+    {
+      "id": "attrs_condition_core",
+      "name": "condition_core",
+      "bindsTo": { "productType": "used-c2c" },
+      "attributes": [
+        { "name": "conditionGrade", "group": "condition", "type": "enum", "enumValues": ["a", "b", "c", "d"], "validation": { "required": true } },
+        { "name": "functionalState", "group": "condition", "type": "enum", "enumValues": ["working", "refurbished", "faulty", "for-parts"] },
+        { "name": "historyReportRef", "group": "condition", "type": "reference" },
+        { "name": "cosmeticNotes", "group": "condition", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_auction_core",
+      "name": "auction_core",
+      "bindsTo": { "productType": "auction" },
+      "attributes": [
+        { "name": "startingBid", "group": "auction", "type": "number", "validation": { "required": true, "min": 0 } },
+        { "name": "reservePrice", "group": "auction", "type": "number", "validation": { "min": 0 } },
+        { "name": "bidIncrement", "group": "auction", "type": "number", "validation": { "required": true, "min": 0 } },
+        { "name": "closesAt", "group": "auction", "type": "string" },
+        { "name": "lotNumber", "group": "auction", "type": "string", "validation": { "required": true } }
+      ]
+    },
+    {
+      "id": "attrs_groupbuy_core",
+      "name": "groupbuy_core",
+      "bindsTo": { "productType": "group-buy" },
+      "attributes": [
+        { "name": "tierSizes", "group": "campaign", "type": "array", "validation": { "required": true } },
+        { "name": "tierPrices", "group": "campaign", "type": "array", "validation": { "required": true } },
+        { "name": "campaignWindowHours", "group": "campaign", "type": "number", "validation": { "min": 1 } },
+        { "name": "minParticipants", "group": "campaign", "type": "number", "validation": { "min": 1 } }
+      ]
+    },
+    {
+      "id": "attrs_live_commerce_core",
+      "name": "live_commerce_core",
+      "bindsTo": { "productType": "live-social" },
+      "attributes": [
+        { "name": "streamRef", "group": "live", "type": "reference" },
+        { "name": "hostId", "group": "live", "type": "string" },
+        { "name": "clipUrl", "group": "live", "type": "string" },
+        { "name": "pinnedSkuList", "group": "live", "type": "array" },
+        { "name": "dropStartsAt", "group": "live", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_ar3d_core",
+      "name": "ar3d_core",
+      "bindsTo": { "productType": "ar-3d" },
+      "attributes": [
+        { "name": "modelAssetUrl", "group": "assets", "type": "string", "validation": { "required": true } },
+        { "name": "assetFormat", "group": "assets", "type": "enum", "enumValues": ["glb", "usdz", "obj", "fbx"] },
+        { "name": "arScaleMode", "group": "assets", "type": "enum", "enumValues": ["true-scale", "adjustable"] },
+        { "name": "polyBudget", "group": "assets", "type": "number", "validation": { "min": 0 } }
+      ]
+    },
+    {
+      "id": "attrs_voice_core",
+      "name": "voice_core",
+      "bindsTo": { "productType": "voice" },
+      "attributes": [
+        { "name": "voiceCommandAlias", "group": "voice", "type": "string", "validation": { "required": true } },
+        { "name": "wakePhrase", "group": "voice", "type": "string" },
+        { "name": "intentSchema", "group": "voice", "type": "object" },
+        { "name": "localeTag", "group": "voice", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_charity_core",
+      "name": "charity_core",
+      "bindsTo": { "productType": "charity" },
+      "attributes": [
+        { "name": "beneficiaryId", "group": "impact", "type": "string", "validation": { "required": true } },
+        { "name": "donationSharePct", "group": "impact", "type": "number", "validation": { "required": true, "min": 0, "max": 100 } },
+        { "name": "receiptPolicy", "group": "impact", "type": "enum", "enumValues": ["instant", "monthly", "annual"] },
+        { "name": "impactUnit", "group": "impact", "type": "string" }
+      ]
+    },
+    {
+      "id": "attrs_fractional_core",
+      "name": "fractional_core",
+      "bindsTo": { "productType": "fractional" },
+      "attributes": [
+        { "name": "totalUnits", "group": "ownership", "type": "number", "validation": { "required": true, "min": 1 } },
+        { "name": "unitPrice", "group": "ownership", "type": "number", "validation": { "required": true, "min": 0 } },
+        { "name": "ownershipVehicle", "group": "ownership", "type": "enum", "enumValues": ["direct", "spv", "custodial"] },
+        { "name": "transferLockDays", "group": "ownership", "type": "number", "validation": { "min": 0 } }
+      ]
+    }
+  ],
+  "productTypes": [
+    { "name": "regulated", "fulfillment": "physical", "inventoryTracked": "batch-lot", "requires": ["product_master_universal", "regulated_compliance"] },
+    { "name": "cpq", "fulfillment": "physical", "inventoryTracked": "none", "requires": ["product_master_universal", "cpq_config"] },
+    { "name": "freight", "fulfillment": "physical", "inventoryTracked": "none", "requires": ["product_master_universal", "freight_core"] },
+    { "name": "used-c2c", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal", "condition_core"] },
+    { "name": "trade-in", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal", "condition_core"] },
+    { "name": "auction", "fulfillment": "physical", "inventoryTracked": "simple", "entitlement": { "mode": "none" }, "requires": ["product_master_universal", "auction_core"] },
+    { "name": "group-buy", "fulfillment": "physical", "inventoryTracked": "simple", "requires": ["product_master_universal", "groupbuy_core"] },
+    { "name": "live-social", "fulfillment": "physical", "inventoryTracked": "simple", "requires": ["product_master_universal", "live_commerce_core"] },
+    { "name": "ar-3d", "fulfillment": "digital", "inventoryTracked": "none", "entitlement": { "mode": "download" }, "requires": ["product_master_universal", "ar3d_core"] },
+    { "name": "voice", "fulfillment": "digital", "inventoryTracked": "none", "entitlement": { "mode": "account-bound" }, "requires": ["product_master_universal", "voice_core"] },
+    { "name": "charity", "fulfillment": "none", "inventoryTracked": "none", "requires": ["product_master_universal", "charity_core"] },
+    { "name": "fractional", "fulfillment": "none", "inventoryTracked": "none", "entitlement": { "mode": "account-bound" }, "requires": ["product_master_universal", "fractional_core"] }
+  ],
+  "identitySchemes": [
+    { "code": "ISRC", "pattern": "^[A-Z]{2}-?[A-Z0-9]{3}-?\\d{2}-?\\d{5}$", "uniquePer": "global" },
+    { "code": "HTS", "pattern": "^\\d{4}\\.\\d{2}(\\.\\d{2,4})?$", "uniquePer": "global" }
+  ]
+}

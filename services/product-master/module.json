@@ -14,7 +14,9 @@
     "lifecycle"
   ],
   "packs": [
-    "packs/universal-product.json"
+    "packs/universal-product.json",
+    "packs/type-packs-wave2.json",
+    "packs/health-vertical.json"
   ],
   "publicApi": [
     "createProduct",

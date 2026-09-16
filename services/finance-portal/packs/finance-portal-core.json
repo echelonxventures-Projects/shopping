@@ -1,0 +1,41 @@
+{
+  "$comment": "Finance portal core pack — account classification (prefix map over the double-entry ledger), reconciliation tolerances, period buckets, statement policy. Financial rules are DATA: onboarding a new chart of accounts, tolerance policy, or reporting cadence = pack entry, zero code.",
+  "pack": { "name": "finance-portal-core", "version": "1.0.0", "kind": "capability-pack" },
+  "accountMap": {
+    "revenue": ["revenue:", "sales:"],
+    "cogs": ["cogs:", "cost-of-goods:"],
+    "fees": ["fees:", "commission:", "payment-fees:"],
+    "tax": ["tax:", "vat:", "gst:"],
+    "refunds": ["refund:", "returns:"],
+    "discounts": ["discount:", "promo:"],
+    "shipping": ["shipping:"],
+    "payouts": ["payouts:", "seller-payable:"],
+    "cash": ["cash:", "bank:"]
+  },
+  "tolerances": {
+    "amountMinor": 100,
+    "dateWindowHours": 72,
+    "autoClearWithinTolerance": true,
+    "exceptionQueueBucket": "finance.recon.exceptions"
+  },
+  "periods": {
+    "day": { "kind": "day", "pattern": "YYYY-MM-DD" },
+    "month": { "kind": "month", "pattern": "YYYY-MM" },
+    "quarter": { "kind": "quarter", "pattern": "YYYY-Q#" },
+    "year": { "kind": "year", "pattern": "YYYY" }
+  },
+  "statement": {
+    "currency": "USD",
+    "minorUnit": 2,
+    "rounding": "half-up",
+    "signConvention": {
+      "revenue": "credit-natural",
+      "cogs": "debit-natural",
+      "fees": "debit-natural",
+      "tax": "credit-natural",
+      "refunds": "debit-natural",
+      "discounts": "debit-natural",
+      "shipping": "credit-natural"
+    }
+  }
+}

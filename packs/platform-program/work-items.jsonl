@@ -897,5 +897,137 @@
       "P0-KRN-005"
     ],
     "acceptance": "11/11 orchestrator tests: free-first law, paid quality unlock, internal-ops-stay-free rule, bitemporal price reconstruction incl. knowledge time, constitutional tier gate beats tenant override, budget degrade, rate-limit fallback, markup billing (free absorbs, growth +25%), BYOK pointer-only; live /ai/route: free\u2192$0 chain-only, growth images\u2192paid+KMS ref, enterprise data-cleaning\u2192local free"
+  },
+  {
+    "tid": "P0-CTR-001",
+    "title": "Contract layer \u2014 CloudEvents-class event envelopes + OTel-class/W3C telemetry + contract-compatibility gate, all GENERATED from registry data in kernel/codegen (no hand-written per-service event or span shape)",
+    "phase": "P0",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [],
+    "acceptance": "codegen tests 7/7: envelope required-attrs + tenant/market/epoch extensions, malformed-event rejection, W3C traceparent + OTel span w/ registry attrs, contract-compat flags type-change/classification-tightening/newly-required as breaking"
+  },
+  {
+    "tid": "P0-CTR-002",
+    "title": "Runtime SPI \u2014 RuntimeTarget entity + RuntimeAdapter SPI in kernel/runtime-target; runtime adapters admitted ONLY by passing the generated runtime conformance matrix (deploy/scale/health/undeploy/capabilities/target-match)",
+    "phase": "P0",
+    "workstream": "CTR",
+    "status": "Done",
+    "dependencies": [
+      "P0-CTR-001"
+    ],
+    "acceptance": "SECOND runtime target admitted via harness (container-orchestrator-class + process-host-class both admitted); broken adapters refused (no-scale, unhealthy-convergence); target-kind isolation enforced; 7/7 tests"
+  },
+  {
+    "tid": "P0-GOV-002",
+    "title": "Constitution v1 bootstrap \u2014 T-C tier, M-of-N quorum ratification, amendment protocol with automated verification + auto-revert (kernel/governance)",
+    "phase": "P0",
+    "workstream": "GOV",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-001"
+    ],
+    "acceptance": "governance tests: floors enforced, M-of-N amendment enactment, auto-revert on breach; delivered with P0-GOV-001 ConfigStore"
+  },
+  {
+    "tid": "P0-GOV-003",
+    "title": "Constitutional crypto floors \u2014 \u00a74.5 minimums validated at publish time, floor violations rejected by the registry (kernel/governance floors + CryptoRegistry)",
+    "phase": "P0",
+    "workstream": "GOV",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-001",
+      "P0-SEC-001"
+    ],
+    "acceptance": "weak-scheme registration rejected with /floor/ (AES-64 refused); floors enforced on every publish"
+  },
+  {
+    "tid": "P0-SEC-001",
+    "title": "Crypto-agility registry \u2014 CryptoScheme entities, key hierarchy, floors, CBOM + PQ readiness generated (kernel/governance + services/crypto-vault field-level envelope encryption)",
+    "phase": "P0",
+    "workstream": "SEC",
+    "status": "Done",
+    "dependencies": [
+      "P0-GOV-002"
+    ],
+    "acceptance": "scheme swap via epoch; CBOM generated; PQ readiness ratio reported; crypto-vault 7/7 (cross-tenant decrypt fails cryptographically, floor violations rejected)"
+  },
+  {
+    "tid": "P0-SEC-002",
+    "title": "IaC baseline + Reference Pack v1 \u2014 runtime/storage defaults as config: infra-composer composes topology FROM the live product registry + pack shapes; runtimeAdapters make the deploy tooling itself swappable; Dockerfile/compose are container-class instance files",
+    "phase": "P0",
+    "workstream": "SEC",
+    "status": "Done",
+    "dependencies": [
+      "PX-INF-002",
+      "PX-INF-005"
+    ],
+    "acceptance": "full env from IaC (pack-sized Deployment+Service, live on k3s); pack swap demo (3 runtime adapters); topology auto-extends with every new product"
+  },
+  {
+    "tid": "P0-SEC-003",
+    "title": "CI pipeline v0 \u2014 lint (pack-sourced doctrine rules) + typecheck + full test suite + register projection staleness + register consistency + secret scan; postgres:17 service container for wire-engine conformance; Node 26 for native TS",
+    "phase": "P0",
+    "workstream": "SEC",
+    "status": "Done",
+    "dependencies": [
+      "P0-CTR-001"
+    ],
+    "acceptance": "CI green gates on kernel packages + services; verified pipeline: 450 tests incl. conformance matrix; secret-scan rule in lintRulePack"
+  },
+  {
+    "tid": "P1-SEC-002",
+    "title": "PCI SAQ-A evidence + SOC 2 evidence collection \u2014 compliance-evidence product: framework control catalogs (SOC 2 TSC, ISO 27001) mapped to platform-module proof artifacts via swappable EvidencePort, freshness windows, gap alerts, readiness scoring, workpaper exports",
+    "phase": "P1",
+    "workstream": "SEC",
+    "status": "Done",
+    "dependencies": [
+      "P1-SEC-001"
+    ],
+    "acceptance": "evidence collected continuously via port; gap detection names the missing module; freshness window (90d) breaches; readiness threshold from pack; SOC2+ISO27001 catalogs; 6/6 tests"
+  },
+  {
+    "tid": "P1-CAT-003",
+    "title": "Product type packs WAVE 2 \u2014 regulated, CPQ, freight/LTL, used/C2C, trade-in, auction, group-buy, live/social, AR-3D, voice, charity, fractional as pure pack data; mergeProductPacks() unions base+wave packs with no code changes",
+    "phase": "P1",
+    "workstream": "CAT",
+    "status": "Done",
+    "dependencies": [
+      "P1-CAT-002"
+    ],
+    "acceptance": "12 new types + 14 taxonomy nodes + 11 attribute sets + 2 identity schemes, all pack-only; multi-set required-attribute binding fixed (was first-match only); 20/20 product-master tests"
+  },
+  {
+    "tid": "P1-CAT-004",
+    "title": "Health vertical pack \u2014 HIPAA-class: PHI classification + retention + consent purpose, Rx rules (RxNorm/NDC/DEA schedule/prescriber/refill), medical device rules (UDI-DI/device class/sterilization/implantable), telehealth service type; NDC/RxNorm/UDI-DI/DEA identity schemes",
+    "phase": "P1",
+    "workstream": "CAT",
+    "status": "Done",
+    "dependencies": [
+      "P1-CAT-002"
+    ],
+    "acceptance": "health-rx binds THREE required sets simultaneously (pharma+hipaa+rx); device UDI + HIPAA privacy attrs mandatory; pattern enforcement per scheme; 20/20 product-master tests"
+  },
+  {
+    "tid": "P1-FIN-001",
+    "title": "Tenant/seller finance portal \u2014 P&L from double-entry ledger feed with pack prefix-map classification, PSP settlement reconciliation w/ tolerance + exception queue, GMV bucketing by pack period, per-seller statements; unclassified money surfaced (never dropped)",
+    "phase": "P1",
+    "workstream": "FIN",
+    "status": "Done",
+    "dependencies": [
+      "P1-MON-001"
+    ],
+    "acceptance": "settlement reports match ledger; amount/date exceptions queued + clearable; GMV by day/month/quarter/year from pack; 7/7 tests (incl. a real bug fix: unclassified entries were silently dropped)"
+  },
+  {
+    "tid": "P1-UCA-001",
+    "title": "Unified commerce/POS \u2014 register sessions w/ float reconciliation + variance tolerance, pack-defined RFID/barcode scan formats + dedupe window, tender/change rules, BOPIS hold window + high-value ID verification, offline-first queue w/ price-drift protection",
+    "phase": "P1",
+    "workstream": "UCA",
+    "status": "Done",
+    "dependencies": [
+      "P1-LOG-001"
+    ],
+    "acceptance": "in-store pickup/return E2E: session open\u2192sale\u2192reconcile; RFID EPC + EAN13 + staff-badge parsed from pack; card-overpay refused, cash change returned; BOPIS expiry + ID gate; offline drift HOLDS for review; 10/10 tests"
   }
 ]

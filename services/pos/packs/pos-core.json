@@ -1,0 +1,38 @@
+{
+  "$comment": "POS core pack — every in-store rule as data: scan formats (RFID/barcode prefixes + length rules), tender types with change rules, register policies (float, variance tolerance, receipt series), BOPIS hold windows, offline queue limits. New register type, tender method, or scan format = pack entry, zero code.",
+  "pack": { "name": "pos-core", "version": "1.0.0", "kind": "capability-pack" },
+  "scanFormats": [
+    { "id": "rfid-epc", "kind": "rfid", "prefixes": ["E280"], "length": 24, "payload": "epc", "caseInsensitive": true },
+    { "id": "ean13", "kind": "barcode", "prefixes": [], "length": 13, "payload": "gtin", "caseInsensitive": false },
+    { "id": "upca", "kind": "barcode", "prefixes": [], "length": 12, "payload": "gtin", "caseInsensitive": false },
+    { "id": "staff-badge", "kind": "barcode", "prefixes": ["STF"], "length": null, "payload": "badge", "caseInsensitive": true },
+    { "id": "store-sku", "kind": "barcode", "prefixes": ["SKU-"], "length": null, "payload": "sku", "caseInsensitive": true }
+  ],
+  "scanPolicy": { "rejectUnknownFormat": true, "dedupeWithinSeconds": 2, "maxScansPerSecond": 60 },
+  "tenderTypes": [
+    { "id": "cash", "kind": "cash", "changeAllowed": true, "roundingMinor": 0 },
+    { "id": "card", "kind": "card", "changeAllowed": false, "requiresAuth": true },
+    { "id": "upi-qr", "kind": "wallet", "changeAllowed": false, "requiresAuth": true },
+    { "id": "gift-card", "kind": "stored-value", "changeAllowed": false, "requiresAuth": false },
+    { "id": "cod", "kind": "cash", "changeAllowed": true, "settleOnDelivery": true }
+  ],
+  "registerPolicy": {
+    "openingFloatDefault": 200,
+    "varianceToleranceMinor": 50,
+    "receiptSeriesPrefix": "POS",
+    "maxOpenSessionsPerStore": 12,
+    "requireFloatDeclaration": true
+  },
+  "bopisPolicy": {
+    "holdHours": 48,
+    "pickupCodeLength": 6,
+    "verifyIdForHighValue": true,
+    "highValueThreshold": 500
+  },
+  "offlinePolicy": {
+    "maxQueuedActions": 500,
+    "conflictStrategy": "hold-for-review",
+    "priceDriftTolerancePct": 2,
+    "syncPriority": ["sale", "pickup", "refund", "stock-count"]
+  }
+}

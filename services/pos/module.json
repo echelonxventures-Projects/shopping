@@ -1,0 +1,23 @@
+{
+  "id": "mod-pos",
+  "name": "@aether/service-pos",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Unified Commerce / POS (Offline-First, RFID, BOPIS)",
+  "description": "In-store selling as a product: register sessions with float reconciliation, offline-first cart capture with queue limits and conflict policy, RFID/barcode scan parsing with pack-defined formats, BOPIS pickup handoff with code verification and hold expiry, cash/COD tender with change calc, receipt numbering. Register policies, scan formats, hold windows, tender types, variance tolerances are ALL pack data.",
+  "capabilities": ["pos", "offline-first", "rfid-scan", "bopis-handoff", "cash-tender", "register-session", "float-reconciliation"],
+  "packs": ["packs/pos-core.json"],
+  "publicApi": ["openSession", "scan", "addToCart", "tender", "closeSession", "holdForPickup", "confirmPickup", "syncQueue", "queueDepth"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "pos.sale.completed", "unit": "sale", "description": "In-store sale completed" },
+      { "event": "pos.pickup.confirmed", "unit": "pickup", "description": "BOPIS pickup handed over" },
+      { "event": "pos.session.closed", "unit": "session", "description": "Register session closed and reconciled" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 79, "currency": "USD", "perUnit": "month" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}

@@ -107,7 +107,8 @@ export class MemoryEngine implements StorageEngine {
     if (q.tenantId) out = out.filter((r) => r.tenantId === q.tenantId);
     if (q.typeId) out = out.filter((r) => r.typeId === q.typeId);
     if (q.id) out = out.filter((r) => r.id === q.id);
-    if (q.asOf) out = out.filter((r) => r.validFrom <= q.asOf && (r.validTo === null || r.validTo > q.asOf));
+    const asOf = q.asOf;
+    if (asOf) out = out.filter((r) => r.validFrom <= asOf && (r.validTo === null || r.validTo > asOf));
     else out = out.filter((r) => r.validTo === null);
     return q.limit ? out.slice(0, q.limit) : out;
   }
@@ -209,7 +210,8 @@ export class FileEngine implements HistoryCapableEngine {
     if (q.tenantId) out = out.filter((r) => r.tenantId === q.tenantId);
     if (q.typeId) out = out.filter((r) => r.typeId === q.typeId);
     if (q.id) out = out.filter((r) => r.id === q.id);
-    if (q.asOf) out = out.filter((r) => r.validFrom <= q.asOf && (r.validTo === null || r.validTo > q.asOf));
+    const asOf = q.asOf;
+    if (asOf) out = out.filter((r) => r.validFrom <= asOf && (r.validTo === null || r.validTo > asOf));
     else out = out.filter((r) => r.validTo === null);
     return q.limit ? out.slice(0, q.limit) : out;
   }

@@ -236,3 +236,112 @@ test('validateIdentity: scheme bindings from pack — pattern pass/fail, unknown
   assert.throws(() => s.validateIdentity('sku-1', { GTIN: 'not-a-gtin' }), /fails pattern/);
   assert.throws(() => s.validateIdentity('sku-1', { 'NO-SUCH-SCHEME': 'x' }), /unknown identity scheme .* register in pack/);
 });
+
+
+// ---------- wave-2 type packs + health vertical (P1-CAT-003 / P1-CAT-004) ----------
+import { mergeProductPacks, type UniversalProductPack } from '../src/index.ts';
+
+const wave2 = JSON.parse(readFileSync(join(here, '../packs/type-packs-wave2.json'), 'utf8')) as UniversalProductPack;
+const health = JSON.parse(readFileSync(join(here, '../packs/health-vertical.json'), 'utf8')) as UniversalProductPack;
+const merged = () => new ProductMasterService(mergeProductPacks([pack as unknown as UniversalProductPack, wave2, health]));
+
+test('mergeProductPacks: base + wave2 + health union — no duplicate type/taxonomy/identity ids', () => {
+  const m = mergeProductPacks([pack as unknown as UniversalProductPack, wave2, health]);
+  const typeNames = m.productTypes.map((t) => t.name);
+  assert.equal(new Set(typeNames).size, typeNames.length);
+  assert.ok(typeNames.includes('physical'));
+  assert.ok(typeNames.includes('auction'));
+  assert.ok(typeNames.includes('health-rx'));
+  const taxIds = m.taxonomy.map((n) => n.id);
+  assert.equal(new Set(taxIds).size, taxIds.length);
+  assert.ok(taxIds.includes('cat_freight'));
+  assert.ok(taxIds.includes('cat_rx'));
+  assert.ok(m.identitySchemes.some((b) => b.code === 'NDC'));
+  assert.ok(m.lifecycleWorkflow.states.includes('published'));
+});
+
+test('wave-2: auction requires startingBid/bidIncrement/lotNumber; CPQ requires configModelCode', () => {
+  const s = merged();
+  assert.throws(
+    () => s.createProduct({ id: 'auc-1', tenantId: 't', taxonomyPath: ['dom_marketplace', 'cat_auction'], productType: 'auction', name: 'Vintage Watch', attributes: { hsCode: '9101.11' } }),
+    /missing required attribute/
+  );
+  s.createProduct({
+    id: 'auc-2', tenantId: 't', taxonomyPath: ['dom_marketplace', 'cat_auction'], productType: 'auction', name: 'Vintage Watch',
+    attributes: { hsCode: '9101.11', startingBid: 100, bidIncrement: 10, lotNumber: 'LOT-77' },
+  });
+  assert.throws(
+    () => s.createProduct({ id: 'cpq-1', tenantId: 't', taxonomyPath: ['dom_industrial', 'cat_cpq'], productType: 'cpq', name: 'Custom Machine', attributes: { hsCode: '8479.89' } }),
+    /missing required attribute "configModelCode"/
+  );
+});
+
+test('wave-2: freight LTL enforces class + gross weight; enum violations rejected', () => {
+  const s = merged();
+  s.createProduct({
+    id: 'fr-1', tenantId: 't', taxonomyPath: ['dom_logistics', 'cat_freight'], productType: 'freight', name: 'Pallet Load',
+    attributes: { hsCode: '0000.00', freightClass: 'ltl', grossWeightKg: 480 },
+  });
+  assert.throws(
+    () => s.createProduct({ id: 'fr-2', tenantId: 't', taxonomyPath: ['dom_logistics', 'cat_freight'], productType: 'freight', name: 'Bad', attributes: { hsCode: '0000.00', freightClass: 'teleport', grossWeightKg: 1 } }),
+    /freightClass must be one of/
+  );
+});
+
+test('health vertical: health-rx enforces ALL THREE required sets (multi-set fix)', () => {
+  const s = merged();
+  const base = { id: 'rx-1', tenantId: 't', taxonomyPath: ['dom_health', 'cat_rx', 'fam_rx_oral'], productType: 'health-rx', name: 'Amoxicillin 500mg' };
+  // pharma_compliance alone is not enough — pharma + HIPAA + Rx sets must ALL bind
+  assert.throws(
+    () => s.createProduct({ ...base, attributes: { hsCode: '3004.10', expiryDate: '2027-01-01', storageCondition: 'ambient', lotNumber: 'L1', countryOfOrigin: 'IN', dosageForm: 'capsule' } }),
+    /missing required attribute "(udi|regulatoryApproval|batchNumber|prescriptionRequired|rxNormCode|phiClassification|retentionPolicyDays|consentPurpose)/
+  );
+  s.createProduct({
+    ...base,
+    attributes: {
+      hsCode: '3004.10',
+      udi: 'UDI-AMOX-500', regulatoryApproval: 'CDSCO/2026/1234', expiryDate: '2027-01-01', batchNumber: 'B-8891', prescriptionRequired: true,
+      phiClassification: 'limited', retentionPolicyDays: 2555, consentPurpose: 'treatment',
+      rxNormCode: '723', deaSchedule: 'none', prescriberRequired: true, dosageForm: 'capsule',
+    },
+  });
+  assert.ok(true);
+});
+
+test('health vertical: HIPAA privacy classification + UDI-DI device rules enforced from pack', () => {
+  const s = merged();
+  const dev = (attributes: Record<string, unknown>) => ({
+    id: `dev-${Math.random().toString(36).slice(2, 8)}`, tenantId: 't',
+    taxonomyPath: ['dom_health', 'cat_medical_device'], productType: 'health-device', name: 'Infusion Pump', attributes,
+  });
+  // UDI-DI + device class are mandatory device attributes
+  assert.throws(
+    () => s.createProduct(dev({ hsCode: '9018.90', deviceClass: 'ii', phiClassification: 'limited', retentionPolicyDays: 3650, consentPurpose: 'treatment' })),
+    /missing required attribute "udiDi"/
+  );
+  // HIPAA privacy classification is mandatory for any health product
+  assert.throws(
+    () => s.createProduct(dev({ hsCode: '9018.90', udiDi: '12345678901234', deviceClass: 'ii' })),
+    /missing required attribute "phiClassification"/
+  );
+  // UDI-DI pattern from pack (14 digits)
+  assert.throws(
+    () => s.createProduct(dev({ hsCode: '9018.90', udiDi: '123', deviceClass: 'ii', phiClassification: 'limited', retentionPolicyDays: 3650, consentPurpose: 'treatment' })),
+    /udiDi failed pattern/
+  );
+  s.createProduct(dev({ hsCode: '9018.90', udiDi: '12345678901234', deviceClass: 'ii', phiClassification: 'limited', retentionPolicyDays: 3650, consentPurpose: 'treatment', sterile: true }));
+});
+
+test('health identity schemes: NDC/RxNorm/UDI-DI patterns enforced', () => {
+  const s = merged();
+  s.createProduct({ id: 'p-h1', tenantId: 't', taxonomyPath: ['dom_retail'], productType: 'physical', name: 'Widget', attributes: { hsCode: '0000.00' } });
+  s.createSku({ id: 'sku-h1', productId: 'p-h1', identityCodes: { NDC: '0002-1433-80', 'UDI-DI': '12345678901234' }, attributes: {}, inventoryPolicy: { tracked: true, type: 'simple' } }, 't');
+  assert.throws(
+    () => s.createSku({ id: 'sku-h2', productId: 'p-h1', identityCodes: { NDC: 'not-an-ndc' }, attributes: {}, inventoryPolicy: { tracked: true, type: 'simple' } }, 't'),
+    /NDC .* fails pattern/
+  );
+  assert.throws(
+    () => s.createSku({ id: 'sku-h3', productId: 'p-h1', identityCodes: { 'UDI-DI': '123' }, attributes: {}, inventoryPolicy: { tracked: true, type: 'simple' } }, 't'),
+    /UDI-DI .* fails pattern/
+  );
+});

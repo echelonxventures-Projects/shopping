@@ -1,0 +1,61 @@
+{
+  "$comment": "Health Vertical Pack (P1-CAT-004) — HIPAA-class health commerce as pure data: PHI classification + retention policy, prescription drug rules (RxNorm/NDC/DEA schedule, prescriber + refill limits), medical device rules (UDI-DI, device class, sterilization, implantable), telehealth services. Serialization is inherited from the base pack's inventoryTracked=serialized. Zero code: onboarding a health market/tenant = pack epoch.",
+  "pack": { "name": "product-types-health", "version": "1.0.0", "kind": "capability-pack" },
+  "taxonomy": [
+    { "id": "dom_health", "kind": "domain", "name": "Health & Life Sciences", "parentId": null },
+    { "id": "cat_rx", "kind": "category", "name": "Prescription Medicines", "parentId": "dom_health" },
+    { "id": "cat_medical_device", "kind": "category", "name": "Medical Devices", "parentId": "dom_health" },
+    { "id": "cat_telehealth", "kind": "category", "name": "Telehealth Services", "parentId": "dom_health" },
+    { "id": "fam_rx_oral", "kind": "product-family", "name": "Oral Solid Dosage", "parentId": "cat_rx" }
+  ],
+  "attributeSets": [
+    {
+      "id": "attrs_health_hipaa",
+      "name": "health_hipaa",
+      "bindsTo": { "taxonomyPath": "dom_health" },
+      "attributes": [
+        { "name": "phiClassification", "group": "privacy", "type": "enum", "enumValues": ["none", "limited", "full"], "validation": { "required": true } },
+        { "name": "retentionPolicyDays", "group": "privacy", "type": "number", "validation": { "required": true, "min": 0 } },
+        { "name": "consentPurpose", "group": "privacy", "type": "string", "validation": { "required": true } },
+        { "name": "auditTrailRequired", "group": "privacy", "type": "boolean" },
+        { "name": "deIdentificationMethod", "group": "privacy", "type": "enum", "enumValues": ["none", "safe-harbor", "expert-determination"] }
+      ]
+    },
+    {
+      "id": "attrs_rx_compliance",
+      "name": "rx_compliance",
+      "bindsTo": { "productType": "health-rx" },
+      "attributes": [
+        { "name": "rxNormCode", "group": "rx", "type": "string", "validation": { "required": true, "pattern": "^\\d{1,7}$" } },
+        { "name": "ndcCode", "group": "rx", "type": "string", "validation": { "pattern": "^\\d{4,5}-\\d{3,4}-\\d{1,2}$" } },
+        { "name": "deaSchedule", "group": "rx", "type": "enum", "enumValues": ["none", "ii", "iii", "iv", "v"], "validation": { "required": true } },
+        { "name": "prescriberRequired", "group": "rx", "type": "boolean", "validation": { "required": true } },
+        { "name": "refillLimit", "group": "rx", "type": "number", "validation": { "min": 0 } },
+        { "name": "dosageForm", "group": "rx", "type": "enum", "enumValues": ["tablet", "capsule", "liquid", "injection", "topical", "inhaler"] }
+      ]
+    },
+    {
+      "id": "attrs_medical_device",
+      "name": "medical_device",
+      "bindsTo": { "productType": "health-device" },
+      "attributes": [
+        { "name": "udiDi", "group": "device", "type": "string", "validation": { "required": true, "pattern": "^\\d{14}$" } },
+        { "name": "deviceClass", "group": "device", "type": "enum", "enumValues": ["i", "ii", "iii"], "validation": { "required": true } },
+        { "name": "sterilizationState", "group": "device", "type": "enum", "enumValues": ["sterile", "non-sterile", "sterilize-before-use"] },
+        { "name": "implantable", "group": "device", "type": "boolean" },
+        { "name": "singleUse", "group": "device", "type": "boolean" }
+      ]
+    }
+  ],
+  "productTypes": [
+    { "name": "health-rx", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal", "pharma_compliance", "health_hipaa", "rx_compliance"] },
+    { "name": "health-device", "fulfillment": "physical", "inventoryTracked": "serialized", "requires": ["product_master_universal", "health_hipaa", "medical_device"] },
+    { "name": "health-service", "fulfillment": "service", "inventoryTracked": "none", "entitlement": { "mode": "booking-slot" }, "requires": ["product_master_universal", "health_hipaa", "services_core"] }
+  ],
+  "identitySchemes": [
+    { "code": "NDC", "pattern": "^\\d{4,5}-\\d{3,4}-\\d{1,2}$", "uniquePer": "global" },
+    { "code": "RxNorm", "pattern": "^\\d{1,7}$", "uniquePer": "global" },
+    { "code": "UDI-DI", "pattern": "^\\d{14}$", "uniquePer": "global" },
+    { "code": "DEA", "pattern": "^[A-Z]{2}\\d{7}$", "uniquePer": "global" }
+  ]
+}

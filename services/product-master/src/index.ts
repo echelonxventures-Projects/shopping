@@ -164,11 +164,13 @@ export class ProductMasterService {
       if (set.bindsTo.taxonomyPath && !pathStr.startsWith(set.bindsTo.taxonomyPath) && !set.bindsTo.taxonomyPath.split('>').includes(product.taxonomyPath[0] ?? '')) continue;
       defs.push(...set.attributes);
     }
-    // product-type mandatory groups
+    // product-type mandatory groups — EVERY required set applies (multi-set verticals)
     const typeDef = this.types.get(product.productType);
     if (typeDef?.requires) {
-      const requiredSet = this.attrSets.find((s) => typeDef.requires!.includes(s.name));
-      if (requiredSet) defs.push(...requiredSet.attributes);
+      for (const requiredName of typeDef.requires) {
+        const requiredSet = this.attrSets.find((s) => s.name === requiredName);
+        if (requiredSet) defs.push(...requiredSet.attributes);
+      }
     }
     return defs;
   }
@@ -282,6 +284,28 @@ export interface UniversalProductPack {
   lifecycleWorkflow: WorkflowDef;
 }
 
+/** union-merge product packs (base + wave packs): ids/codes/names dedupe, base wins on conflict */
+export function mergeProductPacks(packs: UniversalProductPack[]): UniversalProductPack {
+  const [base, ...rest] = packs;
+  if (!base) throw new Error('mergeProductPacks requires at least one pack');
+  const merged: UniversalProductPack = {
+    taxonomy: [...base.taxonomy],
+    attributeSets: [...base.attributeSets],
+    productTypes: [...base.productTypes],
+    identitySchemes: [...base.identitySchemes],
+    uoms: [...(base.uoms ?? [])],
+    lifecycleWorkflow: base.lifecycleWorkflow,
+  };
+  for (const p of rest) {
+    for (const n of p.taxonomy) if (!merged.taxonomy.some((x) => x.id === n.id)) merged.taxonomy.push(n);
+    for (const s of p.attributeSets) if (!merged.attributeSets.some((x) => x.id === s.id)) merged.attributeSets.push(s);
+    for (const t of p.productTypes) if (!merged.productTypes.some((x) => x.name === t.name)) merged.productTypes.push(t);
+    for (const b of p.identitySchemes) if (!merged.identitySchemes.some((x) => x.code === b.code)) merged.identitySchemes.push(b);
+    for (const u of p.uoms ?? []) if (!merged.uoms!.some((x) => x.id === u.id)) merged.uoms!.push(u);
+  }
+  return merged;
+}
+
 // ---------- Module-as-a-Product contract (plug-and-play, billable, configurable) ----------
 import type { AetherModule, HostPort, BillingPort } from '@aether/kernel-module/src/index.ts';
 import { readFileSync as __readFileSync } from 'node:fs';
@@ -291,7 +315,7 @@ import { fileURLToPath as __fileURLToPath } from 'node:url';
 const productMasterModule: AetherModule = {
   manifest: JSON.parse(__readFileSync(__join(__dirname(__fileURLToPath(import.meta.url)), '../module.json'), 'utf8')),
   async create(_host: HostPort, billing: BillingPort, packs: Record<string, unknown>) {
-    const pack = Object.values(packs)[0] as UniversalProductPack;
+    const pack = mergeProductPacks(Object.values(packs) as UniversalProductPack[]);
     const svc = new ProductMasterService(pack);
     const meter = (ev: string) => billing.meter(ev);
     return {

@@ -15,10 +15,23 @@
   },
   "files": [],
   "references": [
-    { "path": "./kernel/primitives" },
-    { "path": "./kernel/registry" },
-    { "path": "./kernel/context" },
-    { "path": "./kernel/uid" },
-    { "path": "./kernel/codegen" }
+    {
+      "path": "./kernel/primitives"
+    },
+    {
+      "path": "./kernel/registry"
+    },
+    {
+      "path": "./kernel/context"
+    },
+    {
+      "path": "./kernel/uid"
+    },
+    {
+      "path": "./kernel/codegen"
+    },
+    {
+      "path": "./kernel/runtime-target"
+    }
   ]
 }

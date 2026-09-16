@@ -1,0 +1,23 @@
+{
+  "id": "mod-finance-portal",
+  "name": "@aether/service-finance-portal",
+  "version": "0.1.0",
+  "kind": "capability-module",
+  "displayName": "Tenant Finance Portal (P&L, Reconciliation, GMV/BI)",
+  "description": "Seller/tenant finance as a product: period-filtered P&L from the double-entry ledger feed (account-prefix categorization from pack), PSP settlement-file reconciliation with an exception queue (pack tolerances), GMV / fee / net reporting bucketed by pack periods, per-seller statements. Account mappings, tolerances, buckets, rounding are ALL pack data.",
+  "capabilities": ["finance-portal", "pl-statement", "settlement-reconciliation", "exception-queue", "gmv-reporting", "seller-statements"],
+  "packs": ["packs/finance-portal-core.json"],
+  "publicApi": ["plStatement", "reconcile", "gmvReport", "sellerStatement", "exceptions", "clearException"],
+  "configSchema": {},
+  "billing": {
+    "meterableEvents": [
+      { "event": "finance.pl.generated", "unit": "statement", "description": "P&L statement generated" },
+      { "event": "finance.reconciliation.run", "unit": "run", "description": "Settlement reconciliation executed" },
+      { "event": "finance.gmv.reported", "unit": "report", "description": "GMV report generated" }
+    ],
+    "pricingModel": "flat+usage",
+    "suggestedRate": { "amount": 99, "currency": "USD", "perUnit": "month" }
+  },
+  "dependencies": [],
+  "hostContract": "aether-host-1"
+}
